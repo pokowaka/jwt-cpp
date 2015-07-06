@@ -1,0 +1,41 @@
+{
+  ignore errors caused by realloc(PTR,0)
+  Memcheck:Leak
+  ...
+  fun:ev_realloc
+}
+
+{
+  ignore error because srtp_init
+  Memcheck:Leak
+  ...
+  fun:srtp_init
+}
+
+{
+  ignore error because SSL_library_init
+  Memcheck:Leak
+  ...
+  fun:SSL_library_init
+}
+
+{
+  ignore error because SSL_library_init
+  Memcheck:Leak
+  ...
+  fun:crypto_kernel_load_debug_module
+}
+
+{
+  ignore errors loading dynamic libraries
+  Memcheck:Leak
+  ... 
+  fun:_dlerror_run
+}
+
+{
+  ignore errors loading dynamic libraries
+  Memcheck:Leak
+  ... 
+  fun:_dl_open
+}
