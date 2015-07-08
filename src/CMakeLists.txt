@@ -1,10 +1,12 @@
-LINK_DIRECTORIES (${JWT-CPP_BINARY_DIR}/src/token) 
+ADD_LIBRARY(jwt-cpp
+  validators/digestvalidator.cpp
+  validators/nonevalidator.cpp
+  token/jwsverifier.cpp
+  token/claimset.cpp
+  base64/base64.cpp token/Token.cpp token/Token.h)
 
-
-ADD_LIBRARY(jwt-cpp token/claimset.cpp token/jwt.cpp base64/base64.cpp)
-
-TARGET_COMPILE_FEATURES(jwt-cpp PRIVATE cxx_delegating_constructors)
-TARGET_LINK_LIBRARIES (jwt-cpp ${JANSSON_LIBRARY} ${CMAKE_DL_LIBS} ${SSL_LIBRARY})
+TARGET_LINK_LIBRARIES (jwt-cpp ${JANSSON_LIBRARY} ${OPENSSL_LIBRARIES})
+SET_PROPERTY(TARGET jwt-cpp PROPERTY CXX_STANDARD 11)
 
 IF(ENABLE_GPERF_TOOLS MATCHES "ON")
     TARGET_LINK_LIBRARIES(jwt-cpp profiler)

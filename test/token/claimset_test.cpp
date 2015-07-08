@@ -1,4 +1,4 @@
-#include "claimset.h"
+#include "token/claimset.h"
 #include "gtest/gtest.h"
 #include <memory>
 
@@ -8,21 +8,21 @@ TEST(claimset_test,  no_exp) {
     ClaimSet fakeTimeSet(&fakeClock);
 
     // No exp set
-    EXPECT_EQ(true, fakeTimeSet.valid());
+    EXPECT_EQ(true, fakeTimeSet.Valid());
 }
 
 TEST(claimset_test, past_exp) {
     ClaimSet fakeTimeSet(&fakeClock);
     // Past exp
-    fakeTimeSet.add("exp", 11);
-    EXPECT_EQ(false, fakeTimeSet.valid());
+    fakeTimeSet.Add("exp", 11);
+    EXPECT_EQ(false, fakeTimeSet.Valid());
 }
 
 TEST(claimset_test, before_exp) {
     ClaimSet fakeTimeSet(&fakeClock);
     // Before exp
-    fakeTimeSet.add("exp", 9);
-    EXPECT_EQ(true, fakeTimeSet.valid());
+    fakeTimeSet.Add("exp", 9);
+    EXPECT_EQ(true, fakeTimeSet.Valid());
 }
 
 
@@ -30,42 +30,42 @@ TEST(claimset_test, no_iat) {
     ClaimSet fakeTimeSet(&fakeClock);
 
     // No iat set
-    EXPECT_EQ(true, fakeTimeSet.valid());
+    EXPECT_EQ(true, fakeTimeSet.Valid());
 }
 
 TEST(claimset_test, past_iat) {
     ClaimSet fakeTimeSet(&fakeClock);
     // Past iat
-    fakeTimeSet.add("iat", 11);
-    EXPECT_EQ(true, fakeTimeSet.valid());
+    fakeTimeSet.Add("iat", 11);
+    EXPECT_EQ(true, fakeTimeSet.Valid());
 }
 
 TEST(claimset_test, before_iat) {
     ClaimSet fakeTimeSet(&fakeClock);
     // Before iat
-    fakeTimeSet.add("iat", 9);
-    EXPECT_EQ(false, fakeTimeSet.valid());
+    fakeTimeSet.Add("iat", 9);
+    EXPECT_EQ(false, fakeTimeSet.Valid());
 }
 
 TEST(claimset_test, no_nbf) {
     ClaimSet fakeTimeSet(&fakeClock);
 
     // No nbf set
-    EXPECT_EQ(true, fakeTimeSet.valid());
+    EXPECT_EQ(true, fakeTimeSet.Valid());
 }
 
 TEST(claimset_test, past_nbf) {
     ClaimSet fakeTimeSet(&fakeClock);
     // Past nbf
-    fakeTimeSet.add("nbf", 11);
-    EXPECT_EQ(false, fakeTimeSet.valid());
+    fakeTimeSet.Add("nbf", 11);
+    EXPECT_EQ(false, fakeTimeSet.Valid());
 }
 
 TEST(claimset_test, before_nbf) {
     ClaimSet fakeTimeSet(&fakeClock);
     // Before nbf
-    fakeTimeSet.add("nbf", 9);
-    EXPECT_EQ(true, fakeTimeSet.valid());
+    fakeTimeSet.Add("nbf", 9);
+    EXPECT_EQ(true, fakeTimeSet.Valid());
 }
 
 
@@ -97,7 +97,13 @@ TEST(claimset_test, take_last) {
 TEST(claimset_test, spec_sample) {
     std::unique_ptr<ClaimSet> set(ClaimSet::parseJson(" {\"iss\":\"joe\", \"exp\":1300819380, \"http://example.com/is_root\":true}"));
     EXPECT_NE(nullptr, set.get());
-    EXPECT_STREQ("joe", set->get("iss").c_str());
-    EXPECT_STREQ("1300819380", set->get("exp").c_str());
-    EXPECT_STREQ("true", set->get("http://example.com/is_root").c_str());
+    EXPECT_STREQ("joe", set->Get("iss").c_str());
+    EXPECT_STREQ("1300819380", set->Get("exp").c_str());
+    EXPECT_STREQ("true", set->Get("http://example.com/is_root").c_str());
+}
+TEST(claimset_test, jwt_header) {
+    std::unique_ptr<ClaimSet> set(ClaimSet::parseJson("{\"alg\":\"HS256\",\"typ\":\"JWT\"}"));
+    EXPECT_NE(nullptr, set.get());
+    EXPECT_STREQ("HS256", set->Get("alg").c_str());
+    EXPECT_STREQ("JWT", set->Get("typ").c_str());
 }

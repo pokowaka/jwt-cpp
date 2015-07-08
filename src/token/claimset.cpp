@@ -1,38 +1,42 @@
-#include "claimset.h"
+#include "token/claimset.h"
 #include <string>
 #include <memory>
 
-const char* const ClaimSet::s_number[] = { "exp", "nbf", "iat" };
-UtcClock ClaimSet::s_clock = UtcClock();
-
-ClaimSet::ClaimSet(IClock* clock) : m_clock(clock), m_claimset(NULL) {
-  m_clock = clock;
-  m_claimset = json_object();
+template<size_t SIZE, class T> inline size_t array_size(T (&arr)[SIZE]) {
+  return SIZE;
 }
 
-ClaimSet::ClaimSet() : m_clock(&s_clock), m_claimset(NULL) {
-  m_claimset = json_object();
+const char* const ClaimSet::number_fields_[] = { "exp", "nbf", "iat" };
+UtcClock ClaimSet::utc_clock_ = UtcClock();
+
+ClaimSet::ClaimSet(IClock* clock) : clock_(clock), claimset_(NULL) {
+  clock_ = clock;
+  claimset_ = json_object();
+}
+
+ClaimSet::ClaimSet() : clock_(&utc_clock_), claimset_(NULL) {
+  claimset_ = json_object();
 }
 
 ClaimSet::~ClaimSet() {
-  json_decref(m_claimset);
+  json_decref(claimset_);
 }
 
-void ClaimSet::add(std::string key, std::string value) {
-  json_object_set(m_claimset, key.c_str(), json_string(value.c_str()));
+void ClaimSet::Add(std::string key, std::string value) {
+  json_object_set(claimset_, key.c_str(), json_string(value.c_str()));
 }
 
-void ClaimSet::add(std::string key, int64_t value) {
-  json_object_set(m_claimset, key.c_str(), json_integer(value));
+void ClaimSet::Add(std::string key, int64_t value) {
+  json_object_set(claimset_, key.c_str(), json_integer(value));
 }
 
-bool ClaimSet::hasKey(std::string key) {
-  json_t* object = json_object_get(m_claimset, key.c_str());
+bool ClaimSet::HasKey(std::string key) {
+  json_t* object = json_object_get(claimset_, key.c_str());
   return (object != NULL);
 }
 
-std::string ClaimSet::get(std::string key) {
-  json_t* value = json_object_get(m_claimset, key.c_str());
+std::string ClaimSet::Get(std::string key) {
+  json_t* value = json_object_get(claimset_, key.c_str());
   if (value == NULL) {
     return "";
   }
@@ -45,13 +49,13 @@ std::string ClaimSet::get(std::string key) {
   }
 }
 
-bool ClaimSet::valid() {
-  return validate_exp() && validate_iat() && validate_nbf();
+bool ClaimSet::Valid() {
+  return ValidateExp() && ValidateIat() && ValidateNbf();
 }
 
 
-bool ClaimSet::validate_exp() {
-  json_t* object = json_object_get(m_claimset, "exp");
+bool ClaimSet::ValidateExp() {
+  json_t* object = json_object_get(claimset_, "exp");
   if (object == NULL) {
     return true;
   }
@@ -61,12 +65,12 @@ bool ClaimSet::validate_exp() {
   }
 
   uint64_t date_ts = (uint64_t) json_integer_value(object);
-  return date_ts < m_clock->currentTime();
+  return date_ts < clock_->Now();
 }
 
 
-bool ClaimSet::validate_iat() {
-  json_t* object = json_object_get(m_claimset, "iat");
+bool ClaimSet::ValidateIat() {
+  json_t* object = json_object_get(claimset_, "iat");
   if (object == NULL) {
     return true;
   }
@@ -77,13 +81,13 @@ bool ClaimSet::validate_iat() {
 
   uint64_t date_ts = (uint64_t) json_integer_value(object);
   // Let's reject tokens issued in the future..
-  return date_ts >= m_clock->currentTime();
+  return date_ts >= clock_->Now();
 }
 
 
 
-bool ClaimSet::validate_nbf() {
-  json_t* object = json_object_get(m_claimset, "nbf");
+bool ClaimSet::ValidateNbf() {
+  json_t* object = json_object_get(claimset_, "nbf");
   if (object == NULL) {
     return true;
   }
@@ -93,19 +97,19 @@ bool ClaimSet::validate_nbf() {
   }
 
   uint64_t date_ts = (uint64_t) json_integer_value(object);
-  return date_ts < m_clock->currentTime();
+  return date_ts < clock_->Now();
 }
 
 std::string ClaimSet::toJson() {
-  std::unique_ptr<char> pResult(json_dumps(m_claimset, JSON_INDENT(2)));
+  std::unique_ptr<char> pResult(json_dumps(claimset_, JSON_INDENT(2)));
   return std::string(pResult.get());
 }
 
-ClaimSet* ClaimSet::parseJson(std::string json) {
+ClaimSet* ClaimSet::parseJson(const char* json) {
   json_t *root;
   json_error_t error;
 
-  root = json_loads(json.c_str(), JSON_REJECT_DUPLICATES, &error);
+  root = json_loads(json, JSON_REJECT_DUPLICATES, &error);
 
   if (!root) {
     return nullptr;
@@ -121,9 +125,9 @@ ClaimSet* ClaimSet::parseJson(std::string json) {
   std::unique_ptr<ClaimSet> claims(new ClaimSet());
 
   json_object_foreach(root, key, value) {
-    for (int i = 0; i < array_size(ClaimSet::s_number); i++) {
+    for (int i = 0; i < array_size(ClaimSet::number_fields_); i++) {
       // Validate that it is a number
-      if (strcmp(ClaimSet::s_number[i], key) == 0 && !json_is_number(value)) {
+      if (strcmp(ClaimSet::number_fields_[i], key) == 0 && !json_is_number(value)) {
         json_decref(root);
         return nullptr;
       }
@@ -131,7 +135,7 @@ ClaimSet* ClaimSet::parseJson(std::string json) {
   }
 
   // Overwrite existing claimset
-  json_decref(claims->m_claimset);
-  claims->m_claimset = root;
+  json_decref(claims->claimset_);
+  claims->claimset_ = root;
   return claims.release();
 }

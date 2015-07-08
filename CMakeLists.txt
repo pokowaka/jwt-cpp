@@ -13,6 +13,9 @@ INCLUDE(GetGitRevisionDescription)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 git_get_exact_tag(GIT_TAG)
 
+
+# FIND_PACKAGE(OpenSSL)
+
 MESSAGE ("Git version: ${GIT_SHA1}")
 if (GIT_TAG)
     MESSAGE ("Git tag: ${GIT_TAG}")
@@ -28,7 +31,6 @@ OPTION(ENABLE_GPERF_TOOLS  "Enable google perftools [default: OFF]" OFF)
 # Compiler SETtings
 #
 #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W")
-SET(CMAKE_C_STANDARD 11)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wpointer-arith")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-long-long")
@@ -52,28 +54,6 @@ ELSE()
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 ENDIF(DEBUG_MODE MATCHES "ON")
 
-# openssl
-MESSAGE ("-- Looking for openssl")
-UNSET(SSL_LIBRARY)
-FIND_LIBRARY (SSL_LIBRARY NAMES ssl)
-If (SSL_LIBRARY)
-    SET(SSL_INCLUDE_DIR /usr/local/ssl/include)
-    MESSAGE ("-- SSL Already Available")
-    MESSAGE ("-- ${SSL_LIBRARY}")
-    MESSAGE ("-- ${SSL_INCLUDE_DIR}")
-ELSE (SSL_LIBRARY)
-    MESSAGE ("-- Making and installing ssl")
-    SET(LIBOPENSSL_PATH ${JWT-CPP_SOURCE_DIR}/ext/openssl-1.0.1c)
-    ADD_CUSTOM_TARGET (build_libopenssl ALL
-    COMMAND ./Configure darwin64-x86_64-cc shared threads
-    COMMAND make
-    COMMAND sudo make install
-    WORKING_DIRECTORY ${LIBOPENSSL_PATH})
-    SET(SSL_LIBRARY /usr/local/ssl/lib/libssl.dylib)
-    SET(SSL_INCLUDE_DIR /usr/local/ssl/include)
-    MESSAGE ("-- ${SSL_LIBRARY}")
-    MESSAGE ("-- ${SSL_INCLUDE_DIR}")
-ENDIF (SSL_LIBRARY)
 
 # Jansson
 MESSAGE ("-- Looking for jansson")
@@ -136,9 +116,23 @@ IF (COVERAGE AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     LINK_LIBRARIES(gcov)
 ENDIF ()
 
+# Search OpenSSL
+FIND_PACKAGE(PkgConfig REQUIRED)
+PKG_SEARCH_MODULE(OPENSSL REQUIRED openssl)
+
+IF(OPENSSL_FOUND)
+    INCLUDE_DIRECTORIES(${OPENSSL_INCLUDE_DIRS})
+    MESSAGE(STATUS "Using OpenSSL ${OPENSSL_VERSION} - ${OPENSSL_LIBDIR} - ${OPENSSL_LIBRARY_DIRS}")
+ELSE()
+    # Error; with REQUIRED, pkg_search_module() will throw an error by it's own
+ENDIF()
+
 # General include directories
-INCLUDE_DIRECTORIES (${SSL_INCLUDE_DIR})
 INCLUDE_DIRECTORIES (src/include)
+INCLUDE_DIRECTORIES (src)
+LINK_DIRECTORIES (${OPENSSL_LIBRARY_DIRS})
+MESSAGE( "CMAKE_SYSTEM_LIBRARY_PATH=${CMAKE_SYSTEM_LIBRARY_PATH}" )
+
 
 # add subdirectory at the end so we inherit all values SET up here.
 ADD_SUBDIRECTORY (src)
