@@ -59,7 +59,7 @@ If (JANSSON)
 ELSE (JANSSON)
     MESSAGE ("-- Missing jansson, building locally")
     SET (JANSSON_BUILD_DOCS OFF)
-    add_subdirectory ("ext/jansson")
+    add_subdirectory (${JWT_SOURCE_DIR}/ext/jansson)
 ENDIF (JANSSON)
 
 # Gperf tools

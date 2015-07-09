@@ -1,5 +1,3 @@
-
-
 SET(JWT_SOURCE_DIRS
   token
   base64

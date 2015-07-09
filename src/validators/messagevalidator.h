@@ -25,8 +25,14 @@
 
 #include <stdint.h>
 
+/**
+ * A MessageValidator can validate and sign a header.
+ */
 class MessageValidator {
  public:
+  /**
+   * Verifies that the given signature belongs with the given header
+   */
   virtual bool VerifySignature(const uint8_t *header, size_t num_header,
                                const uint8_t *signature, size_t num_signature) = 0;
 

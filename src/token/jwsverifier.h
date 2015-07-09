@@ -30,19 +30,49 @@
 #include <string>
 #include "validators/messagevalidator.h"
 
+/**
+ * A JwsVerifier keeps track of a set of message validators that
+ * can be used to validate if the given header is properly signed.
+ */
 class JwsVerifier {
  public:
-    JwsVerifier() {}
-    JwsVerifier(MessageValidator **validators, size_t num_validators);
-    explicit JwsVerifier(MessageValidator* validator);
-    bool VerifySignature(std::string algorithm, const char *header, size_t num_header,
-                         const char *signature, size_t num_signature) const;
-    char* Sign(std::string algorithm, const char *header, size_t num_header,
-                         char *signature, size_t *num_signature) const;
-    bool RegisterValidator(MessageValidator *validator);
+  JwsVerifier() {}
+  JwsVerifier(MessageValidator **validators, size_t num_validators);
+  explicit JwsVerifier(MessageValidator* validator);
+
+  /**
+   * Verfies the given jose header and signature. Uses the verifier defined
+   * by algorithm parameter.
+   *
+   * @params algorithm The algorithm used to validate the header
+   * @param header The header to be validated
+   * @param num_header The length of the header
+   * @param signature The base64 encoded signature
+   * @param num_signature The length of the base64 encoded signature
+   * @return true if the signature is valid, false otherwise.
+   */
+  bool VerifySignature(std::string algorithm, const char *header, size_t num_header,
+      const char *signature, size_t num_signature) const;
+  /**
+   * Signs the header using the given algorithm. If the signature buffer is to small
+   * or null the needed size will be set in *num_signature. The signature will contain
+   * a null terminated base64 encoded string.
+   *
+   * @param header The header to be signed
+   * @param num_header the number chars in the header
+   * @param signature The char array to receiver the signature
+   * @param num_signature The size of the signature array.
+   * @return pointer to signature array.
+   */
+  char* Sign(std::string algorithm, const char *header, size_t num_header,
+      char *signature, size_t *num_signature) const;
+
+  /**
+   * Registers the given validator.
+   */
+  bool RegisterValidator(MessageValidator *validator);
 
  private:
-    std::map<std::string, MessageValidator *> validator_map_;
+  std::map<std::string, MessageValidator *> validator_map_;
 };
-
 #endif  // SRC_TOKEN_JWSVERIFIER_H_
