@@ -20,22 +20,24 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#ifndef SRC_VALIDATORS_MESSAGEVALIDATOR_H_
-#define SRC_VALIDATORS_MESSAGEVALIDATOR_H_
+#include <string.h>
+#include "validators/listclaimvalidator.h"
 
-#include <stdint.h>
+ListClaimValidator::ListClaimValidator(const char *key, const char *const *lst_accepted, const size_t num_accepted)
+  :  lst_accepted_(lst_accepted), key_(key), num_accepted_(num_accepted) { }
 
-class MessageValidator {
- public:
-  virtual bool VerifySignature(const uint8_t *header, size_t num_header,
-                               const uint8_t *signature, size_t num_signature) = 0;
+bool ListClaimValidator::IsValid(const json_t *claim) const {
+  json_t *object = json_object_get(claim, key_);
+  if (!object || !json_is_string(object)) {
+    return false;
+  }
 
-  // if signature == 0, or *num_signate is less than what is needed for a signature
-  // the method should return false, and num_signature should contain the number
-  // of bytes needed to place the signature in.
-  virtual bool Sign(const uint8_t *header, size_t num_header,
-                    uint8_t *signature, size_t *num_signature) = 0;
-  virtual const char *algorithm() const = 0;
-};
+  const char *value = json_string_value(object);
+  for (size_t i = 0; i < num_accepted_; i++) {
+    if (strcmp(lst_accepted_[i], value) == 0)
+      return true;
+  }
 
-#endif  // SRC_VALIDATORS_MESSAGEVALIDATOR_H_
+  return false;
+}
+

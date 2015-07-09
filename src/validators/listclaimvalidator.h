@@ -20,22 +20,42 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#ifndef SRC_VALIDATORS_MESSAGEVALIDATOR_H_
-#define SRC_VALIDATORS_MESSAGEVALIDATOR_H_
+//
+// Created by Erwin Jansen on 7/8/15.
+//
 
-#include <stdint.h>
+#ifndef SRC_VALIDATORS_LISTCLAIMVALIDATOR_H_
+#define SRC_VALIDATORS_LISTCLAIMVALIDATOR_H_
 
-class MessageValidator {
+#include "validators/claimvalidator.h"
+
+class ListClaimValidator : public ClaimValidator {
  public:
-  virtual bool VerifySignature(const uint8_t *header, size_t num_header,
-                               const uint8_t *signature, size_t num_signature) = 0;
+  ListClaimValidator(const char *key, const char *const *lst_accepted, const size_t num_accepted);
+  bool IsValid(const json_t *claimset) const override;
 
-  // if signature == 0, or *num_signate is less than what is needed for a signature
-  // the method should return false, and num_signature should contain the number
-  // of bytes needed to place the signature in.
-  virtual bool Sign(const uint8_t *header, size_t num_header,
-                    uint8_t *signature, size_t *num_signature) = 0;
-  virtual const char *algorithm() const = 0;
+ private:
+  const char *const *lst_accepted_;
+  const char *key_;
+  const size_t num_accepted_;
 };
 
-#endif  // SRC_VALIDATORS_MESSAGEVALIDATOR_H_
+class IssValidator : public ListClaimValidator {
+ public:
+  IssValidator(const char *const *lst_accepted, const size_t num_accepted) : ListClaimValidator("iss", lst_accepted,
+      num_accepted) { }
+};
+
+class SubValidator : public ListClaimValidator {
+ public:
+  SubValidator(const char *const *lst_accepted, const size_t num_accepted) : ListClaimValidator("sub", lst_accepted,
+      num_accepted) { }
+};
+
+
+class AudValidator : public ListClaimValidator {
+ public:
+  AudValidator(const char *const *lst_accepted, const size_t num_accepted) : ListClaimValidator("aud", lst_accepted,
+      num_accepted) { }
+};
+#endif  // SRC_VALIDATORS_LISTCLAIMVALIDATOR_H_

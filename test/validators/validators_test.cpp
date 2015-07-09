@@ -7,29 +7,26 @@
 
 // Test for the various validators.
 
-std::array<const EVP_MD *, 3> hmacs = {EVP_sha256(),
-                                 EVP_sha384(),
-                                 EVP_sha512()};
-std::array<const char *, 3> names = {"HS256",
-                                     "HS384",
-                                     "HS512"};
+std::array<const EVP_MD *, 3> hmacs = {{EVP_sha256(), EVP_sha384(), EVP_sha512()}};
+std::array<const char *, 3> names = {{"HS256", "HS384", "HS512"}};
 
 TEST(hmacvalidator_test, unsigned_fails) {
     std::string message = "Hello World!";
-    for (int i = 0; i < hmacs.size(); i++) {
+    for (size_t i = 0; i < hmacs.size(); i++) {
         DigestValidator validator(names[i], hmacs[i], "foobar");
-        unsigned int len = validator.key_size();
-        std::unique_ptr<uint8_t> pSignature(new uint8_t[len]);
+        size_t len = validator.key_size();
+        std::unique_ptr<uint8_t[]> pSignature(new uint8_t[len]);
+        memset(pSignature.get(), 0, len);
         EXPECT_EQ(false, validator.VerifySignature((uint8_t *) message.c_str(), message.size(), pSignature.get(), len));
     }
 }
 
 TEST(hmacvalidator_test, signing_succeeds) {
     std::string message = "Hello World!";
-    for (int i = 0; i < hmacs.size(); i++) {
+    for (size_t i = 0; i < hmacs.size(); i++) {
         DigestValidator validator(names[i], hmacs[i], "foobar");
-        unsigned int len = validator.key_size();
-        std::unique_ptr<uint8_t> pSignature(new uint8_t[len]);
+        size_t len = validator.key_size();
+        std::unique_ptr<uint8_t[]> pSignature(new uint8_t[len]);
         EXPECT_EQ(true, validator.Sign((uint8_t *) message.c_str(), message.size(), pSignature.get(), &len));
         EXPECT_EQ(true, validator.VerifySignature((uint8_t *) message.c_str(), message.size(), pSignature.get(), len));
     }
@@ -37,10 +34,10 @@ TEST(hmacvalidator_test, signing_succeeds) {
 
 TEST(hmacvalidator_test, signing_on_substr) {
     std::string message = "Hello World!";
-    for (int i = 0; i < hmacs.size(); i++) {
+    for (size_t i = 0; i < hmacs.size(); i++) {
         DigestValidator validator(names[i], hmacs[i], "foobar");
-        unsigned int len = validator.key_size();
-        std::unique_ptr<uint8_t> pSignature(new uint8_t[len]);
+        size_t len = validator.key_size();
+        std::unique_ptr<uint8_t[]> pSignature(new uint8_t[len]);
         EXPECT_EQ(true, validator.Sign((uint8_t *) message.c_str(), 6, pSignature.get(), &len));
         EXPECT_EQ(true, validator.VerifySignature((uint8_t *) message.c_str(), 6, pSignature.get(), len));
     }
@@ -49,10 +46,10 @@ TEST(hmacvalidator_test, signing_on_substr) {
 
 TEST(hmacvalidator_test, signing_does_not_change_length) {
     std::string message = "Hello World!";
-    for (int i = 0; i < hmacs.size(); i++) {
+    for (size_t i = 0; i < hmacs.size(); i++) {
         DigestValidator validator(names[i], hmacs[i], "foobar");
-        unsigned int len = validator.key_size();
-        std::unique_ptr<uint8_t> pSignature(new uint8_t[len]);
+        size_t len = validator.key_size();
+        std::unique_ptr<uint8_t[]> pSignature(new uint8_t[len]);
         EXPECT_EQ(true, validator.Sign((uint8_t *) message.c_str(), message.size(), pSignature.get(), &len));
         EXPECT_EQ(len, validator.key_size());
     }
@@ -61,7 +58,7 @@ TEST(hmacvalidator_test, signing_does_not_change_length) {
 TEST(nonevalidator_test, signed_fails) {
     std::string message = "Hello World!";
     uint8_t signature[] = "not good!";
-    unsigned int len = strlen((char *) signature);
+    size_t len = strlen((char *) signature);
     NoneValidator validator;
 
     EXPECT_EQ(false, validator.VerifySignature((uint8_t *) message.c_str(), message.size(), signature, len));
@@ -71,7 +68,7 @@ TEST(nonevalidator_test, signed_fails) {
 TEST(nonevalidator_test, unsigned_succeeds) {
     std::string message = "Hello World!";
     const uint8_t signature[] = "";
-    unsigned int len = 0;
+    size_t len = 0;
     NoneValidator validator;
     EXPECT_EQ(true, validator.VerifySignature((uint8_t *) message.c_str(), message.size(), signature, len));
 }
@@ -79,7 +76,7 @@ TEST(nonevalidator_test, unsigned_succeeds) {
 TEST(nonevalidator_test, signing_clears_len) {
     std::string message = "Hello World!";
     uint8_t signature[] = "not good!";
-    unsigned int len = strlen((char *) signature);
+    size_t len = strlen((char *) signature);
     NoneValidator validator;
 
     EXPECT_EQ(true, validator.Sign((uint8_t *) message.c_str(), message.size(), signature, &len));

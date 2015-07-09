@@ -20,22 +20,30 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#ifndef SRC_VALIDATORS_MESSAGEVALIDATOR_H_
-#define SRC_VALIDATORS_MESSAGEVALIDATOR_H_
+#ifndef SRC_UTIL_ALLOCATORS_H_
+#define SRC_UTIL_ALLOCATORS_H_
+#include <jansson.h>
+#include <memory>
 
-#include <stdint.h>
-
-class MessageValidator {
+class json_ptr_delete {
  public:
-  virtual bool VerifySignature(const uint8_t *header, size_t num_header,
-                               const uint8_t *signature, size_t num_signature) = 0;
-
-  // if signature == 0, or *num_signate is less than what is needed for a signature
-  // the method should return false, and num_signature should contain the number
-  // of bytes needed to place the signature in.
-  virtual bool Sign(const uint8_t *header, size_t num_header,
-                    uint8_t *signature, size_t *num_signature) = 0;
-  virtual const char *algorithm() const = 0;
+  // constexpr default_delete() noexcept {}
+  // inline template <class U> default_delete(const default_delete<U>& d) noexcept { }
+  inline void operator() (json_t* ptr) const noexcept {
+    json_decref(ptr);
+  }
 };
 
-#endif  // SRC_VALIDATORS_MESSAGEVALIDATOR_H_
+class json_str_delete {
+ public:
+  inline void operator() (char* ptr) const noexcept {
+    free(ptr);
+  }
+};
+
+typedef std::unique_ptr<json_t, json_ptr_delete> unique_json_ptr;
+typedef std::unique_ptr<char, json_str_delete> unique_json_str;
+typedef std::unique_ptr<char[]> str_ptr;
+
+#endif  // SRC_UTIL_ALLOCATORS_H_
+

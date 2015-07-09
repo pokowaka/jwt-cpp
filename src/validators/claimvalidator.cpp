@@ -20,22 +20,20 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#ifndef SRC_VALIDATORS_MESSAGEVALIDATOR_H_
-#define SRC_VALIDATORS_MESSAGEVALIDATOR_H_
+#include "validators/claimvalidator.h"
 
-#include <stdint.h>
+bool AllClaimValidator::IsValid(const json_t *claimset) const {
+  for (size_t i = 0; i < num_claims_; i++) {
+    if (!lst_claims_[i]->IsValid(claimset))
+      return false;
+  }
+  return true;
+}
 
-class MessageValidator {
- public:
-  virtual bool VerifySignature(const uint8_t *header, size_t num_header,
-                               const uint8_t *signature, size_t num_signature) = 0;
-
-  // if signature == 0, or *num_signate is less than what is needed for a signature
-  // the method should return false, and num_signature should contain the number
-  // of bytes needed to place the signature in.
-  virtual bool Sign(const uint8_t *header, size_t num_header,
-                    uint8_t *signature, size_t *num_signature) = 0;
-  virtual const char *algorithm() const = 0;
-};
-
-#endif  // SRC_VALIDATORS_MESSAGEVALIDATOR_H_
+bool AnyClaimValidator::IsValid(const json_t *claimset) const {
+  for (size_t i = 0; i < num_claims_; i++) {
+    if (lst_claims_[i]->IsValid(claimset))
+      return true;
+  }
+  return false;
+}

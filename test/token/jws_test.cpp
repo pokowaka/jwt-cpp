@@ -13,6 +13,17 @@ TEST(jws_test, header_signature) {
   EXPECT_EQ(true, jws.VerifySignature("HS256", header.c_str(), header.size(), signature.c_str(), signature.size()));
 }
 
+TEST(jws_test, can_sign) {
+  HS256Validator validator("secret");
+  JwsVerifier jws(&validator);
+  std::string header= "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9";
+  std::string expected = "TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ";
+  char buffer[4096];
+  size_t num_buffer = 4096;
+
+  EXPECT_STREQ(expected.c_str(), jws.Sign("HS256", header.c_str(), header.size(), buffer, &num_buffer));
+}
+
 TEST(jws_test, no_such_algorithm) {
   HS256Validator validator("secret");
   JwsVerifier jws(&validator);

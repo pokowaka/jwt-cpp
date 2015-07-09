@@ -20,22 +20,28 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#ifndef SRC_VALIDATORS_MESSAGEVALIDATOR_H_
-#define SRC_VALIDATORS_MESSAGEVALIDATOR_H_
+#include "validators/timevalidator.h"
 
-#include <stdint.h>
 
-class MessageValidator {
- public:
-  virtual bool VerifySignature(const uint8_t *header, size_t num_header,
-                               const uint8_t *signature, size_t num_signature) = 0;
+UtcClock TimeValidator::utc_clock_ = UtcClock();
 
-  // if signature == 0, or *num_signate is less than what is needed for a signature
-  // the method should return false, and num_signature should contain the number
-  // of bytes needed to place the signature in.
-  virtual bool Sign(const uint8_t *header, size_t num_header,
-                    uint8_t *signature, size_t *num_signature) = 0;
-  virtual const char *algorithm() const = 0;
-};
+bool TimeValidator::IsValid(const json_t *claim) const {
+    json_t *object = json_object_get(claim, key_);
+    if (!object || !json_is_integer(object)) {
+        return false;
+    }
 
-#endif  // SRC_VALIDATORS_MESSAGEVALIDATOR_H_
+    int64_t time = json_integer_value(object);
+    if (time < 0)
+        return false;
+
+    int64_t diff = clock_->Now() - time;
+    int64_t min = diff - leeway_;
+    int64_t max = diff + leeway_;
+
+    if (sign_) {
+        return (min >= 0 || max >= 0);
+    }
+
+    return (min <= 0 || max <= 0);
+}

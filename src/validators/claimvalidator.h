@@ -20,22 +20,36 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#ifndef SRC_VALIDATORS_MESSAGEVALIDATOR_H_
-#define SRC_VALIDATORS_MESSAGEVALIDATOR_H_
+#ifndef SRC_VALIDATORS_CLAIMVALIDATOR_H_
+#define SRC_VALIDATORS_CLAIMVALIDATOR_H_
 
-#include <stdint.h>
+#include <jansson.h>
 
-class MessageValidator {
+class ClaimValidator {
  public:
-  virtual bool VerifySignature(const uint8_t *header, size_t num_header,
-                               const uint8_t *signature, size_t num_signature) = 0;
-
-  // if signature == 0, or *num_signate is less than what is needed for a signature
-  // the method should return false, and num_signature should contain the number
-  // of bytes needed to place the signature in.
-  virtual bool Sign(const uint8_t *header, size_t num_header,
-                    uint8_t *signature, size_t *num_signature) = 0;
-  virtual const char *algorithm() const = 0;
+  virtual bool IsValid(const json_t *claimset) const = 0;
 };
 
-#endif  // SRC_VALIDATORS_MESSAGEVALIDATOR_H_
+class AllClaimValidator : public ClaimValidator {
+ public:
+  AllClaimValidator(const ClaimValidator *const *lstClaims, const size_t numClaims) : lst_claims_(lstClaims),
+  num_claims_(numClaims) { }
+  bool IsValid(const json_t *claimset) const override;
+
+ private:
+  const ClaimValidator *const *lst_claims_;
+  const size_t num_claims_;
+};
+
+class AnyClaimValidator :  public ClaimValidator {
+ public:
+  AnyClaimValidator(const ClaimValidator *const *lstClaims, const size_t numClaims) : lst_claims_(lstClaims),
+  num_claims_(numClaims) { }
+
+  bool IsValid(const json_t *claimset) const override;
+
+ private:
+  const ClaimValidator *const *lst_claims_;
+  const size_t num_claims_;
+};
+#endif  // SRC_VALIDATORS_CLAIMVALIDATOR_H_

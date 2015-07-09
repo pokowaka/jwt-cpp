@@ -1,20 +1,21 @@
 # The name of our project is "HELLO". CMakeLists files in this project can 
 # refer to the root source directory of the project as ${HELLO_SOURCE_DIR} and 
 # to the root binary directory of the project as ${HELLO_BINARY_DIR}. 
-CMAKE_MINIMUM_REQUIRED (VERSION 3.1.0 FATAL_ERROR) 
-PROJECT (JWT-CPP) 
+CMAKE_MINIMUM_REQUIRED (VERSION 2.8 FATAL_ERROR) 
+PROJECT (JWT)
 
-SET (TOOLS_DIRECTORY ${JWT-CPP_SOURCE_DIR}/tools)
+SET (TOOLS_DIRECTORY ${JWT_SOURCE_DIR}/tools)
 INCLUDE (CheckFunctionExists)
 
 LIST (APPEND CMAKE_MODULE_PATH "${TOOLS_DIRECTORY}/cmake/rpavlik")
 LIST (APPEND CMAKE_MODULE_PATH "${TOOLS_DIRECTORY}/cmake")
 INCLUDE(GetGitRevisionDescription)
+INCLUDE(cpplint)
+INCLUDE(CodeCoverage)
+
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 git_get_exact_tag(GIT_TAG)
 
-
-# FIND_PACKAGE(OpenSSL)
 
 MESSAGE ("Git version: ${GIT_SHA1}")
 if (GIT_TAG)
@@ -24,25 +25,18 @@ ELSE ()
     SET (GIT_TAG "untagged")
 ENDIF (GIT_TAG)
 
-OPTION(DEBUG_MODE          "Enable debug output [default: ON]"      OFF)
+OPTION(DEBUG_MODE          "Enable debug output [default: ON]"      ON)
 OPTION(ENABLE_GPERF_TOOLS  "Enable google perftools [default: OFF]" OFF)
 
 #
 # Compiler SETtings
 #
-#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wpointer-arith")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-long-long")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-function")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wunused-variable")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic")
-
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 IF(DEBUG_MODE MATCHES "ON")
     MESSAGE ("Setting debug flags")
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -fprofile-arcs -ftest-coverage")
+    SET(CMAKE_C_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
     INCLUDE_DIRECTORIES ("/usr/local/include/valgrind")
     IF (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         LINK_LIBRARIES(gcov)
@@ -57,14 +51,16 @@ ENDIF(DEBUG_MODE MATCHES "ON")
 
 # Jansson
 MESSAGE ("-- Looking for jansson")
-UNSET(JANSSON_LIBRARY)
-FIND_LIBRARY (JANSSON_LIBRARY NAMES jansson)
-If (JANSSON_LIBRARY)
+UNSET(JANSSON)
+FIND_LIBRARY (JANSSON NAMES jansson)
+If (JANSSON)
     MESSAGE ("-- Jannson Already Available")
-    MESSAGE ("-- ${JANSSON_LIBRARY}")
-ELSE (JANSSON_LIBRARY)
-    MESSAGE ("-- Missing jansson")
-ENDIF (JANSSON_LIBRARY)
+    MESSAGE ("-- ${JANSSON}")
+ELSE (JANSSON)
+    MESSAGE ("-- Missing jansson, building locally")
+    SET (JANSSON_BUILD_DOCS OFF)
+    add_subdirectory ("ext/jansson")
+ENDIF (JANSSON)
 
 # Gperf tools
 IF(ENABLE_GPERF_TOOLS MATCHES "ON")
@@ -128,15 +124,10 @@ ELSE()
 ENDIF()
 
 # General include directories
-INCLUDE_DIRECTORIES (src/include)
 INCLUDE_DIRECTORIES (src)
+INCLUDE_DIRECTORIES ( ${JANSSON_INCLUDE_DIRS} )
 LINK_DIRECTORIES (${OPENSSL_LIBRARY_DIRS})
-MESSAGE( "CMAKE_SYSTEM_LIBRARY_PATH=${CMAKE_SYSTEM_LIBRARY_PATH}" )
-
-
-# add subdirectory at the end so we inherit all values SET up here.
 ADD_SUBDIRECTORY (src)
-
 
 #-------------------
 # Test
