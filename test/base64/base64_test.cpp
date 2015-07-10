@@ -24,6 +24,28 @@ TEST(base64_test,  quick_fox) {
     EXPECT_STREQ(inputData.c_str(), Base64Encode::DecodeUrl(expectedResult).c_str());
 }
 
+TEST(base64_test, buffer_overflows) {
+  std::string str_dec = "VGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5IGRvZyBhbmQgc29tZSBleHRy";
+  char buffer[4096];
+
+  for(size_t num_dec = 6; num_dec < str_dec.size(); num_dec++) {
+    for(size_t num_buffer = 0; num_buffer < Base64Encode::DecodeBytesNeeded(num_dec) / 2 ; num_buffer++) {
+      EXPECT_EQ(1, Base64Encode::DecodeUrl(str_dec.c_str(), num_dec, buffer, &num_buffer));
+    }
+  }
+}
+
+TEST(base64_test, buffer_underflows) {
+  std::string str_enc = "The quick brown fox jumps over the lazy dog and some extr";
+  char buffer[4096];
+
+  for(size_t num_enc = 6; num_enc < str_enc.size(); num_enc++) {
+    for(size_t num_buffer = 0; num_buffer < Base64Encode::EncodeBytesNeeded(num_enc) / 2; num_buffer++) {
+      EXPECT_EQ(1, Base64Encode::EncodeUrl(str_enc.c_str(), num_enc, buffer, num_buffer));
+    }
+  }
+}
+
 TEST(base64_test, partial) {
  const char* foobar = "Zm9vYmFy";
  char buf[] = {0, 0, 0, 0, 0, 0, 0, 0 };

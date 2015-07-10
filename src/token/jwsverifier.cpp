@@ -68,12 +68,14 @@ char* JwsVerifier::Sign(std::string algorithm, const char *header, size_t num_he
   if (alg == validator_map_.end()) {
     return nullptr;
   }
+  MessageValidator* validator = alg->second;
 
   // Calculate size needed to store the signature..
   size_t num_raw_signature = 0;
-  alg->second->Sign(reinterpret_cast<const uint8_t*>(header), num_header, NULL, &num_raw_signature);
+  validator->Sign(reinterpret_cast<const uint8_t*>(header), num_header, NULL, &num_raw_signature);
 
   size_t needed = Base64Encode::EncodeBytesNeeded(num_raw_signature);
+  // We have to little, set the needed size.
   if (signature == NULL || *num_signature < needed) {
     *num_signature = needed;
     return nullptr;
@@ -82,12 +84,13 @@ char* JwsVerifier::Sign(std::string algorithm, const char *header, size_t num_he
   // The maximum length the raw signature can be after base64 encoding this result
   std::unique_ptr<uint8_t[]> raw_signature(new uint8_t[num_raw_signature]);
 
-  alg->second->Sign(reinterpret_cast<const uint8_t*>(header), num_header, (raw_signature.get()), &num_raw_signature);
-  if (Base64Encode::EncodeUrl(
-        reinterpret_cast<char*>(raw_signature.get()), num_raw_signature, signature, *num_signature)) {
+  if (!validator->Sign(reinterpret_cast<const uint8_t*>(header),
+        num_header, (raw_signature.get()), &num_raw_signature)) {
     return nullptr;
   }
 
+  // num_signature >= needed so the buffer is big enough
+  Base64Encode::EncodeUrl(reinterpret_cast<char*>(raw_signature.get()), num_raw_signature, signature, *num_signature);
   return signature;
 }
 

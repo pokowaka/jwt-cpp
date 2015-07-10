@@ -59,6 +59,45 @@ TEST(token_test, signed) {
     EXPECT_EQ(true, token->VerifyClaims(sub));
 }
 
+TEST(token_test, parse_and_validate) {
+    HS256Validator validator("secret");
+    JwsVerifier verifier(&validator);
+
+    const char* const accepted[] = { "1234567890", "bar" };
+    SubValidator sub(accepted, 2);
+
+    std::string tokenstr = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ";
+    std::unique_ptr<Token> token(Token::Parse(tokenstr.c_str(), tokenstr.size(), verifier, sub));
+
+    EXPECT_TRUE(token.get() != NULL);
+}
+
+TEST(token_test, parse_and_validate_bad_signature) {
+    HS512Validator validator("not_your_secret");
+    JwsVerifier verifier(&validator);
+
+    const char* const accepted[] = { "1234567890", "bar" };
+    SubValidator sub(accepted, 2);
+
+    std::string tokenstr = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ";
+    std::unique_ptr<Token> token(Token::Parse(tokenstr.c_str(), tokenstr.size(), verifier, sub));
+
+    EXPECT_TRUE(token.get() == NULL);
+}
+
+TEST(token_test, parse_and_validate_bad_claims) {
+    HS256Validator validator("secret");
+    JwsVerifier verifier(&validator);
+
+    const char* const accepted[] = { "foo", "bar" };
+    SubValidator sub(accepted, 2);
+
+    std::string tokenstr = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ";
+    std::unique_ptr<Token> token(Token::Parse(tokenstr.c_str(), tokenstr.size(), verifier, sub));
+
+    EXPECT_TRUE(token.get() == NULL);
+}
+
 TEST(token_test, payload_deserialize) {
     std::string tokenstr = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ";
     std::unique_ptr<Token> token(Token::Parse(tokenstr.c_str(), tokenstr.size()));

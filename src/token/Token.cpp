@@ -37,18 +37,14 @@ char* Token::Encode(json_t* payload, MessageValidator* validator) {
   size_t num_header = strlen(str_header.get());
   size_t num_enc_header = Base64Encode::EncodeBytesNeeded(num_header);
   str_ptr enc_header(new char[num_enc_header]);
-  if (Base64Encode::EncodeUrl(str_header.get(), num_header, enc_header.get(), num_enc_header)) {
-    return nullptr;
-  }
+  Base64Encode::EncodeUrl(str_header.get(), num_header, enc_header.get(), num_enc_header);
 
   // Encode the payload
   unique_json_str str_payload(json_dumps(payload, JSON_COMPACT));
   size_t num_payload = strlen(str_payload.get());
   size_t num_enc_payload = Base64Encode::EncodeBytesNeeded(num_payload);
   str_ptr enc_payload(new char[num_enc_payload]);
-  if (Base64Encode::EncodeUrl(str_payload.get(), num_payload, enc_payload.get(), num_enc_payload)) {
-    return nullptr;
-  }
+  Base64Encode::EncodeUrl(str_payload.get(), num_payload, enc_payload.get(), num_enc_payload);
 
   // Now combine the header & payload (Note, that num_enc_payload & num_enc_header contain \0 char)
   size_t num_signed_area  = num_enc_payload + num_enc_header;
@@ -69,9 +65,7 @@ char* Token::Encode(json_t* payload, MessageValidator* validator) {
 
   size_t num_enc_signature = Base64Encode::EncodeBytesNeeded(num_signature);
   str_ptr enc_signature(new char[num_enc_signature]);
-  if (Base64Encode::EncodeUrl(str_signature.get(), num_signature, enc_signature.get(), num_enc_signature)) {
-    return nullptr;
-  }
+  Base64Encode::EncodeUrl(str_signature.get(), num_signature, enc_signature.get(), num_enc_signature);
 
   size_t num_token = num_signed_area + num_enc_signature + 1;
   str_ptr token(new char[num_token]);
