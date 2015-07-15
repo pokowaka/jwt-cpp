@@ -6,6 +6,8 @@
 #include <jansson.h>
 #include "token/jwsverifier.h"
 
+#define MANY_TIMES_TOKEN 500
+
 TEST(token_test, missing_payload) {
     std::string tokenstr = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkJBUiJ9";
     std::unique_ptr<Token> token(Token::Parse(tokenstr.c_str(), tokenstr.size()));
@@ -24,9 +26,9 @@ TEST(token_test, missing_signature) {
 TEST(token_test, valid) {
     std::string tokenstr = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ";
     std::unique_ptr<Token> token(Token::Parse(tokenstr.c_str(), tokenstr.size()));
-    json_t *header = token->header_claims();
+    ASSERT_NE(nullptr, token);
 
-    EXPECT_NE(nullptr, token);
+    json_t *header = token->header_claims();
     EXPECT_EQ(false, token->IsEncrypted());
     EXPECT_STREQ("JWT", json_string_value(json_object_get(header, "typ")));
 }
@@ -113,11 +115,13 @@ TEST(token_test, payload_deserialize) {
 
 
 TEST(token_test, perf_signed) {
-    std::string tokenstr = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ";
-    HS256Validator validator("secret");
+    // std::string tokenstr = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ";
+    std::string tokenstr = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.ueNf9M7B1LolUMR-9Rgnk-bPyzSbMeSW2fWI598ruCELjES2lEadXw38kCiZ1RGP7LS5pf272IrFMi3aYxaFBw";
+    //HS256Validator validator("secret");
+    HS512Validator validator("secret");
     JwsVerifier verifier(&validator);
 
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < MANY_TIMES_TOKEN; i++) {
         std::unique_ptr<Token> token(Token::Parse(tokenstr.c_str(), tokenstr.size()));
         EXPECT_EQ(true, token->VerifySignature(verifier));
         EXPECT_NE(nullptr, token->payload_claims());

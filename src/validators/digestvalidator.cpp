@@ -45,10 +45,10 @@ bool DigestValidator::VerifySignature(const uint8_t *header, size_t num_header,
 
   // We could probably hold this on the stack..
   size_t num_local_signature = key_size_;
-  std::unique_ptr<uint8_t[]> local_signature(new uint8_t[key_size_]);
-  return Sign(header, num_header, local_signature.get(), &num_local_signature)
+  uint8_t local_signature[MAX_KEYLENGTH];
+  return Sign(header, num_header, local_signature, &num_local_signature)
     && num_local_signature == key_size_
-    && const_time_cmp(local_signature.get(), signature, key_size_) == 0;
+    && const_time_cmp(local_signature, signature, key_size_) == 0;
 }
 
 int DigestValidator::const_time_cmp(const void *a, const void *b, const size_t size) {

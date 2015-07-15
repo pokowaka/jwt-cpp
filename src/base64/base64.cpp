@@ -28,62 +28,63 @@
 #define EQUALS     65
 #define INVALID    66
 
+inline char Base64Encode::EncodeChar(uint8_t in) {
+  const char table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+  return table[in];
+}
 
-// Implementations from
-// https://en.wikibooks.org/wiki/Algorithm_Implementation/Miscellaneous/Base64
+inline char Base64Encode::DecodeChar(uint8_t in) {
+  const char table[] = {
+    66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 64, 66, 66, 66, 66,
+    66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
+    66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 62, 66,
+    62, 66, 63, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 66, 66,
+    66, 65, 66, 66, 66, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+    10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+    25, 66, 66, 66, 66, 63, 66, 26, 27, 28, 29, 30, 31, 32, 33,
+    34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
+    49, 50, 51, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
+    66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
+    66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
+    66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
+    66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
+    66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
+    66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
+    66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
+    66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66};
+  return table[in];
+}
 
-// Lookup table for encoding
-// If you want to use an alternate alphabet, change the characters here
-const char Base64Encode::encode_table_[] =
-"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-const char Base64Encode::pad_char_ = '=';
-const char Base64Encode::decode_table_[] = {
-  66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 64, 66, 66, 66, 66,
-  66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
-  66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 62, 66,
-  62, 66, 63, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 66, 66,
-  66, 65, 66, 66, 66, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-  25, 66, 66, 66, 66, 63, 66, 26, 27, 28, 29, 30, 31, 32, 33,
-  34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
-  49, 50, 51, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
-  66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
-  66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
-  66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
-  66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
-  66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
-  66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
-  66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
-  66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66};
 
 int Base64Encode::DecodeUrl(const char *decode, size_t num_decode, char *out, size_t *num_out) {
+  if (*num_out < DecodeBytesNeeded(num_decode))
+    return 1;
+
   const char *end = decode + num_decode;
+  const char *out_start = out;
   char iter = 0;
-  size_t buf = 0, len = 0;
+  uint32_t buf = 0;
 
   while (decode < end) {
     uint8_t ch = *decode++;
-    char c = decode_table_[ch];
+    char c = DecodeChar(ch);
 
     switch (c) {
       case WHITESPACE:
-        return 1;   /* skip whitespace */
+        return 1;   // skip whitespace
       case INVALID:
-        return 1;   /* invalid input, return error */
+        return 1;   // invalid input, return error
       case EQUALS:
-        decode = end;   /* pad character, end of data */
+        decode = end;   // pad character, end of data
         continue;
       default:
         buf = buf << 6 | c;
         iter++;   // increment the number of iteration
-        /* If the buffer is full, split it into bytes */
+        // If the buffer is full, split it into bytes
         if (iter == 4) {
-          if ((len += 3) > *num_out) {
-            return 1; /* buffer overflow */
-          }
-          *(out++) = (buf >> 16) & 255;
-          *(out++) = (buf >> 8) & 255;
-          *(out++) = buf & 255;
+          *(out++) = (buf >> 16) & 0xff;
+          *(out++) = (buf >> 8) & 0xff;
+          *(out++) = buf & 0xff;
           buf = 0;
           iter = 0;
         }
@@ -91,86 +92,58 @@ int Base64Encode::DecodeUrl(const char *decode, size_t num_decode, char *out, si
   }
 
   if (iter == 3) {
-    if ((len += 2) > *num_out) {
-      return 1; /* buffer overflow */
-    }
-    *(out++) = (buf >> 10) & 255;
-    *(out++) = (buf >> 2) & 255;
+    *(out++) = (buf >> 10) & 0xff;
+    *(out++) = (buf >> 2) & 0xff;
   } else {
     if (iter == 2) {
-      if (++len > *num_out) {
-        return 1; /* buffer overflow */
-      }
-      *(out++) = (buf >> 4) & 255;
+      *(out++) = (buf >> 4) & 0xff;
     }
   }
 
-  *num_out = len; /* modify to reflect the actual output size */
+  *num_out = (out - out_start);  // modify to reflect the actual output size
   return 0;
 }
 
-int Base64Encode::EncodeUrl(const char *encode, size_t num_encode, char *result, size_t num_result) {
-  const uint8_t *data = reinterpret_cast<const uint8_t*>(encode);  // No sign weirdness please..
-  size_t resultIndex = 0;
-  size_t x;
-  uint32_t n = 0;
-  uint8_t n0, n1, n2, n3;
+int Base64Encode::EncodeUrl(const char* encode, size_t num_encode, char* result, size_t num_result) {
+  if (EncodeBytesNeeded(num_encode) > num_result)
+    return 1;
 
-  /* increment over the size of the string, three characters at a time */
-  for (x = 0; x < num_encode; x += 3) {
-    /* these three 8-bit (ASCII) characters become one 24-bit number */
-    n = static_cast<uint32_t>(data[x]) << 16;
-    if ((x + 1) < num_encode) {
-      n += static_cast<uint32_t>(data[x + 1]) << 8;
-    }
-
-    if ((x + 2) < num_encode) {
-      n += data[x + 2];
-    }
-
-    /* this 24-bit number gets separated into four 6-bit numbers */
-    n0 = static_cast<uint8_t>((n >> 18) & 63);
-    n1 = static_cast<uint8_t>((n >> 12) & 63);
-    n2 = static_cast<uint8_t>((n >> 6) & 63);
-    n3 = static_cast<uint8_t>(n & 63);
-
-    /*
-     * if we have one byte available, then its encoding is spread
-     * out over two characters
-     */
-    if (resultIndex >= num_result) {
-      return 1;   /* indicate failure: buffer too small */
-    }
-    result[resultIndex++] = encode_table_[n0];
-    if (resultIndex >= num_result) {
-      return 1;   /* indicate failure: buffer too small */
-    }
-    result[resultIndex++] = encode_table_[n1];
-
-    /*
-     * if we have only two bytes available, then their encoding is
-     * spread out over three chars
-     */
-    if ((x + 1) < num_encode) {
-      if (resultIndex >= num_result) {
-        return 1;   /* indicate failure: buffer too small */
-      }
-      result[resultIndex++] = encode_table_[n2];
-    }
-
-    /*
-     * if we have all three bytes available, then their encoding is spread
-     * out over four characters
-     */
-    if ((x + 2) < num_encode) {
-      if (resultIndex >= num_result) return 1;   /* indicate failure: buffer too small */
-      result[resultIndex++] = encode_table_[n3];
-    }
+  if (num_encode == 0) {
+    *result = 0;
+    return 0;
   }
 
-  // No padding as per JWT spec (See section 6)
-  result[resultIndex] = 0;
-  return 0;   /* indicate success */
+  size_t eLen = (num_encode / 3) * 3;                              // Length of even 24-bits.
+
+  // Encode even 24-bits
+  for (size_t s = 0; s < eLen; s += 3) {
+    // Copy next three bytes into lower 24 bits of int, paying attension to sign.
+    uint32_t i = (*encode++ & 0xff) << 16;
+    i = i | (*encode++ & 0xff) << 8;
+    i = i | (*encode++ & 0xff);
+
+    // Encode the int into four chars
+    *result++ =  EncodeChar((i >> 18) & 0x3f);
+    *result++ =  EncodeChar((i >> 12) & 0x3f);
+    *result++ =  EncodeChar((i >> 6) & 0x3f);
+    *result++ =  EncodeChar(i & 0x3f);
+  }
+
+  // Pad and encode last bits if source isn't an even 24 bits.
+  size_t left = num_encode - eLen;   // 0 - 2.
+  if (left > 0) {
+    // Prepare the int
+    uint32_t i = ((*encode++ & 0xff) << 10);
+    i = i | (left == 2 ? ((*encode & 0xff) << 2) : 0);
+
+    // Set last four chars
+    *result++ = EncodeChar(i >> 12);
+    *result++ = EncodeChar((i >> 6) & 0x3f);
+    *result++ = left == 2 ? EncodeChar(i & 0x3f) : 0;
+  }
+
+  *result++ = 0;
+  return 0;
 }
 
 std::string Base64Encode::EncodeUrl(const std::string &input) {

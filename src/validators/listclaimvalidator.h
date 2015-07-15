@@ -21,9 +21,6 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
-// Created by Erwin Jansen on 7/8/15.
-//
-
 #ifndef SRC_VALIDATORS_LISTCLAIMVALIDATOR_H_
 #define SRC_VALIDATORS_LISTCLAIMVALIDATOR_H_
 
@@ -42,20 +39,20 @@ class ListClaimValidator : public ClaimValidator {
 
 class IssValidator : public ListClaimValidator {
  public:
-  IssValidator(const char *const *lst_accepted, const size_t num_accepted) : ListClaimValidator("iss", lst_accepted,
-      num_accepted) { }
+  IssValidator(const char *const *lst_accepted, const size_t num_accepted) :
+    ListClaimValidator("iss", lst_accepted, num_accepted) { }
 };
 
 class SubValidator : public ListClaimValidator {
  public:
-  SubValidator(const char *const *lst_accepted, const size_t num_accepted) : ListClaimValidator("sub", lst_accepted,
-      num_accepted) { }
+  SubValidator(const char *const *lst_accepted, const size_t num_accepted) :
+    ListClaimValidator("sub", lst_accepted, num_accepted) { }
 };
 
 
 class AudValidator : public ListClaimValidator {
  public:
-  AudValidator(const char *const *lst_accepted, const size_t num_accepted) : ListClaimValidator("aud", lst_accepted,
-      num_accepted) { }
+  AudValidator(const char *const *lst_accepted, const size_t num_accepted) :
+    ListClaimValidator("aud", lst_accepted, num_accepted) { }
 };
 #endif  // SRC_VALIDATORS_LISTCLAIMVALIDATOR_H_

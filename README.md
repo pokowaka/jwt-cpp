@@ -60,12 +60,23 @@ Validating tokens works as follows:
 
 Jwt-cpp uses the [CMake](http://www.cmake.org/) cross platform build tools to build. Once you have installed the proper dependencies you can do the following:
 
+For release:
+
 ```
-mkdir build
-cd build
-cmake ..
+mkdir release 
+cd release 
+cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 ```
+
+For debug:
+```
+mkdir debug 
+cd debug 
+cmake -DCMAKE_BUILD_TYPE=Debug ..
+make
+```
+
 
 
 ### Dependencies in linux

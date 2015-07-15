@@ -64,12 +64,12 @@ class Base64Encode {
    * @return the number of bytes encoded in this string
    */
   inline static size_t EncodeBytesNeeded(size_t num_encode) {
+    // Well, the spec calls out to not add padding..
     return 1 + (1 + (num_encode / 3)) * 4 + (num_encode % 3 == 0 ? -4 : num_encode % 3 - 3);
   }
 
  private:
-  static const char pad_char_;
-  static const char encode_table_[];
-  static const char decode_table_[];
+  inline static char DecodeChar(uint8_t in);
+  inline static char EncodeChar(uint8_t in);
 };
 #endif  // SRC_BASE64_BASE64_H_

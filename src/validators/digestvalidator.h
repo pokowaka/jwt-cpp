@@ -27,6 +27,9 @@
 #include <string>
 #include "validators/messagevalidator.h"
 
+// Maximum length of a signature
+// Note that SHA512 is 64 bytes.
+#define MAX_KEYLENGTH 64
 /**
  * Can sign & validate using an openssl digest function. Signing and Verification
  * are not thread safe functions.
@@ -34,17 +37,20 @@
 class DigestValidator : public MessageValidator {
  public:
   explicit DigestValidator(const char *algorithm, const EVP_MD *md, const std::string &key);
-  ~DigestValidator();
+  virtual ~DigestValidator();
 
   bool VerifySignature(const uint8_t *header, size_t num_header,
                        const uint8_t *signature, size_t num_signature);
   bool Sign(const uint8_t *header, size_t num_header,
             uint8_t *signature, size_t *num_signature);
 
-  inline unsigned int key_size() { return key_size_; }
+  inline unsigned int key_size() const { return key_size_; }
   inline const char *algorithm() const { return algorithm_; }
 
  private:
+  DigestValidator(const DigestValidator&);
+  DigestValidator& operator=(const DigestValidator&);
+
   static int const_time_cmp(const void* a, const void* b, const size_t size);
   HMAC_CTX ctx_;
   unsigned int key_size_;

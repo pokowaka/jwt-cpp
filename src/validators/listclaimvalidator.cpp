@@ -23,7 +23,9 @@
 #include <string.h>
 #include "validators/listclaimvalidator.h"
 
-ListClaimValidator::ListClaimValidator(const char *key, const char *const *lst_accepted, const size_t num_accepted)
+ListClaimValidator::ListClaimValidator(const char *key,
+    const char *const *lst_accepted,
+    const size_t num_accepted)
   :  lst_accepted_(lst_accepted), key_(key), num_accepted_(num_accepted) { }
 
 bool ListClaimValidator::IsValid(const json_t *claim) const {

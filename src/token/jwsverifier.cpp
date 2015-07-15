@@ -50,14 +50,18 @@ bool JwsVerifier::VerifySignature(std::string algorithm, const char *header, siz
   }
 
   size_t num_dec_signature = Base64Encode::DecodeBytesNeeded(num_signature);
-  str_ptr dec_signature(new char[num_dec_signature]);
+  char dec_signature[MAX_SIGNATURE_LENGTH];
 
-  if (Base64Encode::DecodeUrl(signature, num_signature, dec_signature.get(), &num_dec_signature)) {
+  if (num_dec_signature > MAX_SIGNATURE_LENGTH) {
+    return false;
+  }
+
+  if (Base64Encode::DecodeUrl(signature, num_signature, dec_signature, &num_dec_signature)) {
     return false;
   }
 
   return alg->second->VerifySignature(reinterpret_cast<const uint8_t*>(header),
-      num_header, reinterpret_cast<const uint8_t*>(dec_signature.get()),
+      num_header, reinterpret_cast<const uint8_t*>(dec_signature),
       static_cast<unsigned int>(num_dec_signature));
 }
 
