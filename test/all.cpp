@@ -6,5 +6,6 @@
 #include "token/token_test.cpp"
 #include "token/jws_test.cpp"
 #include "validators/claim_validators_test.cpp"
+#include "validators/claim_validators_factory_test.cpp"
 #include "validators/validators_test.cpp"
 

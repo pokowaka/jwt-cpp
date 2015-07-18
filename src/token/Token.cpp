@@ -37,14 +37,14 @@ char* Token::Encode(json_t* payload, MessageValidator* validator) {
   size_t num_header = strlen(str_header.get());
   size_t num_enc_header = Base64Encode::EncodeBytesNeeded(num_header);
   str_ptr enc_header(new char[num_enc_header]);
-  Base64Encode::EncodeUrl(str_header.get(), num_header, enc_header.get(), num_enc_header);
+  Base64Encode::EncodeUrl(str_header.get(), num_header, enc_header.get(), &num_enc_header);
 
   // Encode the payload
   unique_json_str str_payload(json_dumps(payload, JSON_COMPACT));
   size_t num_payload = strlen(str_payload.get());
   size_t num_enc_payload = Base64Encode::EncodeBytesNeeded(num_payload);
   str_ptr enc_payload(new char[num_enc_payload]);
-  Base64Encode::EncodeUrl(str_payload.get(), num_payload, enc_payload.get(), num_enc_payload);
+  Base64Encode::EncodeUrl(str_payload.get(), num_payload, enc_payload.get(), &num_enc_payload);
 
   // Now combine the header & payload (Note, that num_enc_payload & num_enc_header contain \0 char)
   size_t num_signed_area  = num_enc_payload + num_enc_header;
@@ -54,7 +54,8 @@ char* Token::Encode(json_t* payload, MessageValidator* validator) {
 
   size_t num_signature = 0;
   size_t strlen_signed_area = num_signed_area - 1;  // We don't want to sign the null terminator!
-  validator->Sign(reinterpret_cast<uint8_t*>(str_signed_area.get()), strlen_signed_area, NULL, &num_signature);
+  validator->Sign(reinterpret_cast<uint8_t*>(str_signed_area.get()),
+      strlen_signed_area, NULL, &num_signature);
 
   str_ptr str_signature(new char[num_signature]);
   if (!validator->Sign(reinterpret_cast<uint8_t*>(str_signed_area.get()),
@@ -65,7 +66,8 @@ char* Token::Encode(json_t* payload, MessageValidator* validator) {
 
   size_t num_enc_signature = Base64Encode::EncodeBytesNeeded(num_signature);
   str_ptr enc_signature(new char[num_enc_signature]);
-  Base64Encode::EncodeUrl(str_signature.get(), num_signature, enc_signature.get(), num_enc_signature);
+  Base64Encode::EncodeUrl(str_signature.get(), num_signature,
+      enc_signature.get(), &num_enc_signature);
 
   size_t num_token = num_signed_area + num_enc_signature + 1;
   str_ptr token(new char[num_token]);
@@ -74,12 +76,42 @@ char* Token::Encode(json_t* payload, MessageValidator* validator) {
   return token.release();
 }
 
-bool Token::VerifyClaims(const ClaimValidator &claimValidator) {
-  return claimValidator.IsValid(payload_claims());
+bool Token::Decrypt(Jwe* decrypter) {
+  if (decrypted_.get() != nullptr)
+    return true;
+
+  uint8_t* decrypted;
+
+  size_t num_dec_payload = Base64Encode::DecodeBytesNeeded(num_payload_);
+  str_ptr dec_payload(new char[num_dec_payload]);
+  if (Base64Encode::DecodeUrl(payload_, num_payload_, dec_payload.get(), &num_dec_payload) != 0) {
+    return nullptr;
+  }
+
+
+  size_t num_dec_signature  = Base64Encode::DecodeBytesNeeded(num_signature_);
+  str_ptr dec_signature(new char[num_dec_signature]);
+  if (Base64Encode::DecodeUrl(signature_, num_signature_, dec_signature.get(),
+        &num_dec_signature) != 0) {
+    return nullptr;
+  }
+
+
+  if (decrypter->Decrypt(header_claims_, reinterpret_cast<uint8_t*>(dec_payload.get()),
+        num_dec_payload, reinterpret_cast<uint8_t*>(dec_signature.get()), num_dec_signature,
+        &decrypted, &num_decrypted_)) {
+    decrypted_.reset(decrypted);
+    return true;
+  }
+  return false;
 }
 
-Token *Token::Parse(const char *jws_token, size_t num_jws_token, const JwsVerifier &verifier,
-                    const ClaimValidator &validator) {
+bool Token::VerifyClaims(ClaimValidator *claimValidator) {
+  return claimValidator->IsValid(payload_claims());
+}
+
+Token *Token::Parse(const char *jws_token, size_t num_jws_token, JwsVerifier *verifier,
+                    ClaimValidator *validator) {
   std::unique_ptr<Token> token(Token::Parse(jws_token, num_jws_token));
   if (!token.get() || !token->VerifySignature(verifier) || !token->VerifyClaims(validator))
     return nullptr;
@@ -130,14 +162,16 @@ Token *Token::Parse(const char *jws_token, size_t num_jws_token) {
     return nullptr;
   }
 
-  return new Token(header, payload, signature, num_header, num_payload, num_signature, header_claims);
+  return new Token(header, payload, signature, num_header, num_payload,
+      num_signature, header_claims);
 }
 
-Token::Token(const char *header, const char *payload, const char *signature, size_t num_header, size_t num_payload,
+Token::Token(const char *header, const char *payload, const char *signature,
+    size_t num_header, size_t num_payload,
     size_t num_signature, json_t *header_claims) :
-  header_(header), payload_(payload), signature_(signature), num_header_(num_header), num_payload_(num_payload),
-  num_signature_(num_signature), invalid_payload_(false), header_claims_(header_claims),
-  payload_claims_(nullptr) {
+  header_(header), payload_(payload), signature_(signature), num_header_(num_header),
+  num_payload_(num_payload), num_signature_(num_signature), invalid_payload_(false),
+  header_claims_(header_claims), payload_claims_(nullptr) {
   }
 
 bool Token::IsEncrypted() {
@@ -168,10 +202,10 @@ json_t *Token::payload_claims() {
   return payload_claims_;
 }
 
-bool Token::VerifySignature(const JwsVerifier &verifier) {
+bool Token::VerifySignature(JwsVerifier *verifier) {
   json_t *alg = json_object_get(header_claims_, "alg");
   return alg != NULL && !IsEncrypted() &&
-    verifier.VerifySignature(json_string_value(alg),
+    verifier->VerifySignature(json_string_value(alg),
         header_, num_payload_ + num_header_ + 1,
         signature_, num_signature_);
 }

@@ -22,6 +22,7 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef SRC_BASE64_BASE64_H_
 #define SRC_BASE64_BASE64_H_
+#include <math.h>
 #include <string>
 
 /**
@@ -47,7 +48,7 @@ class Base64Encode {
    *
    * @return 0 on success
    */
-  static int EncodeUrl(const char *encode, size_t num_encode, char *result, size_t num_result);
+  static int EncodeUrl(const char *encode, size_t num_encode, char *result, size_t *num_result);
 
   /**
    * Gets the number of bytes needed to decode a base64 encoded string of the
@@ -65,7 +66,9 @@ class Base64Encode {
    */
   inline static size_t EncodeBytesNeeded(size_t num_encode) {
     // Well, the spec calls out to not add padding..
-    return 1 + (1 + (num_encode / 3)) * 4 + (num_encode % 3 == 0 ? -4 : num_encode % 3 - 3);
+    int left = num_encode - ((num_encode / 3) * 3);
+    int sub = left == 1 ? 2 : (left == 2 ? 1 : 0);
+    return 4 * ceil(static_cast<float>(num_encode) / 3) + 1 - sub;
   }
 
  private:

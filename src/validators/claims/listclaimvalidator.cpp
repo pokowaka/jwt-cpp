@@ -21,25 +21,48 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <string.h>
-#include "validators/listclaimvalidator.h"
+#include <string>
+#include <sstream>
+#include <vector>
+#include "validators/claims/listclaimvalidator.h"
 
-ListClaimValidator::ListClaimValidator(const char *key,
+ListClaimValidator::ListClaimValidator(const char *property,
+    std::vector<std::string> accepted) : ClaimValidator(property),
+  accepted_(accepted) { }
+
+ListClaimValidator::ListClaimValidator(const char *property,
     const char *const *lst_accepted,
     const size_t num_accepted)
-  :  lst_accepted_(lst_accepted), key_(key), num_accepted_(num_accepted) { }
+  :  ClaimValidator(property) {
+    for (int i = 0; i < num_accepted; i++) {
+      accepted_.push_back(std::string(lst_accepted[i]));
+    }
+  }
 
 bool ListClaimValidator::IsValid(const json_t *claim) const {
-  json_t *object = json_object_get(claim, key_);
-  if (!object || !json_is_string(object)) {
+  json_t *object = json_object_get(claim, property_);
+  if (!json_is_string(object)) {
     return false;
   }
 
   const char *value = json_string_value(object);
-  for (size_t i = 0; i < num_accepted_; i++) {
-    if (strcmp(lst_accepted_[i], value) == 0)
+  for (auto accept : accepted_) {
+    if (accept == value)
       return true;
   }
 
   return false;
 }
 
+std::string ListClaimValidator::toJson() const {
+  std::ostringstream msg;
+  msg << "{ \"" << property() << "\" : [";
+  int last = accepted_.size();
+  for (auto accept : accepted_) {
+    msg <<  "\"" << accept << "\"";
+    if (--last != 0)
+      msg << ", ";
+  }
+  msg << "] }";
+  return msg.str();
+}

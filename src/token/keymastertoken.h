@@ -20,29 +20,19 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#ifndef SRC_UTIL_ALLOCATORS_H_
-#define SRC_UTIL_ALLOCATORS_H_
-#include <jansson.h>
-#include <memory>
+#ifndef SRC_TOKEN_KEYMASTERTOKEN_H_
+#define SRC_TOKEN_KEYMASTERTOKEN_H_
 
-class json_ptr_delete {
+#include "jwe/jwe.h"
+#include "token/jwsverifier.h"
+#include "token/token.h"
+
+class KeymasterToken {
  public:
-  // constexpr default_delete() noexcept {}
-  // inline template <class U> default_delete(const default_delete<U>& d) noexcept { }
-  inline void operator() (json_t* ptr) const noexcept {
-    json_decref(ptr);
-  }
+  static Token* decrypt_and_verify(const char* token, size_t num_token,
+      Jwe* decrypter, JwsVerifier* verifier);
+ private:
 };
 
-class json_str_delete {
- public:
-  inline void operator() (char* ptr) const noexcept {
-    free(ptr);
-  }
-};
 
-typedef std::unique_ptr<json_t, json_ptr_delete> unique_json_ptr;
-typedef std::unique_ptr<char, json_str_delete> unique_json_str;
-typedef std::unique_ptr<char[]> str_ptr;
-#endif  // SRC_UTIL_ALLOCATORS_H_
-
+#endif  // SRC_TOKEN_KEYMASTERTOKEN_H_

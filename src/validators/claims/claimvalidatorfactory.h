@@ -20,39 +20,41 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-//
-#ifndef SRC_VALIDATORS_LISTCLAIMVALIDATOR_H_
-#define SRC_VALIDATORS_LISTCLAIMVALIDATOR_H_
+#ifndef SRC_VALIDATORS_CLAIMS_CLAIMVALIDATORFACTORY_H_
+#define SRC_VALIDATORS_CLAIMS_CLAIMVALIDATORFACTORY_H_
 
-#include "validators/claimvalidator.h"
+#include <jansson.h>
+#include <exception>
+#include <string>
+#include <vector>
+#include "validators/claims/claimvalidator.h"
 
-class ListClaimValidator : public ClaimValidator {
+class ClaimValidatorFactory {
  public:
-  ListClaimValidator(const char *key, const char *const *lst_accepted, const size_t num_accepted);
-  bool IsValid(const json_t *claimset) const override;
+  static ClaimValidator *build(std::string fromJson);
+  ~ClaimValidatorFactory();
 
  private:
-  const char *const *lst_accepted_;
-  const char *key_;
-  const size_t num_accepted_;
+  std::vector<std::string> buildlist(json_t *lst);
+  std::vector<ClaimValidator*> buildvalidatorlist(json_t *json);
+  ClaimValidator *build(json_t *fromJson);
+
+  std::vector<ClaimValidator*> build_;
 };
 
-class IssValidator : public ListClaimValidator {
+class ParsedClaimvalidator : public ClaimValidator {
  public:
-  IssValidator(const char *const *lst_accepted, const size_t num_accepted) :
-    ListClaimValidator("iss", lst_accepted, num_accepted) { }
+  ParsedClaimvalidator(json_t *json, const std::vector<ClaimValidator*> &children,
+      ClaimValidator *root);
+  ~ParsedClaimvalidator();
+
+  bool IsValid(const json_t *claimset) const override;
+  std::string toJson() const override;
+
+ private:
+  json_t *json_;
+  std::vector<ClaimValidator*> children_;
+  ClaimValidator *root_;
 };
 
-class SubValidator : public ListClaimValidator {
- public:
-  SubValidator(const char *const *lst_accepted, const size_t num_accepted) :
-    ListClaimValidator("sub", lst_accepted, num_accepted) { }
-};
-
-
-class AudValidator : public ListClaimValidator {
- public:
-  AudValidator(const char *const *lst_accepted, const size_t num_accepted) :
-    ListClaimValidator("aud", lst_accepted, num_accepted) { }
-};
-#endif  // SRC_VALIDATORS_LISTCLAIMVALIDATOR_H_
+#endif  // SRC_VALIDATORS_CLAIMS_CLAIMVALIDATORFACTORY_H_

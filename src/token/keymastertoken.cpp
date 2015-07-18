@@ -20,20 +20,39 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#include "validators/claimvalidator.h"
+#include "token/keymastertoken.h"
+#include "util/allocators.h"
 
-bool AllClaimValidator::IsValid(const json_t *claimset) const {
-  for (size_t i = 0; i < num_claims_; i++) {
-    if (!lst_claims_[i]->IsValid(claimset))
-      return false;
+Token* KeymasterToken::decrypt_and_verify(const char* token, size_t num_token,
+      Jwe* decrypter, JwsVerifier* verifier) {
+  std::unique_ptr<Token> outerToken(Token::Parse(token, num_token));
+  if (outerToken.get() == NULL) {
+    return nullptr;
   }
-  return true;
+  if (!outerToken->Decrypt(decrypter)) {
+    return nullptr;
+  }
+
+  json_error_t error;
+  unique_json_ptr decrypted(json_loads(
+          const_cast<char*>(reinterpret_cast<const char*>(outerToken->decrypted())),
+      JSON_REJECT_DUPLICATES, &error));
+
+  if (decrypted.get() == NULL) {
+    return nullptr;
+  }
+  json_t *innertoken = json_object_get(decrypted.get(), "token");
+  if (innertoken == NULL) {
+    return nullptr;
+  }
+
+  const char *tokstr = json_string_value(innertoken);
+  std::unique_ptr<Token> parsedInnerToken(Token::Parse(tokstr, strlen(tokstr)));
+
+  if (parsedInnerToken.get() == NULL || !parsedInnerToken->VerifySignature(verifier)) {
+    return nullptr;
+  }
+
+  return parsedInnerToken.release();
 }
 
-bool AnyClaimValidator::IsValid(const json_t *claimset) const {
-  for (size_t i = 0; i < num_claims_; i++) {
-    if (lst_claims_[i]->IsValid(claimset))
-      return true;
-  }
-  return false;
-}

@@ -2,7 +2,9 @@ SET(JWT_SOURCE_DIRS
   token
   base64
   validators
+  validators/claims
   util
+  jwe
 )
 
 FOREACH( DIR ${JWT_SOURCE_DIRS} )

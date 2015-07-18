@@ -20,8 +20,8 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#ifndef SRC_VALIDATORS_DIGESTVALIDATOR_H_
-#define SRC_VALIDATORS_DIGESTVALIDATOR_H_
+#ifndef SRC_VALIDATORS_HMACVALIDATOR_H_
+#define SRC_VALIDATORS_HMACVALIDATOR_H_
 
 #include <openssl/hmac.h>
 #include <string>
@@ -30,45 +30,47 @@
 // Maximum length of a signature
 // Note that SHA512 is 64 bytes.
 #define MAX_KEYLENGTH 64
+
 /**
  * Can sign & validate using an openssl digest function. Signing and Verification
  * are not thread safe functions.
  */
-class DigestValidator : public MessageValidator {
+class HMACValidator : public MessageValidator {
  public:
-  explicit DigestValidator(const char *algorithm, const EVP_MD *md, const std::string &key);
-  virtual ~DigestValidator();
+  explicit HMACValidator(const char *algorithm);
+  explicit HMACValidator(const char *algorithm, const EVP_MD *md, const std::string &key);
+  virtual ~HMACValidator();
 
   bool VerifySignature(const uint8_t *header, size_t num_header,
-                       const uint8_t *signature, size_t num_signature);
+                       const uint8_t *signature, size_t num_signature) override;
   bool Sign(const uint8_t *header, size_t num_header,
-            uint8_t *signature, size_t *num_signature);
+            uint8_t *signature, size_t *num_signature) override;
 
   inline unsigned int key_size() const { return key_size_; }
   inline const char *algorithm() const { return algorithm_; }
 
  private:
-  DigestValidator(const DigestValidator&);
-  DigestValidator& operator=(const DigestValidator&);
-
+  HMACValidator(const HMACValidator &);
+  HMACValidator & operator=(const HMACValidator &);
   static int const_time_cmp(const void* a, const void* b, const size_t size);
+
   HMAC_CTX ctx_;
-  unsigned int key_size_;
   const char *algorithm_;
+  unsigned int key_size_;
 };
 
-class HS256Validator : public DigestValidator {
+class HS256Validator : public HMACValidator {
  public:
-  explicit HS256Validator(const std::string &key) : DigestValidator("HS256", EVP_sha256(), key) { }
+  explicit HS256Validator(const std::string &key) : HMACValidator("HS256", EVP_sha256(), key) { }
 };
 
-class HS384Validator : public DigestValidator {
+class HS384Validator : public HMACValidator {
  public:
-  explicit HS384Validator(const std::string &key) : DigestValidator("HS384", EVP_sha384(), key) { }
+  explicit HS384Validator(const std::string &key) : HMACValidator("HS384", EVP_sha384(), key) { }
 };
 
-class HS512Validator : public DigestValidator {
+class HS512Validator : public HMACValidator {
  public:
-  explicit HS512Validator(const std::string &key) : DigestValidator("HS512", EVP_sha512(), key) { }
+  explicit HS512Validator(const std::string &key) : HMACValidator("HS512", EVP_sha512(), key) { }
 };
-#endif  // SRC_VALIDATORS_DIGESTVALIDATOR_H_
+#endif  // SRC_VALIDATORS_HMACVALIDATOR_H_

@@ -104,8 +104,9 @@ int Base64Encode::DecodeUrl(const char *decode, size_t num_decode, char *out, si
   return 0;
 }
 
-int Base64Encode::EncodeUrl(const char* encode, size_t num_encode, char* result, size_t num_result) {
-  if (EncodeBytesNeeded(num_encode) > num_result)
+int Base64Encode::EncodeUrl(const char* encode, size_t num_encode,
+    char* result, size_t* num_result) {
+  if (EncodeBytesNeeded(num_encode) > *num_result)
     return 1;
 
   if (num_encode == 0) {
@@ -113,6 +114,7 @@ int Base64Encode::EncodeUrl(const char* encode, size_t num_encode, char* result,
     return 0;
   }
 
+  const char* start = result;
   size_t eLen = (num_encode / 3) * 3;                              // Length of even 24-bits.
 
   // Encode even 24-bits
@@ -139,10 +141,12 @@ int Base64Encode::EncodeUrl(const char* encode, size_t num_encode, char* result,
     // Set last four chars
     *result++ = EncodeChar(i >> 12);
     *result++ = EncodeChar((i >> 6) & 0x3f);
-    *result++ = left == 2 ? EncodeChar(i & 0x3f) : 0;
+    if (left == 2)
+      *result++ = EncodeChar(i & 0x3f);
   }
 
   *result++ = 0;
+  *num_result = (result - start);
   return 0;
 }
 
@@ -150,7 +154,7 @@ std::string Base64Encode::EncodeUrl(const std::string &input) {
   size_t num_encoded =  EncodeBytesNeeded(input.size());
   str_ptr encoded(new char[num_encoded]);
   // Impossible to get a buffer overlow
-  EncodeUrl(input.c_str(), input.size(), encoded.get(), num_encoded);
+  EncodeUrl(input.c_str(), input.size(), encoded.get(), &num_encoded);
   return std::string(encoded.get(), num_encoded);
 }
 

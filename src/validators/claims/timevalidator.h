@@ -20,10 +20,11 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#ifndef SRC_VALIDATORS_TIMEVALIDATOR_H_
-#define SRC_VALIDATORS_TIMEVALIDATOR_H_
+#ifndef SRC_VALIDATORS_CLAIMS_TIMEVALIDATOR_H_
+#define SRC_VALIDATORS_CLAIMS_TIMEVALIDATOR_H_
 
-#include "validators/claimvalidator.h"
+#include <string>
+#include "validators/claims/claimvalidator.h"
 #include "util/clock.h"
 
 class TimeValidator : public ClaimValidator {
@@ -31,11 +32,13 @@ class TimeValidator : public ClaimValidator {
   TimeValidator(const char *key, bool sign, uint64_t leeway) : TimeValidator(key, sign, leeway,
       &utc_clock_) { }
   TimeValidator(const char *key, bool sign) : TimeValidator(key, sign, 120) { }
-  TimeValidator(const char *key, bool sign, uint64_t leeway, IClock *clock) : key_(key), sign_(sign), leeway_(leeway), clock_(clock) { }
+  TimeValidator(const char *key, bool sign, uint64_t leeway, IClock *clock) : ClaimValidator(key), sign_
+      (sign)
+      , leeway_(leeway), clock_(clock) { }
   bool IsValid(const json_t *claimset) const override;
+  std::string toJson() const override;
 
  private:
-  const char *key_;
   bool sign_;
   uint64_t leeway_;
   IClock *clock_;
@@ -63,4 +66,4 @@ class IatValidator : public TimeValidator {
   explicit IatValidator(uint64_t leeway) : TimeValidator("iat", true, leeway) { }
   IatValidator(uint64_t leeway, IClock *clock) : TimeValidator("iat", true, leeway, clock) { }
 };
-#endif  // SRC_VALIDATORS_TIMEVALIDATOR_H_
+#endif  // SRC_VALIDATORS_CLAIMS_TIMEVALIDATOR_H_

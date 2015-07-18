@@ -1,5 +1,12 @@
 # CMake build directory
 build/
+release/
+debug/
+
+# intelliJ
+.idea/
+*.iml
+
 
 # Compiled Object files
 *.slo

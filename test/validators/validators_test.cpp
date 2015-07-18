@@ -1,4 +1,4 @@
-#include "validators/digestvalidator.h"
+#include "validators/hmacvalidator.h"
 #include "validators/nonevalidator.h"
 #include "gtest/gtest.h"
 #include <memory>
@@ -13,7 +13,7 @@ std::array<const char *, 3> names = {{"HS256", "HS384", "HS512"}};
 TEST(hmacvalidator_test, unsigned_fails) {
     std::string message = "Hello World!";
     for (size_t i = 0; i < hmacs.size(); i++) {
-        DigestValidator validator(names[i], hmacs[i], "foobar");
+        HMACValidator validator(names[i], hmacs[i], "foobar");
         size_t len = validator.key_size();
         std::unique_ptr<uint8_t[]> pSignature(new uint8_t[len]);
         memset(pSignature.get(), 0, len);
@@ -24,7 +24,7 @@ TEST(hmacvalidator_test, unsigned_fails) {
 TEST(hmacvalidator_test, signing_succeeds) {
     std::string message = "Hello World!";
     for (size_t i = 0; i < hmacs.size(); i++) {
-        DigestValidator validator(names[i], hmacs[i], "foobar");
+        HMACValidator validator(names[i], hmacs[i], "foobar");
         size_t len = validator.key_size();
         std::unique_ptr<uint8_t[]> pSignature(new uint8_t[len]);
         EXPECT_EQ(true, validator.Sign((uint8_t *) message.c_str(), message.size(), pSignature.get(), &len));
@@ -35,7 +35,7 @@ TEST(hmacvalidator_test, signing_succeeds) {
 TEST(hmacvalidator_test, signing_on_substr) {
     std::string message = "Hello World!";
     for (size_t i = 0; i < hmacs.size(); i++) {
-        DigestValidator validator(names[i], hmacs[i], "foobar");
+        HMACValidator validator(names[i], hmacs[i], "foobar");
         size_t len = validator.key_size();
         std::unique_ptr<uint8_t[]> pSignature(new uint8_t[len]);
         EXPECT_EQ(true, validator.Sign((uint8_t *) message.c_str(), 6, pSignature.get(), &len));
@@ -47,7 +47,7 @@ TEST(hmacvalidator_test, signing_on_substr) {
 TEST(hmacvalidator_test, signing_does_not_change_length) {
     std::string message = "Hello World!";
     for (size_t i = 0; i < hmacs.size(); i++) {
-        DigestValidator validator(names[i], hmacs[i], "foobar");
+        HMACValidator validator(names[i], hmacs[i], "foobar");
         size_t len = validator.key_size();
         std::unique_ptr<uint8_t[]> pSignature(new uint8_t[len]);
         EXPECT_EQ(true, validator.Sign((uint8_t *) message.c_str(), message.size(), pSignature.get(), &len));

@@ -20,13 +20,15 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#include "validators/timevalidator.h"
+#include "validators/claims/timevalidator.h"
+#include <sstream>
+#include <string>
 
 
 UtcClock TimeValidator::utc_clock_ = UtcClock();
 
 bool TimeValidator::IsValid(const json_t *claim) const {
-    json_t *object = json_object_get(claim, key_);
+    json_t *object = json_object_get(claim, property_);
     if (!object || !json_is_integer(object)) {
         return false;
     }
@@ -45,3 +47,17 @@ bool TimeValidator::IsValid(const json_t *claim) const {
 
     return (min <= 0 || max <= 0);
 }
+
+std::string TimeValidator::toJson() const {
+  std::ostringstream msg;
+  msg << "{ \"" << property() << "\" : ";
+  if (leeway_ == 0) {
+    msg <<  "null";
+  } else {
+    msg << "{ \"leeway\" : " << std::to_string(leeway_) << " }";
+  }
+  msg  << " }";
+  return msg.str();
+}
+
+

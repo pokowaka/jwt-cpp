@@ -26,7 +26,8 @@
 #include <stddef.h>
 #include <jansson.h>
 #include <memory>
-#include "validators/claimvalidator.h"
+#include "jwe/jwe.h"
+#include "validators/claims/claimvalidator.h"
 #include "validators/messagevalidator.h"
 #include "token/jwsverifier.h"
 
@@ -38,15 +39,19 @@ class Token {
     // returns a parsed token, or null if it is not a json webtoken.
     static Token* Parse(const char *jws_token, size_t num_jws_token);
     static Token* Parse(const char *jws_token, size_t num_jws_token,
-        const JwsVerifier &verifier, const ClaimValidator &validator);
+                        JwsVerifier *verifier, ClaimValidator *validator);
     ~Token();
 
     static char* Encode(json_t* payload, MessageValidator* validator);
     bool IsEncrypted();
-    bool VerifySignature(const JwsVerifier &verifier);
-    bool VerifyClaims(const ClaimValidator &claimValidator);
+    bool VerifySignature(JwsVerifier *verifier);
+    bool VerifyClaims(ClaimValidator *claimValidator);
+    bool Decrypt(Jwe* decrypter);
 
-    inline json_t* header_claims() { return header_claims_; }
+
+    inline const json_t* header_claims() { return header_claims_; }
+    inline const uint8_t* decrypted() { return decrypted_.get(); }
+    inline const size_t num_decrypted() { return  num_decrypted_; }
     json_t* payload_claims();
 
  private:
@@ -54,10 +59,11 @@ class Token {
         size_t num_header, size_t num_payload, size_t num_signature, json_t* header_claims);
 
     const char *header_, *payload_, *signature_;
-    size_t num_header_, num_payload_, num_signature_;
+    size_t num_header_, num_payload_, num_signature_, num_decrypted_;
     bool invalid_payload_;
     json_t* header_claims_;
     json_t* payload_claims_;
+    std::unique_ptr<uint8_t[]> decrypted_;
 };
 
 #endif  // SRC_TOKEN_TOKEN_H_

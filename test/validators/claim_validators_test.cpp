@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include <string>
-#include "validators/timevalidator.h"
-#include "validators/listclaimvalidator.h"
+#include "validators/claims/timevalidator.h"
+#include "validators/claims/listclaimvalidator.h"
 #include "util/allocators.h"
 
 // Test for the various validators.

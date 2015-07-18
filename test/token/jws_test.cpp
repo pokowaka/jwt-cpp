@@ -1,7 +1,7 @@
 #include "token/jwsverifier.h"
 #include <memory>
 #include <string>
-#include "validators/digestvalidator.h"
+#include "validators/hmacvalidator.h"
 #include "gtest/gtest.h"
 
 class BadValidator : public MessageValidator {

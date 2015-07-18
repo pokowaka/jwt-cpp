@@ -30,17 +30,11 @@
 #include <string>
 #include "validators/messagevalidator.h"
 
-// binary signature lenghts of allowed JWA algs
+// We try to stack allocate for the hmac..
 // HS256  32
 // HS384  48
 // HS512  64
-// RS256  256
-// RS384  256
-// RS512  256
-// ES256  64
-// ES384  96  (secp384r1)
-// ES512  132 (secp521r1)
-#define MAX_SIGNATURE_LENGTH 256
+#define MAX_SIGNATURE_LENGTH 1024
 /**
  * A JwsVerifier keeps track of a set of message validators that
  * can be used to validate if the given header is properly signed.

@@ -20,12 +20,15 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#include "validators/digestvalidator.h"
+#include "validators/hmacvalidator.h"
 #include <string.h>
 #include <string>
 #include <memory>
 
-DigestValidator::DigestValidator(const char *algorithm,
+HMACValidator::HMACValidator(const char *algorithm) : algorithm_(algorithm), key_size_(0) {
+}
+
+HMACValidator::HMACValidator(const char *algorithm,
     const EVP_MD *md, const std::string &key) {
   key_size_ = md->md_size;
   algorithm_ = algorithm;
@@ -33,11 +36,11 @@ DigestValidator::DigestValidator(const char *algorithm,
   HMAC_Init_ex(&ctx_, key.c_str(), key.size(), md, NULL);
 }
 
-DigestValidator::~DigestValidator() {
+HMACValidator::~HMACValidator() {
   HMAC_CTX_cleanup(&ctx_);
 }
 
-bool DigestValidator::VerifySignature(const uint8_t *header, size_t num_header,
+bool HMACValidator::VerifySignature(const uint8_t *header, size_t num_header,
                                       const uint8_t *signature, size_t num_signature) {
   // No need to calc the signature if it is going be the wrong size.
   if (num_signature != key_size_ || signature == nullptr)
@@ -51,7 +54,7 @@ bool DigestValidator::VerifySignature(const uint8_t *header, size_t num_header,
     && const_time_cmp(local_signature, signature, key_size_) == 0;
 }
 
-int DigestValidator::const_time_cmp(const void *a, const void *b, const size_t size) {
+int HMACValidator::const_time_cmp(const void *a, const void *b, const size_t size) {
   const unsigned char *_a = (const unsigned char *) a;
   const unsigned char *_b = (const unsigned char *) b;
   unsigned char result = 0;
@@ -64,7 +67,7 @@ int DigestValidator::const_time_cmp(const void *a, const void *b, const size_t s
   return result; /* returns 0 if equal, nonzero otherwise */
 }
 
-bool DigestValidator::Sign(const uint8_t *header, size_t num_header,
+bool HMACValidator::Sign(const uint8_t *header, size_t num_header,
                            uint8_t *signature, size_t *num_signature) {
   if (signature == NULL || *num_signature < key_size_) {
       *num_signature = key_size_;

@@ -45,15 +45,22 @@ bool JwsVerifier::RegisterValidator(MessageValidator *validator) {
 bool JwsVerifier::VerifySignature(std::string algorithm, const char *header, size_t num_header,
     const char *signature, size_t num_signature) const {
   auto alg = validator_map_.find(algorithm);
+
   if (alg == validator_map_.end()) {
     return false;
   }
 
-  size_t num_dec_signature = Base64Encode::DecodeBytesNeeded(num_signature);
-  char dec_signature[MAX_SIGNATURE_LENGTH];
+  // Stack allocated signature is usually sufficient and very fast..
+  str_ptr heapsig;
+  char stacksig[MAX_SIGNATURE_LENGTH];
+  char *dec_signature = stacksig;
 
+
+  // But there might be a case where it is not going to be enough..
+  size_t num_dec_signature = Base64Encode::DecodeBytesNeeded(num_signature);
   if (num_dec_signature > MAX_SIGNATURE_LENGTH) {
-    return false;
+    heapsig = str_ptr(new char[num_dec_signature]);
+    dec_signature = heapsig.get();
   }
 
   if (Base64Encode::DecodeUrl(signature, num_signature, dec_signature, &num_dec_signature)) {
@@ -94,7 +101,8 @@ char* JwsVerifier::Sign(std::string algorithm, const char *header, size_t num_he
   }
 
   // num_signature >= needed so the buffer is big enough
-  Base64Encode::EncodeUrl(reinterpret_cast<char*>(raw_signature.get()), num_raw_signature, signature, *num_signature);
+  Base64Encode::EncodeUrl(reinterpret_cast<char*>(raw_signature.get()),
+      num_raw_signature, signature, num_signature);
   return signature;
 }
 

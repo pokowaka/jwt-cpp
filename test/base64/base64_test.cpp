@@ -19,17 +19,20 @@ std::string combine(uint32_t fst, uint32_t snd) {
 
 TEST(base64_test,  quick_fox) {
     std::string inputData = "The quick brown fox jumps over the lazy dog and some extr";
-    std::string expectedResult = "VGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5IGRvZyBhbmQgc29tZSBleHRy";
+    std::string expectedResult =
+      "VGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5IGRvZyBhbmQgc29tZSBleHRy";
     EXPECT_STREQ(expectedResult.c_str(), Base64Encode::EncodeUrl(inputData).c_str());
     EXPECT_STREQ(inputData.c_str(), Base64Encode::DecodeUrl(expectedResult).c_str());
 }
 
 TEST(base64_test, buffer_overflows) {
-  std::string str_dec = "VGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5IGRvZyBhbmQgc29tZSBleHRy";
+  std::string str_dec =
+    "VGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5IGRvZyBhbmQgc29tZSBleHRy";
   char buffer[4096];
 
-  for(size_t num_dec = 6; num_dec < str_dec.size(); num_dec++) {
-    for(size_t num_buffer = 0; num_buffer < Base64Encode::DecodeBytesNeeded(num_dec) / 2 ; num_buffer++) {
+  for (size_t num_dec = 6; num_dec < str_dec.size(); num_dec++) {
+    for (size_t num_buffer = 0;
+        num_buffer < Base64Encode::DecodeBytesNeeded(num_dec) / 2 ; num_buffer++) {
       EXPECT_EQ(1, Base64Encode::DecodeUrl(str_dec.c_str(), num_dec, buffer, &num_buffer));
     }
   }
@@ -39,29 +42,29 @@ TEST(base64_test, buffer_underflows) {
   std::string str_enc = "The quick brown fox jumps over the lazy dog and some extr";
   char buffer[4096];
 
-  for(size_t num_enc = 6; num_enc < str_enc.size(); num_enc++) {
-    for(size_t num_buffer = 0; num_buffer < Base64Encode::EncodeBytesNeeded(num_enc) / 2; num_buffer++) {
-      EXPECT_EQ(1, Base64Encode::EncodeUrl(str_enc.c_str(), num_enc, buffer, num_buffer));
+  for (size_t num_enc = 6; num_enc < str_enc.size(); num_enc++) {
+    for (size_t num_buffer = 0;
+        num_buffer < Base64Encode::EncodeBytesNeeded(num_enc) / 2; num_buffer++) {
+      EXPECT_EQ(1, Base64Encode::EncodeUrl(str_enc.c_str(), num_enc, buffer, &num_buffer));
     }
   }
 }
 
 TEST(base64_test, partial) {
- const char* foobar = "Zm9vYmFy";
- char buf[] = {0, 0, 0, 0, 0, 0, 0, 0 };
- size_t cBuf = 8;
-    Base64Encode::DecodeUrl(foobar, 4, buf, &cBuf);
- EXPECT_EQ(3, cBuf);
- EXPECT_STREQ("foo", buf);
+  const char* foobar = "Zm9vYmFy";
+  char buf[] = {0, 0, 0, 0, 0, 0, 0, 0 };
+  size_t cBuf = 8;
+  Base64Encode::DecodeUrl(foobar, 4, buf, &cBuf);
+  EXPECT_EQ(3, cBuf);
+  EXPECT_STREQ("foo", buf);
 }
 
 TEST(base64_test, len) {
-  const char* hello = "Hello world! How goes it?";
-  char buf[4096];
-  size_t cBuf = 4096;
-  for(int i = 0;i < strlen(hello); i++) {
-      Base64Encode::EncodeUrl(hello, i, buf, cBuf);
-      EXPECT_EQ(strlen(buf)+1, Base64Encode::EncodeBytesNeeded(i));
+  std::string hello;
+  for (int i = 0; i < 9; i++) {
+    hello.append("x");
+    std::string enc = Base64Encode::EncodeUrl(hello);
+    EXPECT_EQ(enc.size(), Base64Encode::EncodeBytesNeeded(hello.size()));
   }
 }
 
@@ -91,7 +94,8 @@ TEST(base64_test, bad) {
     EXPECT_STREQ("", Base64Encode::DecodeUrl("Zg =").c_str());
     EXPECT_STREQ("", Base64Encode::DecodeUrl("Zm9vYmE@").c_str());
     EXPECT_STREQ("", Base64Encode::DecodeUrl(
-            "VGhlIHF1aWNrIGJy\nb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5IGRvZyBhbmQgc29tZSBleHR").c_str());
+            "VGhlIHF1aWNrIGJy\n"
+            "b3duIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5IGRvZyBhbmQgc29tZSBleHR").c_str());
 }
 
 TEST(base64_test, invers) {
@@ -102,15 +106,16 @@ TEST(base64_test, invers) {
 }
 
 TEST(base64_test, random) {
+    size_t buf = 4096;
     char res[4096];
     char dec[4096];
-    for(int i = 0; i < 10000; i++) {
+    for (int i = 0; i < 10000; i++) {
         uint32_t fst =  random();
         uint32_t snd = random();
         std::string input = combine(fst, snd);
         size_t cOut = 1 +  ((input.size()/3) + (input.size() % 3 > 0)) * 4;
         size_t cRes = 4096;
-        Base64Encode::EncodeUrl(input.c_str(), input.size(), res, 4096);
+        Base64Encode::EncodeUrl(input.c_str(), input.size(), res, &buf);
         Base64Encode::DecodeUrl(res, cOut, dec, &cRes);
         ASSERT_STREQ(input.c_str(), dec);
     }
@@ -119,12 +124,14 @@ TEST(base64_test, random) {
 TEST(base64_test, perf_encode_c) {
     // EncodeUrl = 'Send reinforcements'
     // Benchmark.measure{  50_000_000.times { Base64.encode64(EncodeUrl) } }
-    // => #<Benchmark::Tms:0x71a8adcf @stime=0.120000000000001, @label="", @cstime=0.0, @real=22.494999885559082, @total=23.19, @cutime=0.0, @utime=23.07>
+    // => #<Benchmark::Tms:0x71a8adcf @stime=0.120000000000001,
+    // @label="", @cstime=0.0, @real=22.494999885559082, @total=23.19, @cutime=0.0, @utime=23.07>
     // vs: base64_test.perf (2186 ms) (10x faster than ruby)
     std::string encode = "Send reinforcements";
+    size_t buf = 4096;
     char res[4096];
-    for(int i = 0; i < MANY_TIMES; i++) {
-        Base64Encode::EncodeUrl(encode.c_str(), encode.size(), res, 4096);
+    for (int i = 0; i < MANY_TIMES; i++) {
+        Base64Encode::EncodeUrl(encode.c_str(), encode.size(), res, &buf);
     }
 }
 
@@ -134,7 +141,7 @@ TEST(base64_test, perf_encode_cplus) {
     //  => #<Benchmark::Tms:0x4310d43 @stime=0.00999999999999801, @label="", @cstime=0.0, @real=2.2860000133514404, @total=2.329999999999991, @cutime=0.0, @utime=2.319999999999993>
     // vs: base64_test.perf (227 ms) (10x faster than ruby)
     std::string encode = "Send reinforcements";
-    for(int i = 0; i < MANY_TIMES; i++) {
+    for (int i = 0; i < MANY_TIMES; i++) {
         Base64Encode::EncodeUrl(encode);
     }
 }

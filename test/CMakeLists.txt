@@ -4,6 +4,7 @@ INCLUDE_DIRECTORIES (${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 ADD_EXECUTABLE (jws_test token/jws_test.cpp)
 ADD_EXECUTABLE (validators_test validators/validators_test.cpp)
 ADD_EXECUTABLE (claim_validators_test validators/claim_validators_test.cpp)
+ADD_EXECUTABLE (claim_validators_factory_test validators/claim_validators_factory_test.cpp)
 ADD_EXECUTABLE (base64_test base64/base64_test.cpp)
 ADD_EXECUTABLE (token_test token/token_test.cpp)
 
@@ -11,6 +12,7 @@ SET(TESTS
   jws_test
   validators_test
   claim_validators_test
+  claim_validators_factory_test
   base64_test
   token_test
 )
