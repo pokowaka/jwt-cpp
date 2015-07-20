@@ -9,9 +9,8 @@ Currently it supports the following:
 
 Sign, Verify JWS:
 
-- HS256
-- HS384
-- HS512
+- HS256, HS384, HS512
+- RS256, RS384, RS512
 - *none*
 
 Payload validators:
@@ -25,34 +24,26 @@ Payload validators:
 
 ## Usage
 
-We make use of (jansson)[http://www.digip.org/jansson/] to create json payload.
+We make use of [jansson](http://www.digip.org/jansson/) to create json payload.
 
 ```
-  HS256Validator validator("secret");
-  json_t* payload = json_pack("{ss, ss, sb}", "sub", "1234567890", "name", "John Doe", "admin", true);
-  char* Token::Encode(payload, &validator));
-
-  delete token;
-  json_decref(payload);
+  HS256Validator signer("secret!");
+  json_ptr json(json_pack("{ss}", "name", "John Doe"));
+  str_ptr str_token(JWT::Encode(&signers, json.get()));  
 ```
 
 Validating tokens works as follows:
 
 ```
-  HS256Validator validator("secret");
-  JwsVerifier verifier(&validator);
-
-  const char* const accepted[] = { "1234567890", "bar" };
-  SubValidator sub(accepted, 2);
-
-  char* tokenstr = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ";
-  Token* token = Token::Parse(tokenstr, strlen(tokenstr));
-
-  if (token && token->VerifySignature(verifier) && token->VerifyClaims(sub)) {
-    printf("Valid token, with acceptable claims\n");
+  ExpValidator exp;
+  token_ptr token = JTW::Decode(str_token, &signer, &exp);
+ 
+  if (!token->IsSigned()) {
+    // Token is not properly signed.
   }
-
-  delete token;
+  if (!token->IsValid()) {
+     // Claims are not valid.
+  } 
 ```
 
 

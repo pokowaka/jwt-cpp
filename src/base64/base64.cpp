@@ -33,29 +33,6 @@ inline char Base64Encode::EncodeChar(uint8_t in) {
   return table[in];
 }
 
-inline char Base64Encode::DecodeChar(uint8_t in) {
-  const char table[] = {
-    66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 64, 66, 66, 66, 66,
-    66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
-    66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 62, 66,
-    62, 66, 63, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 66, 66,
-    66, 65, 66, 66, 66, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-    10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-    25, 66, 66, 66, 66, 63, 66, 26, 27, 28, 29, 30, 31, 32, 33,
-    34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
-    49, 50, 51, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
-    66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
-    66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
-    66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
-    66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
-    66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
-    66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
-    66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
-    66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66};
-  return table[in];
-}
-
-
 int Base64Encode::DecodeUrl(const char *decode, size_t num_decode, char *out, size_t *num_out) {
   if (*num_out < DecodeBytesNeeded(num_decode))
     return 1;
@@ -70,13 +47,8 @@ int Base64Encode::DecodeUrl(const char *decode, size_t num_decode, char *out, si
     char c = DecodeChar(ch);
 
     switch (c) {
-      case WHITESPACE:
-        return 1;   // skip whitespace
       case INVALID:
         return 1;   // invalid input, return error
-      case EQUALS:
-        decode = end;   // pad character, end of data
-        continue;
       default:
         buf = buf << 6 | c;
         iter++;   // increment the number of iteration

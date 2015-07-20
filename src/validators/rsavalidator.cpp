@@ -22,6 +22,8 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <openssl/err.h>
 #include <openssl/pem.h>
+#include <regex> // NOLINT(*)
+#include <sstream>
 #include <string>
 #include "validators/rsavalidator.h"
 
@@ -40,9 +42,8 @@ RSAValidator::~RSAValidator() {
   EVP_PKEY_free(private_key_);
 }
 
-bool RSAValidator::VerifySignature(const uint8_t *header,
-    size_t num_header, const uint8_t *signature, size_t num_signature) {
-
+bool RSAValidator::Verify(json_t *jsonHeader, const uint8_t *header, size_t num_header,
+                          const uint8_t *signature, size_t num_signature) {
   EVP_MD_CTX evp_md_ctx;
   EVP_MD_CTX_init(&evp_md_ctx);
   EVP_VerifyInit_ex(&evp_md_ctx, md_, NULL);
@@ -58,8 +59,7 @@ bool RSAValidator::Sign(const uint8_t *header, size_t num_header,
 
   EVP_MD_CTX evp_md_ctx;
   EVP_MD_CTX_init(&evp_md_ctx);
-  EVP_DigestInit_ex(&evp_md_ctx, md_, NULL);
-
+  EVP_DigestSignInit(&evp_md_ctx, NULL, md_, NULL, private_key_);
   if (EVP_DigestSignUpdate(&evp_md_ctx, header, num_header) != 1) {
     return false;
   }
@@ -94,15 +94,46 @@ EVP_PKEY *RSAValidator::LoadKey(const char *key, bool public_key) {
     evp_pkey = PEM_read_bio_PrivateKey(keybio, &evp_pkey, NULL, NULL);
   }
 
-  BIO_set_close(keybio, BIO_NOCLOSE);
   BIO_free(keybio);
 
   if (evp_pkey == NULL) {
     char buffer[120];
     ERR_error_string(ERR_get_error(), buffer);
-    fprintf(stderr, "OpenSSL error: %s", buffer);
-    exit(0);
+    throw std::logic_error(buffer);
   }
 
   return evp_pkey;
 }
+
+std::string RSAValidator::toJson() const {
+  std::ostringstream msg;
+  char *key;
+  std::regex newline("\n");
+
+  msg << "{ \"" << algorithm() << "\" : { ";
+
+  if (public_key_) {
+    BIO *out = BIO_new(BIO_s_mem());
+    PEM_write_bio_PUBKEY(out, public_key_);
+    uint64_t len = BIO_get_mem_data(out, &key);
+    std::string pubkey = std::string(key, len);
+    msg << "\"public\" : \"" << std::regex_replace(pubkey, newline, "\\n")  << "\"";
+    BIO_free(out);
+
+    if (private_key_) {
+      msg << ", ";
+    }
+  }
+  if (private_key_) {
+    BIO *out = BIO_new(BIO_s_mem());
+    PEM_write_bio_PUBKEY(out, private_key_);
+    uint64_t len = BIO_get_mem_data(out, &key);
+    std::string privkey = std::string(key, len);
+    msg << "\"private\" : \"" << std::regex_replace(privkey, newline, "\\n") << "\"";
+    BIO_free(out);
+  }
+
+  msg << "} }";
+  return msg.str();
+}
+

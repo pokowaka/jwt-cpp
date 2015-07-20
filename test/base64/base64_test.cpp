@@ -70,11 +70,11 @@ TEST(base64_test, len) {
 
 TEST(base64_test, spec) {
     EXPECT_STREQ("" , Base64Encode::DecodeUrl("").c_str());
-    EXPECT_STREQ("f" , Base64Encode::DecodeUrl("Zg==").c_str());
-    EXPECT_STREQ("fo" , Base64Encode::DecodeUrl("Zm8=").c_str());
+    EXPECT_STREQ("f" , Base64Encode::DecodeUrl("Zg").c_str());
+    EXPECT_STREQ("fo" , Base64Encode::DecodeUrl("Zm8").c_str());
     EXPECT_STREQ("foo" , Base64Encode::DecodeUrl("Zm9v").c_str());
-    EXPECT_STREQ("foob" , Base64Encode::DecodeUrl("Zm9vYg==").c_str());
-    EXPECT_STREQ("fooba" , Base64Encode::DecodeUrl("Zm9vYmE=").c_str());
+    EXPECT_STREQ("foob" , Base64Encode::DecodeUrl("Zm9vYg").c_str());
+    EXPECT_STREQ("fooba" , Base64Encode::DecodeUrl("Zm9vYmE").c_str());
     EXPECT_STREQ("foobar" , Base64Encode::DecodeUrl("Zm9vYmFy").c_str());
 }
 
@@ -99,7 +99,7 @@ TEST(base64_test, bad) {
 }
 
 TEST(base64_test, invers) {
-  std::string res = "TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ";
+  std::string res = "dCm-Fpm5S8VCg0Mi8LPdMNwrZhQWtox7hFsH6oG-yf4";
   std::string out = Base64Encode::DecodeUrl(res);
   ASSERT_EQ(32, out.size());
   ASSERT_STREQ(res.c_str(), Base64Encode::EncodeUrl(Base64Encode::DecodeUrl(res)).c_str());

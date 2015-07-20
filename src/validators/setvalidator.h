@@ -20,19 +20,30 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#ifndef SRC_TOKEN_KEYMASTERTOKEN_H_
-#define SRC_TOKEN_KEYMASTERTOKEN_H_
+#ifndef SRC_VALIDATORS_SETVALIDATOR_H_
+#define SRC_VALIDATORS_SETVALIDATOR_H_
 
-#include "jwe/jwe.h"
-#include "token/jwsverifier.h"
-#include "token/token.h"
+#include <stdint.h>
+#include <stddef.h>
+#include <map>
+#include <string>
+#include <vector>
+#include "validators/messagevalidator.h"
 
-class KeymasterToken {
+/**
+ * A validator that delegates to a set of registered
+ * validators.
+ */
+class SetValidator : public MessageValidator {
  public:
-  static Token* decrypt_and_verify(const char* token, size_t num_token,
-      Jwe* decrypter, JwsVerifier* verifier);
+  explicit SetValidator(std::vector<MessageValidator*> msg);
+  bool Verify(json_t *jsonHeader, const uint8_t *header, size_t cHeader,
+              const uint8_t *signature, size_t cSignature) override;
+  const char *algorithm() const override { return "SET"; }
+  std::string toJson() const override;
+  bool Accepts(const char* algorithm) const override;
  private:
+  std::map<std::string, MessageValidator *> validator_map_;
 };
 
-
-#endif  // SRC_TOKEN_KEYMASTERTOKEN_H_
+#endif  // SRC_VALIDATORS_SETVALIDATOR_H_

@@ -25,6 +25,8 @@
 #include <math.h>
 #include <string>
 
+#define INVALID    66
+
 /**
  * A Class that is capable of encoding & decoding base64 that
  * are specific to JWT spec.
@@ -36,7 +38,6 @@ class Base64Encode {
   static std::string EncodeUrl(const std::string &input);
   static std::string DecodeUrl(const std::string &input);
 
-  // Note, these are significantly faster than the std:: version!
   /**
    * Decodes the given base64 encoded string into the out array.
    *
@@ -49,6 +50,15 @@ class Base64Encode {
    * @return 0 on success
    */
   static int EncodeUrl(const char *encode, size_t num_encode, char *result, size_t *num_result);
+
+  /**
+   * Checks if this is a valid char in the base64 url set
+   *
+   * @return true if it is a valid char
+   */
+  inline static bool IsValidBase64Char(const char ch) {
+    return DecodeChar(ch) != INVALID;
+  }
 
   /**
    * Gets the number of bytes needed to decode a base64 encoded string of the
@@ -72,7 +82,28 @@ class Base64Encode {
   }
 
  private:
-  inline static char DecodeChar(uint8_t in);
+  inline static char DecodeChar(uint8_t in) {
+    const char table[] = {
+      66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
+      66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
+      66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 62, 66,
+      62, 66, 63, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 66, 66,
+      66, 66, 66, 66, 66, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+      10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+      25, 66, 66, 66, 66, 63, 66, 26, 27, 28, 29, 30, 31, 32, 33,
+      34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
+      49, 50, 51, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
+      66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
+      66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
+      66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
+      66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
+      66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
+      66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
+      66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
+      66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66};
+    return table[in];
+  }
+
   inline static char EncodeChar(uint8_t in);
 };
 #endif  // SRC_BASE64_BASE64_H_

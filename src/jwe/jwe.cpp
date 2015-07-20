@@ -87,6 +87,7 @@ inline size_t shimBrokenRubyJWE(uint8_t *str) {
     return replaced;
 }
 
+
 bool Jwe::Decrypt(json_t *jwe_header, uint8_t *payload, size_t num_payload,
                   uint8_t *signature, size_t num_signature,
                   uint8_t **decrypted, size_t *num_decrypted) const {

@@ -20,39 +20,32 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#include "token/keymastertoken.h"
-#include "util/allocators.h"
+#ifndef SRC_VALIDATORS_KIDVALIDATOR_H_
+#define SRC_VALIDATORS_KIDVALIDATOR_H_
 
-Token* KeymasterToken::decrypt_and_verify(const char* token, size_t num_token,
-      Jwe* decrypter, JwsVerifier* verifier) {
-  std::unique_ptr<Token> outerToken(Token::Parse(token, num_token));
-  if (outerToken.get() == NULL) {
-    return nullptr;
-  }
-  if (!outerToken->Decrypt(decrypter)) {
-    return nullptr;
-  }
+#include <stdint.h>
+#include <stddef.h>
+#include <map>
+#include <string>
+#include <vector>
+#include "validators/messagevalidator.h"
 
-  json_error_t error;
-  unique_json_ptr decrypted(json_loads(
-          const_cast<char*>(reinterpret_cast<const char*>(outerToken->decrypted())),
-      JSON_REJECT_DUPLICATES, &error));
+/**
+ * A validator that delegates to a Kid of registered
+ * validators.
+ */
+class KidValidator : public MessageValidator {
+ public:
+  KidValidator();
+  void Register(std::string kid, MessageValidator* validator);
+  bool Verify(json_t *jsonHeader, const uint8_t *header, size_t cHeader,
+              const uint8_t *signature, size_t cSignature) override;
+  const char *algorithm() const { return algorithm_; }
+  std::string toJson() const override;
 
-  if (decrypted.get() == NULL) {
-    return nullptr;
-  }
-  json_t *innertoken = json_object_get(decrypted.get(), "token");
-  if (innertoken == NULL) {
-    return nullptr;
-  }
+ private:
+  std::map<std::string, MessageValidator *> validator_map_;
+  const char* algorithm_;
+};
 
-  const char *tokstr = json_string_value(innertoken);
-  std::unique_ptr<Token> parsedInnerToken(Token::Parse(tokstr, strlen(tokstr)));
-
-  if (parsedInnerToken.get() == NULL || !parsedInnerToken->VerifySignature(verifier)) {
-    return nullptr;
-  }
-
-  return parsedInnerToken.release();
-}
-
+#endif  // SRC_VALIDATORS_KIDVALIDATOR_H_

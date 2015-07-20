@@ -45,14 +45,14 @@ bool AllClaimValidator::IsValid(const json_t *claimset) const {
 
 std::string AllClaimValidator::toJson() const {
   std::ostringstream msg;
-  msg << "{ \"all\" : ";
+  msg << "{ \"all\" : [ ";
   int num = validators_.size();
   for (auto validator : validators_) {
       msg << validator->toJson();
       if (--num != 0)
         msg << ", ";
   }
-  msg << " }";
+  msg << " ] }";
   return msg.str();
 }
 
@@ -76,14 +76,14 @@ bool AnyClaimValidator::IsValid(const json_t *claimset) const {
 
 std::string AnyClaimValidator::toJson() const {
   std::ostringstream msg;
-  msg << "{ \"any\" : ";
+  msg << "{ \"any\" : [ ";
   int num = validators_.size();
   for (auto validator : validators_) {
       msg << validator->toJson();
       if (--num != 0)
         msg << ", ";
   }
-  msg << " }";
+  msg << " ] }";
   return msg.str();
 }
 

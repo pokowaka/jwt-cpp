@@ -20,45 +20,49 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#include "validators/claims/timevalidator.h"
+#include "validators/setvalidator.h"
 #include <sstream>
 #include <string>
+#include <vector>
 
-
-UtcClock TimeValidator::utc_clock_ = UtcClock();
-
-bool TimeValidator::IsValid(const json_t *claim) const {
-  json_t *object = json_object_get(claim, property_);
-  if (!json_is_integer(object)) {
-    return false;
+SetValidator::SetValidator(std::vector<MessageValidator*> validators) {
+  for (auto validator : validators) {
+    validator_map_[validator->algorithm()] = validator;
   }
-
-  json_int_t time = json_integer_value(object);
-  if (time < 0) {
-    return false;
-  }
-
-  json_int_t diff = clock_->Now() - time;
-  json_int_t min = diff - leeway_;
-  json_int_t max = diff + leeway_;
-
-  if (sign_) {
-    return (min >= 0 || max >= 0);
-  }
-
-  return (min <= 0 || max <= 0);
 }
 
-std::string TimeValidator::toJson() const {
-  std::ostringstream msg;
-  msg << "{ \"" << property() << "\" : ";
-  if (leeway_ == 0) {
-    msg <<  "null";
-  } else {
-    msg << "{ \"leeway\" : " << std::to_string(leeway_) << " }";
+bool SetValidator::Verify(json_t *jsonHeader, const uint8_t *header, size_t num_header,
+                          const uint8_t *signature, size_t num_signature) {
+  json_t* algname = json_object_get(jsonHeader, "alg");
+  if (!json_is_string(algname)) {
+    return  false;
   }
-  msg  << " }";
+
+  auto alg = validator_map_.find(json_string_value(algname));
+  if (alg == validator_map_.end()) {
+    return nullptr;
+  }
+
+  MessageValidator* validator = alg->second;
+  return validator->Verify(nullptr, header, num_header, signature, num_signature);
+}
+
+
+bool SetValidator::Accepts(const char* algorithm) const {
+  auto alg = validator_map_.find(algorithm);
+  return  alg != validator_map_.end();
+}
+
+std::string SetValidator::toJson() const {
+  std::ostringstream msg;
+  msg << "{ \"set\" : [ ";
+  int idx = 0;
+  for (const auto &validator : validator_map_) {
+    if (idx++ > 0) {
+      msg << ", ";
+    }
+    msg << validator.second->toJson();
+  }
+  msg << " ] }";
   return msg.str();
 }
-
-

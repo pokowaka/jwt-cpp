@@ -1,5 +1,5 @@
 SET(JWT_SOURCE_DIRS
-  token
+  jwt
   base64
   validators
   validators/claims

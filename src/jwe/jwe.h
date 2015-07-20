@@ -38,6 +38,7 @@
  * alg: 'RSA1_5' and enc: 'A256CBC'
  *
  * TODO: This really needs to be extended.
+ *       and properly implemented.
  */
 class Jwe {
  public:

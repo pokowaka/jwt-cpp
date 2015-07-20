@@ -31,10 +31,10 @@ class TimeValidator : public ClaimValidator {
  public:
   TimeValidator(const char *key, bool sign, uint64_t leeway) : TimeValidator(key, sign, leeway,
       &utc_clock_) { }
-  TimeValidator(const char *key, bool sign) : TimeValidator(key, sign, 120) { }
-  TimeValidator(const char *key, bool sign, uint64_t leeway, IClock *clock) : ClaimValidator(key), sign_
-      (sign)
-      , leeway_(leeway), clock_(clock) { }
+  TimeValidator(const char *key, bool sign) : TimeValidator(key, sign, 0) { }
+  TimeValidator(const char *key, bool sign, uint64_t leeway,
+      IClock *clock) : ClaimValidator(key), sign_(sign), leeway_(leeway),
+  clock_(clock) { }
   bool IsValid(const json_t *claimset) const override;
   std::string toJson() const override;
 

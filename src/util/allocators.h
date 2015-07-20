@@ -41,8 +41,8 @@ class json_str_delete {
   }
 };
 
-typedef std::unique_ptr<json_t, json_ptr_delete> unique_json_ptr;
-typedef std::unique_ptr<char, json_str_delete> unique_json_str;
+typedef std::unique_ptr<json_t, json_ptr_delete> json_ptr;
+typedef std::unique_ptr<char, json_str_delete> json_str;
 typedef std::unique_ptr<char[]> str_ptr;
 #endif  // SRC_UTIL_ALLOCATORS_H_
 

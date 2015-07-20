@@ -27,36 +27,37 @@
 #include <string>
 #include "validators/messagevalidator.h"
 
-// Maximum length of a signature
+// Maximum length of a signature in bytes
 // Note that SHA512 is 64 bytes.
-#define MAX_KEYLENGTH 64
+#define MAX_HMAC_KEYLENGTH 64
 
 /**
- * Can sign & validate using an openssl digest function. Signing and Verification
- * are not thread safe functions.
+ * Can sign & validate a message using an openssl digest function.
  */
-class HMACValidator : public MessageValidator {
+class HMACValidator : public MessageSigner {
  public:
   explicit HMACValidator(const char *algorithm);
   explicit HMACValidator(const char *algorithm, const EVP_MD *md, const std::string &key);
   virtual ~HMACValidator();
 
-  bool VerifySignature(const uint8_t *header, size_t num_header,
-                       const uint8_t *signature, size_t num_signature) override;
+  bool Verify(json_t *jsonHeader, const uint8_t *header, size_t num_header,
+              const uint8_t *signature, size_t num_signature) override;
   bool Sign(const uint8_t *header, size_t num_header,
             uint8_t *signature, size_t *num_signature) override;
 
   inline unsigned int key_size() const { return key_size_; }
   inline const char *algorithm() const { return algorithm_; }
+  std::string toJson() const override;
 
  private:
   HMACValidator(const HMACValidator &);
   HMACValidator & operator=(const HMACValidator &);
-  static int const_time_cmp(const void* a, const void* b, const size_t size);
+  static int const_time_cmp(const uint8_t* a, const uint8_t* b, const size_t size);
 
-  HMAC_CTX ctx_;
+  const EVP_MD* md_;
   const char *algorithm_;
   unsigned int key_size_;
+  std::string key_;
 };
 
 class HS256Validator : public HMACValidator {

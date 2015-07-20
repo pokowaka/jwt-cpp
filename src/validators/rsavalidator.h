@@ -31,19 +31,20 @@
  * The RSAValidator can sign and validate the RSASSA-PKCX-v1_5 family of
  * signature algorithms.
  */
-class RSAValidator : public MessageValidator {
+class RSAValidator : public MessageSigner {
  public:
   explicit RSAValidator(const char *algorithm, const EVP_MD *md, const std::string &public_key);
   explicit RSAValidator(const char *algorithm, const EVP_MD *md, const std::string &public_key,
       const std::string &private_key);
   virtual ~RSAValidator();
 
-  bool VerifySignature(const uint8_t *header, size_t num_header, const uint8_t *signature,
-      size_t num_signature) override;
+  bool Verify(json_t *jsonHeader, const uint8_t *header, size_t num_header,
+              const uint8_t *signature, size_t num_signature) override;
   bool Sign(const uint8_t *header, size_t num_header,
       uint8_t *signature, size_t *num_signature) override;
 
   inline const char *algorithm() const { return algorithm_; }
+  std::string toJson() const override;
 
  private:
   EVP_PKEY* LoadKey(const char *key, bool public_key);

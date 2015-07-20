@@ -20,45 +20,50 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#include "validators/claims/timevalidator.h"
+#include "validators/kidvalidator.h"
 #include <sstream>
 #include <string>
+#include <vector>
 
 
-UtcClock TimeValidator::utc_clock_ = UtcClock();
+KidValidator::KidValidator() : algorithm_(NULL) { }
 
-bool TimeValidator::IsValid(const json_t *claim) const {
-  json_t *object = json_object_get(claim, property_);
-  if (!json_is_integer(object)) {
-    return false;
+void KidValidator::Register(std::string kid, MessageValidator *validator) {
+  validator_map_[kid] = validator;
+  if (algorithm_ == NULL) {
+    algorithm_ = validator->algorithm();
   }
-
-  json_int_t time = json_integer_value(object);
-  if (time < 0) {
-    return false;
+  if (strcmp(algorithm_, validator->algorithm()) != 0) {
+    throw std::logic_error("algorithm types have to be uniform");
   }
-
-  json_int_t diff = clock_->Now() - time;
-  json_int_t min = diff - leeway_;
-  json_int_t max = diff + leeway_;
-
-  if (sign_) {
-    return (min >= 0 || max >= 0);
-  }
-
-  return (min <= 0 || max <= 0);
 }
 
-std::string TimeValidator::toJson() const {
-  std::ostringstream msg;
-  msg << "{ \"" << property() << "\" : ";
-  if (leeway_ == 0) {
-    msg <<  "null";
-  } else {
-    msg << "{ \"leeway\" : " << std::to_string(leeway_) << " }";
+bool KidValidator::Verify(json_t *jsonHeader, const uint8_t *header, size_t num_header,
+                          const uint8_t *signature, size_t num_signature) {
+  json_t *kid = json_object_get(jsonHeader, "kid");
+  if (!json_is_string(kid))
+    return false;
+
+  auto kidvalidator = validator_map_.find(json_string_value(kid));
+  if (kidvalidator == validator_map_.end()) {
+    return nullptr;
   }
-  msg  << " }";
+
+  MessageValidator *validator = kidvalidator->second;
+  return validator->Verify(jsonHeader, header, num_header, signature, num_signature);
+}
+
+std::string KidValidator::toJson() const {
+  std::ostringstream msg;
+  msg << "{ \"kid\" : { ";
+  int idx = 0;
+  for (const auto &validator : validator_map_) {
+    if (idx++ > 0) {
+      msg << ", ";
+    }
+    msg << "\"" << validator.first << "\" : ";
+    msg << validator.second->toJson();
+  }
+  msg << " } }";
   return msg.str();
 }
-
-

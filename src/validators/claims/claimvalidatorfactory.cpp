@@ -116,7 +116,7 @@ ClaimValidator *ClaimValidatorFactory::build(json_t *json) {
 
 ClaimValidator *ClaimValidatorFactory::build(std::string fromJson) {
   json_error_t error;
-  unique_json_ptr json_str(json_loads(fromJson.c_str(), JSON_REJECT_DUPLICATES, &error));
+  json_ptr json_str(json_loads(fromJson.c_str(), JSON_REJECT_DUPLICATES, &error));
 
   if (!json_str) {
     std::ostringstream msg;
@@ -136,6 +136,10 @@ ClaimValidator *ClaimValidatorFactory::build(std::string fromJson) {
 }
 
 std::vector<ClaimValidator*> ClaimValidatorFactory::buildvalidatorlist(json_t *json) {
+  if (!json_is_array(json)) {
+    throw std::logic_error("not an array!");
+  }
+
   size_t idx;
   json_t *value;
   std::vector<ClaimValidator*> result;

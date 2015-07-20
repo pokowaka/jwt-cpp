@@ -20,28 +20,29 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#ifndef SRC_VALIDATORS_NONEVALIDATOR_H_
-#define SRC_VALIDATORS_NONEVALIDATOR_H_
-
-#include <stdint.h>
-#include <string>
 #include "validators/messagevalidator.h"
+#include <string>
 
-/**
- * A validator that really doesn't do any validation at all.
- */
-class NoneValidator : public MessageSigner {
- public:
-  bool Verify(json_t *jsonHeader, const uint8_t *header, size_t cHeader,
-              const uint8_t *signature, size_t cSignature);
-  bool Sign(const uint8_t *header, size_t num_header,
-            uint8_t *signature, size_t *num_signature) override;
+bool MessageValidator::Accepts(const char *algorithm) const {
+  return strcmp(algorithm, this->algorithm()) == 0;
+}
+bool MessageValidator::Validate(json_t *jsonHeader, std::string header, std::string signature) {
+  return Verify(jsonHeader,
+                reinterpret_cast<u_int8_t *>(const_cast<char *>(header.c_str())),
+                header.size(),
+                reinterpret_cast<u_int8_t *>(const_cast<char *>(signature.c_str())),
+                signature.size());
+}
 
-  const char *algorithm() const { return "none"; }
-
-  std::string toJson() const override {
-    return "{ \"none\" : null }";
+std::string MessageSigner::Digest(std::string header) {
+  size_t num_signature = 0;
+  Sign(reinterpret_cast<const uint8_t *>(header.c_str()), header.size(), NULL, &num_signature);
+  std::unique_ptr<uint8_t[]> signature(new uint8_t[num_signature]);
+  if (!this->Sign(
+        reinterpret_cast<const uint8_t*>(header.c_str()), header.size(),
+        signature.get(), &num_signature)) {
+    throw std::logic_error("unable to sign header");
   }
-};
 
-#endif  // SRC_VALIDATORS_NONEVALIDATOR_H_
+  return std::string(reinterpret_cast<char*>(signature.get()), num_signature);
+}

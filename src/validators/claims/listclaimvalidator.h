@@ -51,7 +51,6 @@ class SubValidator : public ListClaimValidator {
     ListClaimValidator("sub", lst_accepted, num_accepted) { }
 };
 
-
 class AudValidator : public ListClaimValidator {
  public:
   AudValidator(const char *const *lst_accepted, const size_t num_accepted) :
