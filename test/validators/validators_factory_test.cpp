@@ -28,7 +28,7 @@ TEST(parse_test, can_use_validator) {
     "VGPkHXap_i2zwUCxr7dsjBq7Nnx83h5dNGjzuifjpx8";
 
   jwt_ptr token(JWT::Decode(strtoken, valid.get()));
-  EXPECT_TRUE(token->IsSigned());
+  EXPECT_NE(nullptr, token.get());
 }
 
 // Test for the various validators.

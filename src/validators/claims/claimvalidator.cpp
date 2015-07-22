@@ -24,6 +24,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <iostream>
 
 AllClaimValidator::AllClaimValidator(const ClaimValidator *const *lstClaims,
     const size_t numClaims) : ClaimValidator(NULL) {
@@ -68,10 +69,14 @@ AnyClaimValidator::AnyClaimValidator(const ClaimValidator *const *lstClaims, con
 
 bool AnyClaimValidator::IsValid(const json_t *claimset) const {
   for (auto validator : validators_) {
-      if (validator->IsValid(claimset))
-        return true;
+      try {
+        if (validator->IsValid(claimset))
+          return true;
+      } catch(InvalidClaimError ice) {
+
+      }
   }
-  return false;
+  throw InvalidClaimError("None of the children validate");
 }
 
 std::string AnyClaimValidator::toJson() const {

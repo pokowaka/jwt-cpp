@@ -25,7 +25,6 @@
 
 #include <jansson.h>
 #include <stddef.h>
-#include <exception>
 #include <memory>
 #include <string>
 #include "validators/claims/claimvalidator.h"
@@ -35,10 +34,6 @@
 // Stack allocated signature.
 #define MAX_SIGNATURE_LENGTH 256
 
-class TokenFormatError : public std::runtime_error {
- public:
-  explicit TokenFormatError(std::string msg) : std::runtime_error(msg) { }
-};
 
 
 /**
@@ -76,11 +71,9 @@ class JWT {
 
   inline const json_t* header() { return header_; }
   inline const json_t* payload() { return payload_; }
-  inline bool IsSigned() { return signed_ ; }
-  inline bool IsValid() { return valid_; }
 
  private:
-  JWT(json_t* header, json_t* payload, bool signature, bool claim);
+  JWT(json_t* header, json_t* payload);
 
   static json_t* ExtractPayload(const char* payload, size_t num_payload);
   static bool VerifySignature(json_t* header_claims_, const char*header,
@@ -89,8 +82,6 @@ class JWT {
 
   json_t* header_;
   json_t* payload_;
-  bool signed_;
-  bool valid_;
 };
 
 typedef std::unique_ptr<JWT> jwt_ptr;

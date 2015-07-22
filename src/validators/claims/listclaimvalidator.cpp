@@ -25,6 +25,7 @@
 #include <sstream>
 #include <vector>
 #include "validators/claims/listclaimvalidator.h"
+#include "jwt/jwt_error.h"
 
 ListClaimValidator::ListClaimValidator(const char *property,
     std::vector<std::string> accepted) : ClaimValidator(property),
@@ -42,7 +43,7 @@ ListClaimValidator::ListClaimValidator(const char *property,
 bool ListClaimValidator::IsValid(const json_t *claim) const {
   json_t *object = json_object_get(claim, property_);
   if (!json_is_string(object)) {
-    return false;
+    throw InvalidClaimError(std::string("Missing: ") += property_);
   }
 
   const char *value = json_string_value(object);
@@ -51,7 +52,7 @@ bool ListClaimValidator::IsValid(const json_t *claim) const {
       return true;
   }
 
-  return false;
+  throw InvalidClaimError(std::string("Invalid: ") += property_);
 }
 
 std::string ListClaimValidator::toJson() const {

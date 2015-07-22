@@ -50,23 +50,15 @@ TEST(Sample, payload_deserialize) {
   ExpValidator exp;
 
   // Decode and validate the token
-  jwt_ptr token;
   try {
-    token.reset(JWT::Decode(str_token.get(), &signer, &exp));
-  } catch (TokenFormatError *tfe) {
+    jwt_ptr token(JWT::Decode(str_token.get(), &signer, &exp));
+    const json_t* header = token->header();
+    const json_t* payload = token->payload();
+  } catch (TokenFormatError &tfe) {
     // Badly encoded token
     FAIL();
   }
 
-  if (!token->IsValid()) {
-    // Claim validators say token is invalid
-    FAIL();
-  }
-
-  if (!token->IsSigned()) {
-    // JWT is not signed.
-    FAIL();
-  }
 }
 
 TEST(Sample, from_json) {
@@ -105,18 +97,8 @@ TEST(Sample, from_json) {
 
   try {
     token.reset(JWT::Decode(str_token.get(), message_validator.get(), claim_validator.get()));
-  } catch (TokenFormatError *tfe) {
-    // Badly encoded token
-    FAIL();
-  }
-
-  if (!token->IsValid()) {
-    // Claim validators say token is invalid
-    FAIL();
-  }
-
-  if (!token->IsSigned()) {
-    // JWT is not signed.
+  } catch (InvalidTokenError &tfe) {
+    // Badly token
     FAIL();
   }
 }
@@ -143,17 +125,9 @@ TEST(Sample, kid) {
 
   // Now let's use these validators to parse and verify the token we
   // created above
-  jwt_ptr token(JWT::Decode(str_token.get(), message_validator.get()));
-
-  if (token.get() == nullptr) {
-    // Badly encoded token"
+  try {
+    jwt_ptr token(JWT::Decode(str_token.get(), message_validator.get()));
+  } catch (InvalidTokenError &ite) {
     FAIL();
   }
-
-  if (!token->IsSigned()) {
-    // JWT is not signed.
-    FAIL();
-  }
-
-  // We don't care about claims..
 }

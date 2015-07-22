@@ -27,7 +27,9 @@
 #include <string.h>
 #include <jansson.h>
 #include <string>
+#include "jwt/jwt_error.h"
 #include "util/allocators.h"
+
 
 /**
  * A MessageValidator can validate and sign a header.

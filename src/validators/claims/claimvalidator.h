@@ -27,6 +27,12 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include "jwt/jwt_error.h"
+
+class InvalidClaimError : public InvalidTokenError {
+public:
+ explicit InvalidClaimError(std::string msg) : InvalidTokenError(msg) { }
+};
 
 class ClaimValidator {
  public:

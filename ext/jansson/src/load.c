@@ -711,6 +711,7 @@ static json_t *parse_object(lex_t *lex, size_t flags, json_error_t *error)
 
         if(flags & JSON_REJECT_DUPLICATES) {
             if(json_object_get(object, key)) {
+                printf("Found dupe!");
                 jsonp_free(key);
                 error_set(error, lex, "duplicate object key");
                 goto error;

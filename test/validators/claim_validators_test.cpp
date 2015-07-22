@@ -2,6 +2,7 @@
 #include "gtest/gtest.h"
 #include "./constants.h"
 #include "util/allocators.h"
+#include "validators/claims/claimvalidator.h"
 #include "validators/claims/listclaimvalidator.h"
 #include "validators/claims/timevalidator.h"
 
@@ -16,19 +17,19 @@ TEST(iat_test, before) {
 TEST(iat_test, wrong_type) {
   json_ptr json(json_pack("{si}", "iat", "foo"));
   IatValidator iat(0, &fakeClock);
-  EXPECT_FALSE(iat.IsValid(json.get()));
+  ASSERT_THROW(iat.IsValid(json.get()), InvalidClaimError);
 }
 
 TEST(iat_test, missing) {
   json_ptr json(json_pack("{si}", "foo", 12));
   IatValidator iat(0, &fakeClock);
-  EXPECT_FALSE(iat.IsValid(json.get()));
+  ASSERT_THROW(iat.IsValid(json.get()), InvalidClaimError);
 }
 
 TEST(iat_test, after) {
   json_ptr json(json_pack("{si}", "iat", 12));
   IatValidator iat(0, &fakeClock);
-  EXPECT_FALSE(iat.IsValid(json.get()));
+  ASSERT_THROW(iat.IsValid(json.get()), InvalidClaimError);
 }
 
 TEST(iat_test, before_leeway) {
@@ -47,19 +48,19 @@ TEST(nbf_test, before) {
 TEST(nbf_test, wrong_type) {
   json_ptr json(json_pack("{ss}", "nbf", "foo"));
   NbfValidator iat(0, &fakeClock);
-  EXPECT_FALSE(iat.IsValid(json.get()));
+  ASSERT_THROW(iat.IsValid(json.get()), InvalidClaimError);
 }
 
 TEST(nbf_test, missing) {
   json_ptr json(json_pack("{si}", "foo", 12));
   NbfValidator nbf(0, &fakeClock);
-  EXPECT_FALSE(nbf.IsValid(json.get()));
+  ASSERT_THROW(nbf.IsValid(json.get()), InvalidClaimError);
 }
 
 TEST(nbf_test, after) {
   json_ptr json(json_pack("{si}", "nbf", 12));
   NbfValidator nbf(0, &fakeClock);
-  EXPECT_FALSE(nbf.IsValid(json.get()));
+  ASSERT_THROW(nbf.IsValid(json.get()), InvalidClaimError);
 }
 
 TEST(nbf_test, before_leeway) {
@@ -71,19 +72,19 @@ TEST(nbf_test, before_leeway) {
 TEST(exp_test, expired) {
   json_ptr json(json_pack("{si}", "exp", 9));
   ExpValidator exp(0, &fakeClock);
-  EXPECT_FALSE(exp.IsValid(json.get()));
+  ASSERT_THROW(exp.IsValid(json.get()), InvalidClaimError);
 }
 
 TEST(exp_test, wrong_type) {
   json_ptr json(json_pack("{ss}", "exp", "foo"));
   ExpValidator exp(0, &fakeClock);
-  EXPECT_FALSE(exp.IsValid(json.get()));
+  ASSERT_THROW(exp.IsValid(json.get()), InvalidClaimError);
 }
 
 TEST(exp_test, missing) {
   json_ptr json(json_pack("{si}", "foo", 12));
   ExpValidator exp(0, &fakeClock);
-  EXPECT_FALSE(exp.IsValid(json.get()));
+  ASSERT_THROW(exp.IsValid(json.get()), InvalidClaimError);
 }
 
 TEST(exp_test, not_expired) {
@@ -98,24 +99,24 @@ TEST(exp_test, not_expired_leeway) {
   EXPECT_TRUE(exp.IsValid(json.get()));
 }
 
-const char* const accepted[] = { "foo", "bar" };
+const char *const accepted[] = {"foo", "bar"};
 
 TEST(iss_test, missing) {
   json_ptr json(json_pack("{ss}", "foo", "bar"));
   IssValidator iss(accepted, 2);
-  EXPECT_FALSE(iss.IsValid(json.get()));
+  ASSERT_THROW(iss.IsValid(json.get()), InvalidClaimError);
 }
 
 TEST(iss_test, wrong_type) {
   json_ptr json(json_pack("{si}", "iss", 5));
   IssValidator iss(accepted, 2);
-  EXPECT_FALSE(iss.IsValid(json.get()));
+  ASSERT_THROW(iss.IsValid(json.get()), InvalidClaimError);
 }
 
 TEST(iss_test, wrong_subject) {
   json_ptr json(json_pack("{ss}", "iss", "baz"));
   IssValidator iss(accepted, 2);
-  EXPECT_FALSE(iss.IsValid(json.get()));
+  ASSERT_THROW(iss.IsValid(json.get()), InvalidClaimError);
 }
 
 TEST(iss_test, right_subject) {
@@ -127,19 +128,19 @@ TEST(iss_test, right_subject) {
 TEST(sub_test, missing) {
   json_ptr json(json_pack("{ss}", "foo", "bar"));
   SubValidator sub(accepted, 2);
-  EXPECT_FALSE(sub.IsValid(json.get()));
+  ASSERT_THROW(sub.IsValid(json.get()), InvalidClaimError);
 }
 
 TEST(sub_test, wrong_type) {
   json_ptr json(json_pack("{si}", "sub", 5));
   SubValidator sub(accepted, 2);
-  EXPECT_FALSE(sub.IsValid(json.get()));
+  ASSERT_THROW(sub.IsValid(json.get()), InvalidClaimError);
 }
 
 TEST(sub_test, wrong_subject) {
   json_ptr json(json_pack("{ss}", "sub", "baz"));
   SubValidator sub(accepted, 2);
-  EXPECT_FALSE(sub.IsValid(json.get()));
+  ASSERT_THROW(sub.IsValid(json.get()), InvalidClaimError);
 }
 
 TEST(sub_test, right_subject) {
@@ -151,19 +152,19 @@ TEST(sub_test, right_subject) {
 TEST(aud_test, missing) {
   json_ptr json(json_pack("{ss}", "foo", "bar"));
   AudValidator aud(accepted, 2);
-  EXPECT_FALSE(aud.IsValid(json.get()));
+  ASSERT_THROW(aud.IsValid(json.get()), InvalidClaimError);
 }
 
 TEST(aud_test, wrong_type) {
   json_ptr json(json_pack("{si}", "aud", 5));
   AudValidator aud(accepted, 2);
-  EXPECT_FALSE(aud.IsValid(json.get()));
+  ASSERT_THROW(aud.IsValid(json.get()), InvalidClaimError);
 }
 
 TEST(aud_test, wrong_subject) {
   json_ptr json(json_pack("{ss}", "aud", "baz"));
   AudValidator aud(accepted, 2);
-  EXPECT_FALSE(aud.IsValid(json.get()));
+  ASSERT_THROW(aud.IsValid(json.get()), InvalidClaimError);
 }
 
 TEST(aud_test, right_subject) {
@@ -177,7 +178,7 @@ TEST(any_test, has_sub) {
   AudValidator aud(accepted, 2);
   SubValidator sub(accepted, 2);
 
-  ClaimValidator* claims[] = { &aud, &sub };
+  ClaimValidator *claims[] = {&aud, &sub};
   AnyClaimValidator any(claims, 2);
 
   EXPECT_TRUE(any.IsValid(json.get()));
@@ -188,10 +189,10 @@ TEST(any_test, no_aud_no_sub) {
   AudValidator aud(accepted, 2);
   SubValidator sub(accepted, 2);
 
-  ClaimValidator* claims[] = { &aud, &sub };
+  ClaimValidator *claims[] = {&aud, &sub};
   AnyClaimValidator any(claims, 2);
 
-  EXPECT_FALSE(any.IsValid(json.get()));
+  ASSERT_THROW(any.IsValid(json.get()), InvalidClaimError);
 }
 
 TEST(all_test, no_aud) {
@@ -199,10 +200,10 @@ TEST(all_test, no_aud) {
   AudValidator aud(accepted, 2);
   SubValidator sub(accepted, 2);
 
-  ClaimValidator* claims[] = { &aud, &sub };
+  ClaimValidator *claims[] = {&aud, &sub};
   AllClaimValidator all(claims, 2);
 
-  EXPECT_FALSE(all.IsValid(json.get()));
+  ASSERT_THROW(all.IsValid(json.get()), InvalidClaimError);
 }
 
 TEST(all_test, aud_and_sub) {
@@ -210,7 +211,7 @@ TEST(all_test, aud_and_sub) {
   AudValidator aud(accepted, 2);
   SubValidator sub(accepted, 2);
 
-  ClaimValidator* claims[] = { &aud, &sub };
+  ClaimValidator *claims[] = {&aud, &sub};
   AllClaimValidator all(claims, 2);
 
   EXPECT_TRUE(all.IsValid(json.get()));

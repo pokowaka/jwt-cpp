@@ -2,12 +2,14 @@
 #include <string>
 #include "gtest/gtest.h"
 #include "jwt/jwt.h"
+#include "jwt/jwt_error.h"
 #include "util/allocators.h"
 #include "validators/claims/listclaimvalidator.h"
 #include "validators/claims/timevalidator.h"
 #include "validators/hmacvalidator.h"
 #include "validators/nonevalidator.h"
 #include "validators/rsavalidator.h"
+
 
 class TokenTest : public ::testing::Test {
  public:
@@ -24,21 +26,14 @@ class TokenTest : public ::testing::Test {
   void ValidToken(std::string jwt, MessageValidator *validator, ClaimValidator *claims) {
     jwt_ptr token(JWT::Decode(jwt, validator, claims));
     ASSERT_NE(nullptr, token);
-    EXPECT_TRUE(token->IsValid());
-    EXPECT_TRUE(token->IsSigned());
   }
 
   void ImproperSignedToken(std::string jwt, MessageValidator *validator) {
-    jwt_ptr token(JWT::Decode(jwt, validator));
-    ASSERT_NE(nullptr, token);
-    EXPECT_FALSE(token->IsSigned());
+    ASSERT_THROW(JWT::Decode(jwt, validator), InvalidTokenError);
   }
 
   void ImproperClaims(std::string jwt, ClaimValidator *claims) {
-    jwt_ptr token(JWT::Decode(jwt, nullptr, claims));
-    ASSERT_NE(nullptr, token);
-    EXPECT_FALSE(token->IsSigned());
-    EXPECT_FALSE(token->IsValid());
+    ASSERT_THROW(JWT::Decode(jwt, nullptr, claims), InvalidClaimError);
   }
 
   NoneValidator none_;
@@ -76,24 +71,21 @@ TEST_F(TokenTest, encoded_token_is_valid) {
 TEST_F(TokenTest, encoded_token_with_none_is_valid) {
   NoneValidator none;
   json_ptr json(json_pack("{ss, ss, sb}", "sub", "1234567890", "name", "John Doe", "admin", true));
-  str_ptr str_token(JWT::Encode(&none, json.get()));
-  jwt_ptr token(JWT::Decode(str_token.get(), &validator_, &lst_));
+  str_ptr str_token(JWT::Encode(&none, json.get()));;
   ValidToken(str_token.get(), &none, &lst_);
 }
 
 TEST_F(TokenTest, encoded_token_has_duplicates) {
-  json_ptr json(json_pack("{ss, ss, sb}", "sub", "1234567890", "sub", "John Doe", "admin", true));
-  str_ptr str_token(JWT::Encode(&validator_, json.get()));
-  jwt_ptr token(JWT::Decode(str_token.get(), &validator_, &lst_));
-  EXPECT_NE(nullptr, token.get());
+  std::string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIifQ"
+      ".dtxWM6MIcgoeMgH87tGvsNDY6cHWL6MGW4LeYvnm1JA";
+  ASSERT_THROW(JWT::Decode(token, &validator_, &lst_), InvalidTokenError);
 }
 
 TEST_F(TokenTest, encoded_token_missing_alg) {
   std::string noAlg = "eyJmb28iOiJIUzI1NiJ9."
     "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9."
     "TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ";
-  jwt_ptr token(JWT::Decode(noAlg, &validator_, &lst_));
-  EXPECT_NE(nullptr, token.get());
+  ASSERT_THROW(JWT::Decode(noAlg, &validator_, &lst_), InvalidTokenError);
 }
 
 TEST_F(TokenTest, encoded_token_has_custom_header) {
@@ -125,8 +117,8 @@ TEST_F(TokenTest, just_parse) {
 
 TEST_F(TokenTest, parse_and_validate_bad_signature) {
   HS256Validator hs256("Not the right secret");
-  jwt_ptr token(JWT::Decode(validToken_, &hs256));
-  EXPECT_FALSE(token->IsSigned());
+  ASSERT_THROW(JWT::Decode(validToken_, &hs256), InvalidSignatureError);
+
 }
 
 TEST_F(TokenTest, modified_token) {

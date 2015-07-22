@@ -23,19 +23,19 @@
 #include "validators/claims/timevalidator.h"
 #include <sstream>
 #include <string>
-
+#include "jwt/jwt_error.h"
 
 UtcClock TimeValidator::utc_clock_ = UtcClock();
 
 bool TimeValidator::IsValid(const json_t *claim) const {
   json_t *object = json_object_get(claim, property_);
   if (!json_is_integer(object)) {
-    return false;
+    throw InvalidClaimError(std::string("Missing claim: ") += property_);
   }
 
   json_int_t time = json_integer_value(object);
   if (time < 0) {
-    return false;
+    throw InvalidClaimError(std::string("Negative time for: ") += property_);
   }
 
   json_int_t diff = clock_->Now() - time;
@@ -43,10 +43,16 @@ bool TimeValidator::IsValid(const json_t *claim) const {
   json_int_t max = diff + leeway_;
 
   if (sign_) {
-    return (min >= 0 || max >= 0);
+    if (!(min >= 0 || max >= 0)) {
+      throw InvalidClaimError(std::string("Failed: ") += property_);
+    }
+    return true;
+  }
+  if (!(min <= 0 || max <= 0)) {
+    throw InvalidClaimError(std::string("Failed: ") += property_);
   }
 
-  return (min <= 0 || max <= 0);
+  return true;
 }
 
 std::string TimeValidator::toJson() const {

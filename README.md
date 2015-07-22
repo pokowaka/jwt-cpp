@@ -35,15 +35,25 @@ We make use of [jansson](http://www.digip.org/jansson/) to create json payload.
 Validating tokens works as follows:
 
 ```
+  // Use the expiration validator
   ExpValidator exp;
-  token_ptr token = JTW::Decode(str_token, &signer, &exp);
- 
-  if (!token->IsSigned()) {
-    // Token is not properly signed.
+
+  // Decode and validate the token
+  jwt_ptr token;
+  try {
+    token.reset(JWT::Decode(str_token.get(), &signer, &exp));
+  } catch (TokenFormatError *tfe) {
+    // Badly encoded token
+    FAIL();
   }
+
   if (!token->IsValid()) {
-     // Claims are not valid.
-  } 
+    // Claim validators say token is invalid
+  }
+
+  if (!token->IsSigned()) {
+    // JWT is not signed.
+  }
 ```
 
 

@@ -25,11 +25,11 @@
 #include <string>
 #include "base64/base64.h"
 #include "util/allocators.h"
+#include "jwt/jwt_error.h"
 
 
-JWT::JWT(json_t *header_claims, json_t *payload_claims, bool issigned, bool valid)
-    : header_(header_claims), payload_(payload_claims), signed_(issigned),
-      valid_(valid) { }
+JWT::JWT(json_t *header_claims, json_t *payload_claims)
+    : header_(header_claims), payload_(payload_claims)  { }
 
 JWT::~JWT() {
   json_decref(header_);
@@ -144,13 +144,15 @@ JWT *JWT::Decode(const char *jws_token, size_t num_jws_token, MessageValidator *
 
   json_ptr payload_claims(ExtractPayload(payload, num_payload));
 
-  bool issigned = VerifySignature(header_claims.get(),
+  VerifySignature(header_claims.get(),
                                   header, num_header + num_payload + 1,
                                   signature, num_signature,
                                   verifier);
-  bool isvalid = validator && validator->IsValid(payload_claims.get());
+  if (validator) {
+    validator->IsValid(payload_claims.get());
+  }
 
-  return new JWT(header_claims.release(), payload_claims.release(), issigned, isvalid);
+  return new JWT(header_claims.release(), payload_claims.release());
 }
 
 json_t *JWT::ExtractPayload(const char *payload, size_t num_payload) {
@@ -175,16 +177,17 @@ bool JWT::VerifySignature(json_t *header_claims_, const char *header,
                             size_t num_header_and_payload, const char *signature,
                             size_t num_signature, MessageValidator *verifier) {
   if (verifier == nullptr) {
-    return false;
+    return true;
   }
 
   json_t *alg = json_object_get(header_claims_, "alg");
   if (!json_is_string(alg)) {
-    return false;
+    throw InvalidSignatureError("Missing alg header");
   }
 
   if (!verifier->Accepts(json_string_value(alg))) {
-    return false;
+    throw InvalidSignatureError(std::string("Verifier does not accept alg header: ") +=
+                             json_string_value(alg));
   }
 
   str_ptr heapsig;
@@ -202,9 +205,13 @@ bool JWT::VerifySignature(json_t *header_claims_, const char *header,
     throw std::logic_error("validated block has base64 error in signature");
   }
 
-  return verifier->Verify(header_claims_,
+  if (!verifier->Verify(header_claims_,
                           reinterpret_cast<uint8_t *>(const_cast<char *>(header)),
                           num_header_and_payload,
                           reinterpret_cast<uint8_t *>(const_cast<char *>(dec_signature)),
-                          num_dec_signature);
+                          num_dec_signature)) {
+    throw InvalidSignatureError("Unable to verify signature");
+  }
+
+  return true;
 }
