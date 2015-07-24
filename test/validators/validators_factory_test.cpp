@@ -3,17 +3,17 @@
 #include "gtest/gtest.h"
 #include "./constants.h"
 #include "jwt/jwt.h"
-#include "validators/hmacvalidator.h"
-#include "validators/messagevalidatorfactory.h"
-#include "validators/rsavalidator.h"
-#include "validators/nonevalidator.h"
+#include "jwt/hmacvalidator.h"
+#include "jwt/messagevalidatorfactory.h"
+#include "jwt/rsavalidator.h"
+#include "jwt/nonevalidator.h"
 
 // Test for the various validators.
 TEST(parse_test, proper_hmac) {
   for (int i = 2; i > 0; i--) {
     std::ostringstream json;
     json << "{ \"" << hmacs[i] << "\" : { \"secret\" : \"safe!\" } }";
-    validator_ptr valid(MessageValidatorFactory::build(json.str()));
+    validator_ptr valid(MessageValidatorFactory::Build(json.str()));
     EXPECT_NE(nullptr, valid.get());
     EXPECT_STREQ(json.str().c_str(), valid->toJson().c_str());
     EXPECT_STREQ(hmacs[i], valid->algorithm());
@@ -22,7 +22,7 @@ TEST(parse_test, proper_hmac) {
 
 TEST(parse_test, can_use_validator) {
   std::string json = "{ \"HS256\" : { \"secret\" : \"secret\" } }";
-  validator_ptr valid(MessageValidatorFactory::build(json));
+  validator_ptr valid(MessageValidatorFactory::Build(json));
   std::string strtoken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
     "eyJzdWIiOiJzdWJqZWN0IiwiZXhwIjoxNDM3NDMzMzk3fQ."
     "VGPkHXap_i2zwUCxr7dsjBq7Nnx83h5dNGjzuifjpx8";
@@ -41,7 +41,7 @@ TEST(parse_test, proper_rsa) {
         "Nnmy3FmhiJX0o5KNOKOEWKnTUoGfM7TbfV5WGRcXW37W4cBUQ2dLWwIDAQAB\\n"
         "-----END PUBLIC KEY-----"
         "\" } }";
-    validator_ptr valid(MessageValidatorFactory::build(json.str()));
+    validator_ptr valid(MessageValidatorFactory::Build(json.str()));
     EXPECT_NE(nullptr, valid.get());
     EXPECT_STREQ(rs[i], valid->algorithm());
   }
@@ -59,7 +59,7 @@ TEST(parse_test, proper_rsa_from_file) {
   for (int i = 0; i < 3; i++) {
     std::ostringstream json;
     json << "{ \"" << rs[i] << "\" : { \"public\" : { \"fromfile\" : \"/tmp/test.key\" } } }";
-    validator_ptr valid(MessageValidatorFactory::build(json.str()));
+    validator_ptr valid(MessageValidatorFactory::Build(json.str()));
 
     EXPECT_NE(nullptr, valid.get());
     EXPECT_STREQ(rs[i], valid->algorithm());
@@ -72,7 +72,7 @@ TEST(parse_test, parse_set) {
       "{ \"HS256\" : { \"secret\" : \"safe\" } }, "
       "{ \"HS512\" : { \"secret\" : \"supersafe\" } }"
       " ] }";
-  validator_ptr valid(MessageValidatorFactory::build(json));
+  validator_ptr valid(MessageValidatorFactory::Build(json));
   EXPECT_NE(nullptr, valid.get());
   EXPECT_STREQ(json, valid->toJson().c_str());
   EXPECT_TRUE(valid->Accepts("HS256"));
@@ -86,7 +86,7 @@ TEST(parse_test, parse_kid) {
       "\"key2\" : { \"HS256\" : { \"secret\" : \"key2\" } }, "
       "\"key3\" : { \"HS256\" : { \"secret\" : \"key3\" } } "
       "} }";
-  validator_ptr valid(MessageValidatorFactory::build(json));
+  validator_ptr valid(MessageValidatorFactory::Build(json));
   EXPECT_NE(nullptr, valid.get());
   EXPECT_STREQ(json, valid->toJson().c_str());
   EXPECT_TRUE(valid->Accepts("HS256"));
@@ -99,27 +99,27 @@ TEST(parse_test, bad_kid) {
       "\"key1\" : { \"HS256\" : { \"secret\" : \"key1\" } }, "
       "\"key3\" : { \"HS512\" : { \"secret\" : \"key3\" } } "
       "} }";
-  ASSERT_THROW(MessageValidatorFactory::build(json), std::logic_error);
+  ASSERT_THROW(MessageValidatorFactory::Build(json), std::logic_error);
 }
 
 TEST(parse_test, non_existing) {
   const char *json = "{ \"HS253\" : { \"secret\" : \"safe!\" } }";
-  ASSERT_THROW(MessageValidatorFactory::build(json), std::logic_error);
+  ASSERT_THROW(MessageValidatorFactory::Build(json), std::logic_error);
 }
 
 TEST(parse_test, non_secret) {
   const char *json = "{ \"HS253\" : { \"without_secret\" : \"safe!\" } }";
-  ASSERT_THROW(MessageValidatorFactory::build(json), std::logic_error);
+  ASSERT_THROW(MessageValidatorFactory::Build(json), std::logic_error);
 }
 
 TEST(parse_test, bad_json) {
   const char *json = "{ { \"HS256\" : { \"secret\" : \"safe!\" } }";
-  ASSERT_THROW(MessageValidatorFactory::build(json), std::logic_error);
+  ASSERT_THROW(MessageValidatorFactory::Build(json), std::logic_error);
 }
 
 void roundtrip(MessageValidator *validator) {
   std::string json = validator->toJson();
-  validator_ptr msg(MessageValidatorFactory::build(json));
+  validator_ptr msg(MessageValidatorFactory::Build(json));
   EXPECT_STREQ(json.c_str(), msg->toJson().c_str());
 }
 

@@ -20,28 +20,37 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#ifndef SRC_VALIDATORS_NONEVALIDATOR_H_
-#define SRC_VALIDATORS_NONEVALIDATOR_H_
+#ifndef SRC_INCLUDE_JWT_JWT_ERROR_H_
+#define SRC_INCLUDE_JWT_JWT_ERROR_H_
 
-#include <stdint.h>
+#include <exception>
+#include <stdexcept>
 #include <string>
-#include "validators/messagevalidator.h"
 
 /**
- * A validator that really doesn't do any validation at all.
+ * Indicates that we failed to validate and parse the token.
  */
-class NoneValidator : public MessageSigner {
+class InvalidTokenError :public std::runtime_error {
  public:
-  bool Verify(json_t *jsonHeader, const uint8_t *header, size_t cHeader,
-              const uint8_t *signature, size_t cSignature);
-  bool Sign(const uint8_t *header, size_t num_header,
-            uint8_t *signature, size_t *num_signature) override;
-
-  const char *algorithm() const { return "none"; }
-
-  std::string toJson() const override {
-    return "{ \"none\" : null }";
-  }
+  explicit InvalidTokenError(std::string msg) : std::runtime_error(msg) { }
 };
 
-#endif  // SRC_VALIDATORS_NONEVALIDATOR_H_
+/**
+ * Indicates that the token is not properly encoded. The token cannot
+ * be parsed. It will not be possible to extact any information
+ * from this set of bytes.
+ */
+class TokenFormatError : public InvalidTokenError {
+ public:
+  explicit TokenFormatError(std::string msg) : InvalidTokenError(msg) { }
+};
+
+/**
+ * The token is not properly signed.
+ */
+class InvalidSignatureError : public InvalidTokenError {
+ public:
+  explicit InvalidSignatureError(std::string msg) : InvalidTokenError(msg) { }
+};
+
+#endif  // SRC_INCLUDE_JWT_JWT_ERROR_H_

@@ -23,8 +23,8 @@
 #include "jwt/jwt.h"
 #include <jansson.h>
 #include <string>
-#include "base64/base64.h"
-#include "util/allocators.h"
+#include "private/base64.h"
+#include "jwt/allocators.h"
 #include "jwt/jwt_error.h"
 
 
@@ -43,8 +43,11 @@ char *JWT::Encode(MessageSigner *validator, json_t *payload, json_t *header) {
   }
 
   // Set proper header flags.
-  json_object_set(header, "typ", json_string("JWT"));
-  json_object_set(header, "alg", json_string(validator->algorithm()));
+  json_ptr jwt(json_string("JWT"));
+  json_object_set(header, "typ", jwt.get());
+
+  json_ptr alg(json_string(validator->algorithm()));
+  json_object_set(header, "alg", alg.get());
 
   // Encode the header
   json_str str_header(json_dumps(header, JSON_COMPACT));

@@ -20,30 +20,40 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#ifndef SRC_VALIDATORS_SETVALIDATOR_H_
-#define SRC_VALIDATORS_SETVALIDATOR_H_
 
-#include <stdint.h>
-#include <stddef.h>
-#include <map>
-#include <string>
-#include <vector>
-#include "validators/messagevalidator.h"
+#ifndef SRC_INCLUDE_PRIVATE_JWE_H_
+#define SRC_INCLUDE_PRIVATE_JWE_H_
+
+
+#include <jansson.h>
+#include <openssl/evp.h>
+
+// The size of the IV property must be the same as the BlockSize
+// property divided by 8.
+// So in our case this should work just fine
+#define MAX_IV_SIZE 128
 
 /**
- * A validator that delegates to a set of registered
- * validators.
+ * Allows you to decrypt tokens with
+ * alg: 'RSA1_5' and enc: 'A256CBC'
+ *
+ * TODO: This really needs to be extended.
+ *       and properly implemented.
  */
-class SetValidator : public MessageValidator {
+class Jwe {
  public:
-  explicit SetValidator(std::vector<MessageValidator*> msg);
-  bool Verify(json_t *jsonHeader, const uint8_t *header, size_t cHeader,
-              const uint8_t *signature, size_t cSignature) override;
-  const char *algorithm() const override { return "SET"; }
-  std::string toJson() const override;
-  bool Accepts(const char* algorithm) const override;
+  explicit Jwe(const char* private_key);
+  ~Jwe();
+
+  bool Decrypt(json_t* jwe_header, uint8_t *payload, size_t num_payload,
+      uint8_t *signature, size_t num_signature,
+      uint8_t **decrypted, size_t *num_decrypted) const;
+
  private:
-  std::map<std::string, MessageValidator *> validator_map_;
+  inline static bool isSet(json_t *json, const char *key, const char *expected);
+  static RSA *createRSA(const char *key, bool public_key);
+  RSA* rsa_;
 };
 
-#endif  // SRC_VALIDATORS_SETVALIDATOR_H_
+
+#endif  // SRC_INCLUDE_PRIVATE_JWE_H_

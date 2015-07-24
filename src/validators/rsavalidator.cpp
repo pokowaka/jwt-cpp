@@ -25,7 +25,7 @@
 #include <regex> // NOLINT(*)
 #include <sstream>
 #include <string>
-#include "validators/rsavalidator.h"
+#include "jwt/rsavalidator.h"
 
 RSAValidator::RSAValidator(const char *algorithm, const EVP_MD *md, const std::string &key)
   : algorithm_(algorithm), private_key_(NULL), public_key_(NULL), md_(md) {
@@ -56,26 +56,28 @@ bool RSAValidator::Verify(json_t *jsonHeader, const uint8_t *header, size_t num_
 bool RSAValidator::Sign(const uint8_t *header, size_t num_header,
     uint8_t *signature, size_t *num_signature) {
   size_t needed = 0;
+  bool success = false;
 
   EVP_MD_CTX evp_md_ctx;
   EVP_MD_CTX_init(&evp_md_ctx);
   EVP_DigestSignInit(&evp_md_ctx, NULL, md_, NULL, private_key_);
   if (EVP_DigestSignUpdate(&evp_md_ctx, header, num_header) != 1) {
-    return false;
+    goto Error;
   }
 
   // Figure out how many bytes we need
   if (EVP_DigestSignFinal(&evp_md_ctx, NULL, &needed) != 1) {
-    return false;
+    goto Error;
   }
 
   // We need more bytes please!
   if (signature == NULL || *num_signature < needed) {
     *num_signature = needed;
-    return false;
+    goto Error;
   }
 
-  bool success = EVP_DigestSignFinal(&evp_md_ctx, signature, num_signature) == 1;
+  success = EVP_DigestSignFinal(&evp_md_ctx, signature, num_signature) == 1;
+Error:
   EVP_MD_CTX_cleanup(&evp_md_ctx);
   return success;
 }

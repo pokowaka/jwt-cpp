@@ -1,15 +1,7 @@
 #include <jansson.h>
 #include <string>
 #include "gtest/gtest.h"
-#include "jwt/jwt.h"
-#include "jwt/jwt_error.h"
-#include "util/allocators.h"
-#include "validators/claims/listclaimvalidator.h"
-#include "validators/claims/timevalidator.h"
-#include "validators/hmacvalidator.h"
-#include "validators/nonevalidator.h"
-#include "validators/rsavalidator.h"
-
+#include "jwt/jwt_all.h"
 
 class TokenTest : public ::testing::Test {
  public:

@@ -1,7 +1,16 @@
 #ifndef TEST_VALIDATORS_CONSTANTS_H_
 #define TEST_VALIDATORS_CONSTANTS_H_
 
-#include "util/clock.h"
+#include "private/clock.h"
+
+class FakeClock : public IClock {
+ public:
+    explicit FakeClock(uint64_t time) { now_ = time; }
+    inline uint64_t Now() { return now_; }
+ private:
+    uint64_t now_;
+};
+
 
 const char *privkey = "-----BEGIN RSA PRIVATE KEY-----\n"
     "MIIEowIBAAKCAQEA4SWe3cgEULKiz2wP+fYqN2TxEx6DiL4rvyqZfl0CFpVMH7wC\n"

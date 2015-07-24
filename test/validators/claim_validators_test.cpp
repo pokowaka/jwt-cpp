@@ -1,10 +1,10 @@
 #include <string>
 #include "gtest/gtest.h"
 #include "./constants.h"
-#include "util/allocators.h"
-#include "validators/claims/claimvalidator.h"
-#include "validators/claims/listclaimvalidator.h"
-#include "validators/claims/timevalidator.h"
+#include "jwt/allocators.h"
+#include "jwt/claimvalidator.h"
+#include "jwt/listclaimvalidator.h"
+#include "jwt/timevalidator.h"
 
 // Test for the various validators.
 
@@ -167,8 +167,20 @@ TEST(aud_test, wrong_subject) {
   ASSERT_THROW(aud.IsValid(json.get()), InvalidClaimError);
 }
 
+TEST(aud_test, wrong_subject_from_list) {
+  json_ptr json(json_pack("{s[sss]}", "aud", "baz", "gnu", "cpp"));
+  AudValidator aud(accepted, 2);
+  ASSERT_THROW(aud.IsValid(json.get()), InvalidClaimError);
+}
+
 TEST(aud_test, right_subject) {
   json_ptr json(json_pack("{ss}", "aud", "foo"));
+  AudValidator aud(accepted, 2);
+  EXPECT_TRUE(aud.IsValid(json.get()));
+}
+
+TEST(aud_test, right_subject_from_list) {
+  json_ptr json(json_pack("{s[sss]}", "aud", "bar", "baz", "foo"));
   AudValidator aud(accepted, 2);
   EXPECT_TRUE(aud.IsValid(json.get()));
 }

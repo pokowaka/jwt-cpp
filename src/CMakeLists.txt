@@ -9,11 +9,13 @@ SET(JWT_SOURCE_DIRS
 
 FOREACH( DIR ${JWT_SOURCE_DIRS} )
   AUX_SOURCE_DIRECTORY(${DIR} JWT_SRC)
-	FILE(GLOB SRC ${DIR}/*.h )
   SET(JWT_SRC ${JWT_SRC} ${SRC} )
 ENDFOREACH( DIR ${JWT_SOURCE_DIRS} )
 
-ADD_LIBRARY(jwt ${JWT_SRC})
+FILE(GLOB JWT_HDR include/jwt/*.h )
+
+
+ADD_LIBRARY(jwt ${JWT_SRC} ${JWT_HDR})
 TARGET_LINK_LIBRARIES (jwt jansson ${OPENSSL_LIBRARIES})
 SET_PROPERTY(TARGET jwt PROPERTY CXX_STANDARD 11)
 
@@ -22,10 +24,13 @@ IF(ENABLE_GPERF_TOOLS MATCHES "ON")
     TARGET_LINK_LIBRARIES(jwt-cpp tcmalloc)
 ENDIF(ENABLE_GPERF_TOOLS MATCHES "ON")
 
-################################################################################
-#
-# CPP lint check target
-#
-################################################################################
+SET_TARGET_PROPERTIES(jwt PROPERTIES PUBLIC_HEADER "${JWT_HDR}")
+# Install targets.
+INSTALL(TARGETS jwt
+        EXPORT JwtTargets
+        LIBRARY DESTINATION "${JWT_INSTALL_LIB_DIR}" COMPONENT lib
+        ARCHIVE DESTINATION "${JWT_INSTALL_LIB_DIR}" COMPONENT lib
+        PUBLIC_HEADER DESTINATION "${JWT_INSTALL_INCLUDE_DIR}/jwt" COMPONENT lib)
+
 ADD_STYLE_CHECK_TARGET(lint "${JWT_SRC}")
 

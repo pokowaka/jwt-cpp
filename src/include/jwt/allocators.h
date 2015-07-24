@@ -20,40 +20,28 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-#ifndef SRC_JWE_JWE_H_
-#define SRC_JWE_JWE_H_
-
-
+#ifndef SRC_INCLUDE_JWT_ALLOCATORS_H_
+#define SRC_INCLUDE_JWT_ALLOCATORS_H_
 #include <jansson.h>
-#include <openssl/evp.h>
+#include <memory>
 
-// The size of the IV property must be the same as the BlockSize
-// property divided by 8.
-// So in our case this should work just fine
-#define MAX_IV_SIZE 128
-
-/**
- * Allows you to decrypt tokens with
- * alg: 'RSA1_5' and enc: 'A256CBC'
- *
- * TODO: This really needs to be extended.
- *       and properly implemented.
- */
-class Jwe {
+class json_ptr_delete {
  public:
-  explicit Jwe(const char* private_key);
-  ~Jwe();
-
-  bool Decrypt(json_t* jwe_header, uint8_t *payload, size_t num_payload,
-      uint8_t *signature, size_t num_signature,
-      uint8_t **decrypted, size_t *num_decrypted) const;
-
- private:
-  inline static bool isSet(json_t *json, const char *key, const char *expected);
-  static RSA *createRSA(const char *key, bool public_key);
-  RSA* rsa_;
+  // constexpr default_delete() noexcept {}
+  // inline template <class U> default_delete(const default_delete<U>& d) noexcept { }
+  inline void operator() (json_t* ptr) const {
+    json_decref(ptr);
+  }
 };
 
+class json_str_delete {
+ public:
+  inline void operator() (char* ptr) const {
+    free(ptr);
+  }
+};
 
-#endif  // SRC_JWE_JWE_H_
+typedef std::unique_ptr<json_t, json_ptr_delete> json_ptr;
+typedef std::unique_ptr<char, json_str_delete> json_str;
+typedef std::unique_ptr<char[]> str_ptr;
+#endif  // SRC_INCLUDE_JWT_ALLOCATORS_H_

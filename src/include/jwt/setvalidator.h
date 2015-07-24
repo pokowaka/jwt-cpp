@@ -20,32 +20,30 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#ifndef SRC_VALIDATORS_KIDVALIDATOR_H_
-#define SRC_VALIDATORS_KIDVALIDATOR_H_
+#ifndef SRC_INCLUDE_JWT_SETVALIDATOR_H_
+#define SRC_INCLUDE_JWT_SETVALIDATOR_H_
 
 #include <stdint.h>
 #include <stddef.h>
 #include <map>
 #include <string>
 #include <vector>
-#include "validators/messagevalidator.h"
+#include "jwt/messagevalidator.h"
 
 /**
- * A validator that delegates to a Kid of registered
+ * A validator that delegates to a set of registered
  * validators.
  */
-class KidValidator : public MessageValidator {
+class SetValidator : public MessageValidator {
  public:
-  KidValidator();
-  void Register(std::string kid, MessageValidator* validator);
+  explicit SetValidator(std::vector<MessageValidator*> msg);
   bool Verify(json_t *jsonHeader, const uint8_t *header, size_t cHeader,
-              const uint8_t *signature, size_t cSignature) override;
-  const char *algorithm() const { return algorithm_; }
-  std::string toJson() const override;
-
+              const uint8_t *signature, size_t cSignature);
+  const char *algorithm() const  { return "SET"; }
+  std::string toJson() const;
+  bool Accepts(const char* algorithm) const;
  private:
   std::map<std::string, MessageValidator *> validator_map_;
-  const char* algorithm_;
 };
 
-#endif  // SRC_VALIDATORS_KIDVALIDATOR_H_
+#endif  // SRC_INCLUDE_JWT_SETVALIDATOR_H_

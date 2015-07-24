@@ -20,12 +20,12 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#include "jwe/jwe.h"
+#include "private/jwe.h"
 #include <string.h>
 #include <openssl/pem.h>
 #include <openssl/err.h>
-#include <base64/base64.h>
-#include "util/allocators.h"
+#include "private/base64.h"
+#include "jwt/allocators.h"
 
 inline bool Jwe::isSet(json_t *json, const char *key, const char *expected) {
     json_t *object = json_object_get(json, key);

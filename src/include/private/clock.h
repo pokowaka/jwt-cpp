@@ -20,41 +20,28 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#ifndef SRC_VALIDATORS_CLAIMS_CLAIMVALIDATORFACTORY_H_
-#define SRC_VALIDATORS_CLAIMS_CLAIMVALIDATORFACTORY_H_
+#ifndef SRC_INCLUDE_PRIVATE_CLOCK_H_
+#define SRC_INCLUDE_PRIVATE_CLOCK_H_
 
-#include <jansson.h>
-#include <exception>
-#include <string>
-#include <vector>
-#include "validators/claims/claimvalidator.h"
+#include <time.h>
 
-class ClaimValidatorFactory {
+/**
+ * Clock interface, mainly used so we can stub out behavior.
+ */
+class IClock {
  public:
-  static ClaimValidator *build(std::string fromJson);
-  ~ClaimValidatorFactory();
-
- private:
-  std::vector<std::string> buildlist(json_t *lst);
-  std::vector<ClaimValidator*> buildvalidatorlist(json_t *json);
-  ClaimValidator *build(json_t *fromJson);
-
-  std::vector<ClaimValidator*> build_;
+    virtual uint64_t Now()  = 0;
+    virtual ~IClock() {}
 };
 
-class ParsedClaimvalidator : public ClaimValidator {
+class UtcClock : public IClock {
  public:
-  ParsedClaimvalidator(json_t *json, const std::vector<ClaimValidator*> &children,
-      ClaimValidator *root);
-  ~ParsedClaimvalidator();
-
-  bool IsValid(const json_t *claimset) const override;
-  std::string toJson() const override;
-
- private:
-  json_t *json_;
-  std::vector<ClaimValidator*> children_;
-  ClaimValidator *root_;
+    uint64_t Now() {
+      time_t rawtime;
+      struct tm ptm;
+      time(&rawtime);
+      gmtime_r(&rawtime, &ptm);
+      return mktime(&ptm);
+    }
 };
-
-#endif  // SRC_VALIDATORS_CLAIMS_CLAIMVALIDATORFACTORY_H_
+#endif  // SRC_INCLUDE_PRIVATE_CLOCK_H_

@@ -20,48 +20,47 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#ifndef SRC_VALIDATORS_MESSAGEVALIDATORFACTORY_H_
-#define SRC_VALIDATORS_MESSAGEVALIDATORFACTORY_H_
+#ifndef SRC_INCLUDE_PRIVATE_BUILDWRAPPERS_H_
+#define SRC_INCLUDE_PRIVATE_BUILDWRAPPERS_H_
 
 #include <jansson.h>
-#include <exception>
 #include <string>
 #include <vector>
-#include "validators/messagevalidator.h"
-#include "validators/kidvalidator.h"
+#include "jwt/messagevalidator.h"
+#include "jwt/claimvalidator.h"
 
-class MessageValidatorFactory {
- public:
-  static MessageValidator *build(std::string fromJson);
-  ~MessageValidatorFactory();
 
- private:
-  std::vector<std::string> buildlist(json_t *lst);
-  std::vector<MessageValidator*> buildvalidatorlist(json_t *json);
-  std::string ParseSecret(const char *property, json_t *object);
-  MessageValidator *build(json_t *fromJson);
-  MessageValidator *buildkid(KidValidator* kid, json_t *kidlist);
+class ParsedClaimvalidator : public ClaimValidator {
+public:
+  ParsedClaimvalidator(json_t *json, const std::vector<ClaimValidator*> &children,
+                       ClaimValidator *root);
+  ~ParsedClaimvalidator();
 
-  std::vector<MessageValidator*> build_;
+  bool IsValid(const json_t *claimset) const;
+  std::string toJson() const;
+
+private:
+  json_t *json_;
+  std::vector<ClaimValidator*> children_;
+  ClaimValidator *root_;
 };
 
+
 class ParsedMessagevalidator : public MessageValidator {
- public:
+public:
   ParsedMessagevalidator(json_t *json, const std::vector<MessageValidator*> &children,
-      MessageValidator *root);
+                         MessageValidator *root);
   ~ParsedMessagevalidator();
 
   bool Verify(json_t *jsonHeader, const uint8_t *header, size_t num_header,
-              const uint8_t *signature, size_t num_signature) override;
-  const char *algorithm() const override;
-  bool Accepts(const char* algorithm) const override;
-  std::string toJson() const override;
+              const uint8_t *signature, size_t num_signature);
+  const char *algorithm() const;
+  bool Accepts(const char* algorithm) const;
+  std::string toJson() const;
 
- private:
+private:
   json_t *json_;
   std::vector<MessageValidator*> children_;
   MessageValidator *root_;
 };
-
-#endif  // SRC_VALIDATORS_MESSAGEVALIDATORFACTORY_H_
-
+#endif  // SRC_INCLUDE_PRIVATE_BUILDWRAPPERS_H_

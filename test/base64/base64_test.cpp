@@ -1,4 +1,4 @@
-#include "base64/base64.h"
+#include "private/base64.h"
 #include "gtest/gtest.h"
 
 #define MANY_TIMES 5000

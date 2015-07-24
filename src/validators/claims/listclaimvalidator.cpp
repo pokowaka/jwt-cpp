@@ -24,7 +24,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
-#include "validators/claims/listclaimvalidator.h"
+#include "jwt/listclaimvalidator.h"
 #include "jwt/jwt_error.h"
 
 ListClaimValidator::ListClaimValidator(const char *property,
@@ -67,3 +67,28 @@ std::string ListClaimValidator::toJson() const {
   msg << "] }";
   return msg.str();
 }
+
+bool AudValidator::IsValid(const json_t *claim) const {
+  json_t *object = json_object_get(claim, property_);
+  if (json_is_string(object)) {
+    return ListClaimValidator::IsValid(claim);
+  }
+  if (!json_is_array(object)) {
+    throw InvalidClaimError(std::string("aud not a string/array: "));
+  }
+
+  size_t idx;
+  json_t *elem;
+
+  json_array_foreach(object, idx, elem) {
+    const char *value = json_string_value(elem);
+    if (value) {
+      for (auto accept : accepted_) {
+        if (accept == value)
+          return true;
+      }
+    }
+  }
+  throw InvalidClaimError(std::string("Invalid: ") += property_);
+}
+

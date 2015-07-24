@@ -20,7 +20,7 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#include "validators/nonevalidator.h"
+#include "jwt/nonevalidator.h"
 #include <string.h>
 
 bool NoneValidator::Verify(json_t *jsonHeader, const uint8_t *header, size_t num_header,

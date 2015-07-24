@@ -20,12 +20,12 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#ifndef SRC_VALIDATORS_HMACVALIDATOR_H_
-#define SRC_VALIDATORS_HMACVALIDATOR_H_
+#ifndef SRC_INCLUDE_JWT_HMACVALIDATOR_H_
+#define SRC_INCLUDE_JWT_HMACVALIDATOR_H_
 
 #include <openssl/hmac.h>
 #include <string>
-#include "validators/messagevalidator.h"
+#include "jwt/messagevalidator.h"
 
 // Maximum length of a signature in bytes
 // Note that SHA512 is 64 bytes.
@@ -41,13 +41,13 @@ class HMACValidator : public MessageSigner {
   virtual ~HMACValidator();
 
   bool Verify(json_t *jsonHeader, const uint8_t *header, size_t num_header,
-              const uint8_t *signature, size_t num_signature) override;
+              const uint8_t *signature, size_t num_signature);
   bool Sign(const uint8_t *header, size_t num_header,
-            uint8_t *signature, size_t *num_signature) override;
+            uint8_t *signature, size_t *num_signature);
 
   inline unsigned int key_size() const { return key_size_; }
   inline const char *algorithm() const { return algorithm_; }
-  std::string toJson() const override;
+  std::string toJson() const;
 
  private:
   HMACValidator(const HMACValidator &);
@@ -60,18 +60,39 @@ class HMACValidator : public MessageSigner {
   std::string key_;
 };
 
+/**
+ * HMAC using SHA-256
+ */
 class HS256Validator : public HMACValidator {
  public:
+   /**
+    * Initializez the HMAC using SHA-256 algorithm with the given key
+    * @param key The secret used when calculating the SHA-256
+    */
   explicit HS256Validator(const std::string &key) : HMACValidator("HS256", EVP_sha256(), key) { }
 };
 
+/**
+ * HMAC using SHA-384
+ */
 class HS384Validator : public HMACValidator {
  public:
+   /**
+    * Initializez the HMAC using SHA-384 algorithm with the given key
+    * @param key The secret used when calculating the SHA-384
+    */
   explicit HS384Validator(const std::string &key) : HMACValidator("HS384", EVP_sha384(), key) { }
 };
 
+/**
+ * HMAC using SHA-512
+ */
 class HS512Validator : public HMACValidator {
  public:
+   /**
+    * Initializez the HMAC using SHA-512 algorithm with the given key
+    * @param key The secret used when calculating the SHA-512
+    */
   explicit HS512Validator(const std::string &key) : HMACValidator("HS512", EVP_sha512(), key) { }
 };
-#endif  // SRC_VALIDATORS_HMACVALIDATOR_H_
+#endif  // SRC_INCLUDE_JWT_HMACVALIDATOR_H_

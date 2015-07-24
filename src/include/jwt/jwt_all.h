@@ -20,37 +20,19 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#ifndef SRC_UTIL_CLOCK_H_
-#define SRC_UTIL_CLOCK_H_
+#ifndef SRC_INCLUDE_JWT_JWT_ALL_H_
+#define SRC_INCLUDE_JWT_JWT_ALL_H_
+#include "jwt/jwt.h"
+#include "jwt/allocators.h"
 
-#include <time.h>
+// Validators
+#include "jwt/messagevalidatorfactory.h"
+#include "jwt/nonevalidator.h"
+#include "jwt/rsavalidator.h"
+#include "jwt/hmacvalidator.h"
 
-/**
- * Clock interface, mainly used so we can stub out behavior.
- */
-class IClock {
- public:
-    virtual uint64_t Now()  = 0;
-    virtual ~IClock() {}
-};
-
-class UtcClock : public IClock {
- public:
-    uint64_t Now() {
-      time_t rawtime;
-      struct tm ptm;
-      time(&rawtime);
-      gmtime_r(&rawtime, &ptm);
-      return mktime(&ptm);
-    }
-};
-
-class FakeClock : public IClock {
- public:
-    explicit FakeClock(uint64_t time) { now_ = time; }
-    inline uint64_t Now() { return now_; }
- private:
-    uint64_t now_;
-};
-
-#endif  // SRC_UTIL_CLOCK_H_
+// Claims
+#include "jwt/claimvalidatorfactory.h"
+#include "jwt/listclaimvalidator.h"
+#include "jwt/timevalidator.h"
+#endif  // SRC_INCLUDE_JWT_JWT_ALL_H_

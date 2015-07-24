@@ -20,29 +20,32 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#ifndef SRC_UTIL_ALLOCATORS_H_
-#define SRC_UTIL_ALLOCATORS_H_
+#ifndef SRC_INCLUDE_JWT_MESSAGEVALIDATORFACTORY_H_
+#define SRC_INCLUDE_JWT_MESSAGEVALIDATORFACTORY_H_
+
 #include <jansson.h>
-#include <memory>
+#include <exception>
+#include <string>
+#include <vector>
+#include "jwt/messagevalidator.h"
+#include "jwt/kidvalidator.h"
 
-class json_ptr_delete {
+class MessageValidatorFactory {
  public:
-  // constexpr default_delete() noexcept {}
-  // inline template <class U> default_delete(const default_delete<U>& d) noexcept { }
-  inline void operator() (json_t* ptr) const noexcept {
-    json_decref(ptr);
-  }
+  static MessageValidator *Build(std::string fromJson);
+  static MessageSigner *BuildSigner(std::string fromJson);
+  ~MessageValidatorFactory();
+
+ private:
+  static std::string ParseSecret(const char *property, json_t *object);
+
+  std::vector<std::string> BuildList(json_t *lst);
+  std::vector<MessageValidator*> BuildValidatorList(json_t *json);
+  MessageValidator *Build(json_t *fromJson);
+  MessageValidator *BuildKid(KidValidator *kid, json_t *kidlist);
+
+  std::vector<MessageValidator*> build_;
 };
 
-class json_str_delete {
- public:
-  inline void operator() (char* ptr) const noexcept {
-    free(ptr);
-  }
-};
-
-typedef std::unique_ptr<json_t, json_ptr_delete> json_ptr;
-typedef std::unique_ptr<char, json_str_delete> json_str;
-typedef std::unique_ptr<char[]> str_ptr;
-#endif  // SRC_UTIL_ALLOCATORS_H_
+#endif  // SRC_INCLUDE_JWT_MESSAGEVALIDATORFACTORY_H_
 

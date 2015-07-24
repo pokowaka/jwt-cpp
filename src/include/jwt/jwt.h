@@ -20,42 +20,64 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#ifndef SRC_JWT_JWT_H_
-#define SRC_JWT_JWT_H_
+#ifndef SRC_INCLUDE_JWT_JWT_H_
+#define SRC_INCLUDE_JWT_JWT_H_
 
 #include <jansson.h>
 #include <stddef.h>
 #include <memory>
 #include <string>
-#include "validators/claims/claimvalidator.h"
-#include "validators/messagevalidator.h"
-
+#include "jwt/claimvalidator.h"
+#include "jwt/messagevalidator.h"
 
 // Stack allocated signature.
 #define MAX_SIGNATURE_LENGTH 256
 
-
-
 /**
- * A Json web token. This class can parse and encode a JSON Web JWT (JWT).
- * It folows the spec from http://self-issued.info/docs/draft-ietf-oauth-json-web-token.html
+ * JSON Web Token (JWT) is a compact, URL-safe means of representing claims to
+ * be transferred between two parties. The claims in a JWT are encoded as a JSON
+ * object that is used as the payload of a JSON Web Signature (JWS) structure or
+ * as the plaintext of a JSON Web Encryption (JWE) structure, enabling the
+ * claims to be digitally signed or integrity protected with a Message
+ * Authentication Code (MAC) and/or encrypted.
+ *
+ * This class can parse, validate and encode anf sign such tokens.
+ * See the
+ * [spec](http://self-issued.info/docs/draft-ietf-oauth-json-web-token.html) for
+ * more details.
  */
 class JWT {
  public:
   ~JWT();
 
   /**
-   * Parses the given string and validates it with the given validators.
-   * Note: Omitting the validators will still result in a parsed token.
+   * Parses an encoded web token and validates it.
    *
    * @param jwsToken String containing a valid webtoken
-   * @param verifier Optional verifier used to validate the signature.
-   * @param validator Optional validator to validate the claims in this token.
-   * @return nullptr if string cannot be parsed, otherwise a token.
+   * @param verifier Optional verifier used to validate the signature. If this
+   *                 parameter is null the signature will not be verified.
+   * @param validator Optional validator to validate the claims in this token. The
+   *                  payload will not be validated if this parameter is null
+   * @throw TokenFormatError in case the token cannot be parsed
+   * @throw InvalidSignatureError in case the token is not signed
+   * @throw InvalidClaimError in case the payload cannot be validated
    */
   static JWT *Decode(std::string jwsToken, MessageValidator *verifier = nullptr,
                      ClaimValidator *validator = nullptr);
 
+  /**
+   * Decodes and validates a JSON Web Token.
+   *
+   * @param jws_token String containing a valid webtoken
+   * @param num_jws_token The number of bytes in the jws_token string
+   * @param verifier Optional verifier used to validate the JOSE header. No
+   *                 verification will be done if this parameter is null .
+   * @param validator Optional validator to validate the claims in this token. The
+   *                  payload will not be validated if this parameter is null
+   * @throw TokenFormatError in case the token cannot be parsed
+   * @throw InvalidSignatureError in case the token is not signed
+   * @throw InvalidClaimError in case the payload cannot be validated
+   */
   static JWT *Decode(const char *jws_token, size_t num_jws_token,
                      MessageValidator *verifier = nullptr, ClaimValidator *validator = nullptr);
 
@@ -69,7 +91,17 @@ class JWT {
    */
   static char *Encode(MessageSigner *signer, json_t *payload, json_t *header = nullptr);
 
+  /**
+   * The contents of the JOSE Header describe the cryptographic operations
+   * applied to the JWT Claims Set.  Callers do not own the reference returned
+   * and should not free it.
+   */
   inline const json_t* header() { return header_; }
+
+  /**
+   * A JSON object that contains the claims conveyed by the JWT.  Callers do not
+   * own the reference returned and should not free it.
+   */
   inline const json_t* payload() { return payload_; }
 
  private:
@@ -84,5 +116,6 @@ class JWT {
   json_t* payload_;
 };
 
+/** Auto pointer that will release the token when it goes out of scope */
 typedef std::unique_ptr<JWT> jwt_ptr;
-#endif  // SRC_JWT_JWT_H_
+#endif  // SRC_INCLUDE_JWT_JWT_H_

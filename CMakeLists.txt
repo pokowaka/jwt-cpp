@@ -9,9 +9,11 @@ INCLUDE (CheckFunctionExists)
 
 LIST (APPEND CMAKE_MODULE_PATH "${TOOLS_DIRECTORY}/cmake/rpavlik")
 LIST (APPEND CMAKE_MODULE_PATH "${TOOLS_DIRECTORY}/cmake")
+LIST (APPEND CMAKE_MODULE_PATH "${TOOLS_DIRECTORY}/cmake/doxygen")
 INCLUDE(GetGitRevisionDescription)
 INCLUDE(cpplint)
 INCLUDE(CodeCoverage)
+INCLUDE(UseDoxygen)
 
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 git_get_exact_tag(GIT_TAG)
@@ -25,7 +27,14 @@ ELSE ()
     SET (GIT_TAG "untagged")
 ENDIF (GIT_TAG)
 
+
 OPTION(ENABLE_GPERF_TOOLS  "Enable google perftools [default: OFF]" OFF)
+OPTION(ENABLE_DOC          "Enable documentation    [default: ON]" ON)
+
+
+set(JWT_INSTALL_LIB_DIR       lib CACHE PATH "Installation directory for libraries")
+set(JWT_INSTALL_BIN_DIR       bin CACHE PATH "Installation directory for executables")
+set(JWT_INSTALL_INCLUDE_DIR   include CACHE PATH "Installation directory for header files")
 
 #
 # Compiler SETtings
@@ -50,8 +59,7 @@ MESSAGE ("-- Looking for jansson")
 UNSET(JANSSON)
 FIND_LIBRARY (JANSSON NAMES jansson)
 If (JANSSON)
-    MESSAGE ("-- Jannson Already Available")
-    MESSAGE ("-- ${JANSSON}")
+    MESSAGE ("-- Jannson Already Available ${JANSSON}")
 ELSE (JANSSON)
     MESSAGE ("-- Missing jansson, building locally")
     # We are not really interested in the debug build of jannson
@@ -105,17 +113,9 @@ IF(ENABLE_GPERF_TOOLS MATCHES "ON")
 ENDIF(ENABLE_GPERF_TOOLS MATCHES "ON")
 
 
-# Coverage settings
-IF (COVERAGE AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    SET (CMAKE_CXX_FLAGS "-fprofile-arcs -ftest-coverage")
-    SET (CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -fprofile-arcs -ftest-coverage")
-    ADD_DEFINITIONS(-fprofile-arcs -ftest-coverage)
-    LINK_LIBRARIES(gcov)
-ENDIF ()
-
 # Search OpenSSL
 FIND_PACKAGE(PkgConfig REQUIRED)
-PKG_SEARCH_MODULE(OPENSSL REQUIRED openssl)
+PKG_SEARCH_MODULE(OPENSSL REQUIRED openssl openssl>=1.0.2)
 
 IF(OPENSSL_FOUND)
     INCLUDE_DIRECTORIES(${OPENSSL_INCLUDE_DIRS})
@@ -125,7 +125,7 @@ ELSE()
 ENDIF()
 
 # General include directories
-INCLUDE_DIRECTORIES (src)
+INCLUDE_DIRECTORIES (src/include/ src/include/private)
 INCLUDE_DIRECTORIES ( ${JANSSON_INCLUDE_DIRS} )
 LINK_DIRECTORIES (${OPENSSL_LIBRARY_DIRS})
 ADD_SUBDIRECTORY (src)
@@ -133,6 +133,6 @@ ADD_SUBDIRECTORY (src)
 #-------------------
 # Test
 #-------------------
-ADD_SUBDIRECTORY (ext/gtest-1.7.0)
 ENABLE_TESTING (true)
+ADD_SUBDIRECTORY (ext/gtest-1.7.0)
 ADD_SUBDIRECTORY (test)

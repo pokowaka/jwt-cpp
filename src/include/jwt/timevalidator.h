@@ -20,23 +20,22 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#ifndef SRC_VALIDATORS_CLAIMS_TIMEVALIDATOR_H_
-#define SRC_VALIDATORS_CLAIMS_TIMEVALIDATOR_H_
+#ifndef SRC_INCLUDE_JWT_TIMEVALIDATOR_H_
+#define SRC_INCLUDE_JWT_TIMEVALIDATOR_H_
 
 #include <string>
-#include "validators/claims/claimvalidator.h"
-#include "util/clock.h"
+#include "jwt/claimvalidator.h"
+class IClock;
+class UtcClock;
 
 class TimeValidator : public ClaimValidator {
  public:
-  TimeValidator(const char *key, bool sign, uint64_t leeway) : TimeValidator(key, sign, leeway,
-      &utc_clock_) { }
-  TimeValidator(const char *key, bool sign) : TimeValidator(key, sign, 0) { }
+  TimeValidator(const char *key, bool sign, uint64_t leeway);
+  TimeValidator(const char *key, bool sign);
   TimeValidator(const char *key, bool sign, uint64_t leeway,
-      IClock *clock) : ClaimValidator(key), sign_(sign), leeway_(leeway),
-  clock_(clock) { }
-  bool IsValid(const json_t *claimset) const override;
-  std::string toJson() const override;
+      IClock *clock);
+  bool IsValid(const json_t *claimset) const;
+  std::string toJson() const;
 
  private:
   bool sign_;
@@ -45,7 +44,15 @@ class TimeValidator : public ClaimValidator {
   static UtcClock utc_clock_;
 };
 
-
+/**
+ * The exp (expiration time) claim identifies the expiration time on or after
+ * which the JWT MUST NOT be accepted for processing. The processing of the exp
+ * claim requires that the current date/time MUST be before the expiration
+ * date/time listed in the exp claim. Implementers MAY provide for some small
+ * leeway, usually no more than a few minutes, to account for clock skew. Its
+ * value MUST be a number containing a NumericDate value. Use of this claim is
+ * OPTIONAL.
+ */
 class ExpValidator : public TimeValidator {
  public:
   ExpValidator() : TimeValidator("exp", false) { }
@@ -53,6 +60,14 @@ class ExpValidator : public TimeValidator {
   ExpValidator(uint64_t leeway, IClock *clock) : TimeValidator("exp", false, leeway, clock) { }
 };
 
+/**
+ * The nbf (not before) claim identifies the time before which the JWT MUST NOT
+ * be accepted for processing. The processing of the nbf claim requires that the
+ * current date/time MUST be after or equal to the not-before date/time listed
+ * in the nbf claim. Implementers MAY provide for some small leeway, usually no
+ * more than a few minutes, to account for clock skew. Its value MUST be a
+ * number containing a NumericDate value. Use of this claim is OPTIONAL.
+ */
 class NbfValidator : public TimeValidator {
  public:
   NbfValidator() : TimeValidator("nbf", true) { }
@@ -66,4 +81,4 @@ class IatValidator : public TimeValidator {
   explicit IatValidator(uint64_t leeway) : TimeValidator("iat", true, leeway) { }
   IatValidator(uint64_t leeway, IClock *clock) : TimeValidator("iat", true, leeway, clock) { }
 };
-#endif  // SRC_VALIDATORS_CLAIMS_TIMEVALIDATOR_H_
+#endif  // SRC_INCLUDE_JWT_TIMEVALIDATOR_H_

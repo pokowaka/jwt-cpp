@@ -20,24 +20,28 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#ifndef SRC_JWT_JWT_ERROR_H_
-#define SRC_JWT_JWT_ERROR_H_
+#ifndef SRC_INCLUDE_JWT_NONEVALIDATOR_H_
+#define SRC_INCLUDE_JWT_NONEVALIDATOR_H_
 
-#include <exception>
+#include <stdint.h>
+#include <string>
+#include "jwt/messagevalidator.h"
 
-class InvalidTokenError :public std::runtime_error {
+/**
+ * A validator that really doesn't do any validation at all.
+ */
+class NoneValidator : public MessageSigner {
  public:
-  explicit InvalidTokenError(std::string msg) : std::runtime_error(msg) { }
-}; 
+  bool Verify(json_t *jsonHeader, const uint8_t *header, size_t cHeader,
+              const uint8_t *signature, size_t cSignature);
+  bool Sign(const uint8_t *header, size_t num_header,
+            uint8_t *signature, size_t *num_signature);
 
-class TokenFormatError : public InvalidTokenError {
- public:
-  explicit TokenFormatError(std::string msg) : InvalidTokenError(msg) { }
+  const char *algorithm() const { return "none"; }
+
+  std::string toJson() const  {
+    return "{ \"none\" : null }";
+  }
 };
 
-class InvalidSignatureError : public InvalidTokenError {
-public:
-  explicit InvalidSignatureError(std::string msg) : InvalidTokenError(msg) { }
-};
-
-#endif  // SRC_JWT_JWT_ERROR_H_
+#endif  // SRC_INCLUDE_JWT_NONEVALIDATOR_H_

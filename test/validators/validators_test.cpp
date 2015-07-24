@@ -1,13 +1,10 @@
-#include "validators/hmacvalidator.h"
-#include "validators/nonevalidator.h"
 #include "gtest/gtest.h"
 #include <memory>
 #include <string>
 #include <array>
 #include <vector>
-#include <validators/rsavalidator.h>
-#include <validators/kidvalidator.h>
-#include <validators/setvalidator.h>
+#include "jwt/jwt_all.h"
+#include "jwt/setvalidator.h"
 #include "constants.h"
 
 class MessageValidatorTest : public ::testing::Test {

@@ -20,8 +20,8 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#ifndef SRC_BASE64_BASE64_H_
-#define SRC_BASE64_BASE64_H_
+#ifndef SRC_INCLUDE_PRIVATE_BASE64_H_
+#define SRC_INCLUDE_PRIVATE_BASE64_H_
 #include <math.h>
 #include <string>
 
@@ -29,7 +29,7 @@
 
 /**
  * A Class that is capable of encoding & decoding base64 that
- * are specific to JWT spec.
+ * are specific to PRIVATE spec.
  *
  * Basically this means the URL alphabet, and no padding.
  */
@@ -106,4 +106,4 @@ class Base64Encode {
 
   inline static char EncodeChar(uint8_t in);
 };
-#endif  // SRC_BASE64_BASE64_H_
+#endif  // SRC_INCLUDE_PRIVATE_BASE64_H_

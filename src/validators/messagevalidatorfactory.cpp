@@ -20,19 +20,20 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#include "validators/messagevalidatorfactory.h"
+#include "jwt/messagevalidatorfactory.h"
 #include <jansson.h>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
-#include "util/allocators.h"
-#include "validators/hmacvalidator.h"
-#include "validators/kidvalidator.h"
-#include "validators/nonevalidator.h"
-#include "validators/rsavalidator.h"
-#include "validators/setvalidator.h"
+#include "private/buildwrappers.h"
+#include "jwt/allocators.h"
+#include "jwt/hmacvalidator.h"
+#include "jwt/kidvalidator.h"
+#include "jwt/nonevalidator.h"
+#include "jwt/rsavalidator.h"
+#include "jwt/setvalidator.h"
 
 
 MessageValidatorFactory::~MessageValidatorFactory() {
@@ -41,7 +42,54 @@ MessageValidatorFactory::~MessageValidatorFactory() {
   }
 }
 
-MessageValidator *MessageValidatorFactory::build(json_t *json) {
+MessageSigner* MessageValidatorFactory::BuildSigner(std::string fromJson) {
+  json_error_t error;
+  json_ptr json_str(json_loads(fromJson.c_str(), JSON_REJECT_DUPLICATES, &error));
+
+  if (!json_str) {
+    std::ostringstream msg;
+    msg << "Failed to parse JSON: " << error.text
+      << ", at line: " << error.line << ", col: " << error.column;
+    throw std::logic_error(msg.str());
+  }
+
+  json_t* json = json_str.get();
+  if (json_object_size(json) > 1) {
+    char *fail = json_dumps(json, 0);
+    std::ostringstream msg;
+    msg << "More than one property at: " << fail;
+    free(fail);
+    throw std::logic_error(msg.str());
+  }
+  std::unique_ptr<MessageSigner> constructed = nullptr;
+  if (json_object_get(json, "none")) {
+    constructed.reset(new NoneValidator());
+  } else if (json_object_get(json, "HS256")) {
+    constructed.reset(new HS256Validator(ParseSecret("secret", json_object_get(json, "HS256"))));
+  } else if (json_object_get(json, "HS384")) {
+    constructed.reset(new HS384Validator(ParseSecret("secret", json_object_get(json, "HS384"))));
+  } else if (json_object_get(json, "HS512")) {
+    constructed.reset(new HS512Validator(ParseSecret("secret", json_object_get(json, "HS512"))));
+  } else if (json_object_get(json, "RS256")) {
+    constructed.reset(new RS256Validator(ParseSecret("public", json_object_get(json, "RS256")),
+        ParseSecret("public", json_object_get(json, "RS256"))));
+  } else if (json_object_get(json, "RS384")) {
+    constructed.reset(new RS384Validator(ParseSecret("public", json_object_get(json, "RS256")),
+        ParseSecret("public", json_object_get(json, "RS384"))));
+  } else if (json_object_get(json, "RS512")) {
+    constructed.reset(new RS512Validator(ParseSecret("public", json_object_get(json, "RS256")),
+        ParseSecret("public", json_object_get(json, "RS512"))));
+  }
+
+  if (constructed.get() == nullptr) {
+    throw std::logic_error("Unable to construct signer");
+  }
+
+
+  return constructed.release();
+}
+
+MessageValidator *MessageValidatorFactory::Build(json_t *json) {
   if (json == NULL) {
     throw std::logic_error("Cannot construct from empty json!");
   }
@@ -72,12 +120,12 @@ MessageValidator *MessageValidatorFactory::build(json_t *json) {
 
   try {
     if (json_object_get(json, "set")) {
-      auto lst = buildvalidatorlist(json_object_get(json, "set"));
+      auto lst = BuildValidatorList(json_object_get(json, "set"));
       constructed.reset(new SetValidator(lst));
     } else if (json_object_get(json, "kid")) {
       KidValidator *kid = new KidValidator();
       constructed.reset(kid);
-      buildkid(kid, json_object_get(json, "kid"));
+      BuildKid(kid, json_object_get(json, "kid"));
     }
   } catch (std::exception &le) {
     std::ostringstream msg;
@@ -106,8 +154,7 @@ MessageValidator *MessageValidatorFactory::build(json_t *json) {
   return constructed.release();
 }
 
-
-MessageValidator *MessageValidatorFactory::build(std::string fromJson) {
+MessageValidator *MessageValidatorFactory::Build(std::string fromJson) {
   json_error_t error;
   json_ptr json_str(json_loads(fromJson.c_str(), JSON_REJECT_DUPLICATES, &error));
 
@@ -120,7 +167,7 @@ MessageValidator *MessageValidatorFactory::build(std::string fromJson) {
 
   MessageValidatorFactory factory;
 
-  MessageValidator *root = factory.build(json_str.get());
+  MessageValidator *root = factory.Build(json_str.get());
   ParsedMessagevalidator *validator = new ParsedMessagevalidator(
       json_str.release(), factory.build_, root);
   factory.build_.clear();
@@ -128,24 +175,24 @@ MessageValidator *MessageValidatorFactory::build(std::string fromJson) {
   return validator;
 }
 
-std::vector<MessageValidator *> MessageValidatorFactory::buildvalidatorlist(json_t *json) {
+std::vector<MessageValidator *> MessageValidatorFactory::BuildValidatorList(json_t *json) {
   size_t idx;
   json_t *value;
   std::vector<MessageValidator *> result;
 
   json_array_foreach(json, idx, value) {
-    result.push_back(build(value));
+    result.push_back(Build(value));
   }
 
   return result;
 }
 
-MessageValidator *MessageValidatorFactory::buildkid(KidValidator *kid, json_t *kidlist) {
+MessageValidator *MessageValidatorFactory::BuildKid(KidValidator *kid, json_t *kidlist) {
   const char *key;
   json_t *value;
 
   json_object_foreach(kidlist , key, value) {
-    MessageValidator* validator = build(value);
+    MessageValidator* validator = Build(value);
     kid->Register(key, validator);
   }
 

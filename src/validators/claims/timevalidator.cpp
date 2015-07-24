@@ -20,12 +20,19 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#include "validators/claims/timevalidator.h"
+#include "jwt/timevalidator.h"
 #include <sstream>
 #include <string>
 #include "jwt/jwt_error.h"
+#include "private/clock.h"
 
 UtcClock TimeValidator::utc_clock_ = UtcClock();
+TimeValidator::TimeValidator(const char *key, bool sign, uint64_t leeway) : TimeValidator(key, sign, leeway,
+    &utc_clock_) { }
+TimeValidator::TimeValidator(const char *key, bool sign) : TimeValidator(key, sign, 0) { }
+TimeValidator::TimeValidator(const char *key, bool sign, uint64_t leeway,
+    IClock *clock) : ClaimValidator(key), sign_(sign), leeway_(leeway),
+  clock_(clock) { }
 
 bool TimeValidator::IsValid(const json_t *claim) const {
   json_t *object = json_object_get(claim, property_);

@@ -2,13 +2,7 @@
 #include <string>
 #include <sstream>
 #include "gtest/gtest.h"
-#include "jwt/jwt.h"
-#include "util/allocators.h"
-#include "util/clock.h"
-#include "validators/claims/claimvalidatorfactory.h"
-#include "validators/claims/timevalidator.h"
-#include "validators/hmacvalidator.h"
-#include "validators/messagevalidatorfactory.h"
+#include "jwt/jwt_all.h"
 
 TEST(Sample, sign) {
   // Setup a signer
@@ -34,14 +28,11 @@ TEST(Sample, invalid_tokens) {
 }
 
 TEST(Sample, payload_deserialize) {
-  // Use a clock that return UTC time
-  UtcClock clock;
-
   // Let's use the HS256 signer & validator.
   HS256Validator signer("secret");
 
   // Setup the json payload we want to use
-  json_ptr json(json_pack("{ss, si}", "sub", "subject", "exp", clock.Now() + 3600));
+  json_ptr json(json_pack("{ss, si}", "sub", "subject", "exp", time(NULL) + 360000));
 
   // Encode the jwt token.
   str_ptr str_token(JWT::Encode(&signer, json.get()));
@@ -79,7 +70,7 @@ TEST(Sample, from_json) {
           "}";
 
   // Lets build the claim validator
-  claim_ptr claim_validator(ClaimValidatorFactory::build(json_claim));
+  claim_ptr claim_validator(ClaimValidatorFactory::Build(json_claim));
 
   // Next we are going to setup the message validators. We will accept
   // the HS256 & HS512 validators with the given secrets.
@@ -89,7 +80,7 @@ TEST(Sample, from_json) {
           "  { \"HS512\" : { \"secret\" : \"supersafe\" } }"
           " ]"
           "}";
-  validator_ptr message_validator(MessageValidatorFactory::build(json_validators));
+  validator_ptr message_validator(MessageValidatorFactory::Build(json_validators));
 
   // Now let's use these validators to parse and verify the token we
   // created above
@@ -121,7 +112,7 @@ TEST(Sample, kid) {
           "  \"key_id_2\" :  { \"HS256\" : { \"secret\" : \"supersafe\" } }"
           " }"
           "}";
-  validator_ptr message_validator(MessageValidatorFactory::build(json_validators));
+  validator_ptr message_validator(MessageValidatorFactory::Build(json_validators));
 
   // Now let's use these validators to parse and verify the token we
   // created above

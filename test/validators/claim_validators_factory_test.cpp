@@ -1,22 +1,19 @@
 #include <string>
-#include <validators/claims/timevalidator.h>
-#include <validators/claims/listclaimvalidator.h>
 #include "gtest/gtest.h"
-#include "validators/claims/claimvalidatorfactory.h"
-#include "util/allocators.h"
+#include "jwt/jwt_all.h"
 #include "constants.h"
 
 // Test for the various validators.
 TEST(parse_test, proper_exp) {
   std::string json = "{ \"exp\" : null }";
-  claim_ptr valid(ClaimValidatorFactory::build(json));
+  claim_ptr valid(ClaimValidatorFactory::Build(json));
   EXPECT_NE(nullptr, valid.get());
   EXPECT_STREQ("exp", valid->property());
 }
 
 TEST(parse_test, iss_not_a_list) {
   std::string json = "{ \"iss\" : { \"foo\" : \"bar\"} }";
-  ASSERT_THROW(ClaimValidatorFactory::build(json), std::logic_error);
+  ASSERT_THROW(ClaimValidatorFactory::Build(json), std::logic_error);
 }
 
 TEST(parse_test, any) {
@@ -26,36 +23,36 @@ TEST(parse_test, any) {
           "  { \"iss\" : [\"foo\", \"bar\"] }\n"
           "] \n"
           "}";
-  claim_ptr valid(ClaimValidatorFactory::build(json));
+  claim_ptr valid(ClaimValidatorFactory::Build(json));
   EXPECT_NE(nullptr, valid.get());
   EXPECT_STREQ(NULL, valid->property());
 }
 
 TEST(parse_test, any_not_a_list) {
   std::string json = "{ \"any\" : { \"xx\" : \"zz\" }}";
-  ASSERT_THROW(ClaimValidatorFactory::build(json), std::logic_error);
+  ASSERT_THROW(ClaimValidatorFactory::Build(json), std::logic_error);
 }
 
 TEST(parse_test, optional_exp) {
   std::string json = "{ \"optional\" : { \"exp\" : { \"leeway\" : 32} } }";
-  claim_ptr valid(ClaimValidatorFactory::build(json));
+  claim_ptr valid(ClaimValidatorFactory::Build(json));
   EXPECT_NE(nullptr, valid.get());
   EXPECT_STREQ("exp", valid->property());
 }
 
 TEST(parse_test, optional_empty) {
   std::string json = "{ \"optional\" : null }";
-  ASSERT_THROW(ClaimValidatorFactory::build(json), std::logic_error);
+  ASSERT_THROW(ClaimValidatorFactory::Build(json), std::logic_error);
 }
 
 TEST(parse_test, optional_inner_bad) {
   std::string json = "{ \"optional\" : { \"elxp\" : null } }";
-  ASSERT_THROW(ClaimValidatorFactory::build(json), std::logic_error);
+  ASSERT_THROW(ClaimValidatorFactory::Build(json), std::logic_error);
 }
 
 TEST(parse_test, double_properties) {
   std::string json =  "{ \"exp\" : null, \"nbf\" : null }";
-  ASSERT_THROW(ClaimValidatorFactory::build(json), std::logic_error);
+  ASSERT_THROW(ClaimValidatorFactory::Build(json), std::logic_error);
 }
 
 TEST(parse_test, bad_type) {
@@ -64,12 +61,12 @@ TEST(parse_test, bad_type) {
           "  \"optional\" : { \"exp\" : { \"leeway\" : 32} }, \n"
           "  \"iss\" : [\"foo\", \"bar\"]] \n"
           "}";
-  ASSERT_THROW(ClaimValidatorFactory::build(json), std::logic_error);
+  ASSERT_THROW(ClaimValidatorFactory::Build(json), std::logic_error);
 }
 
 void roundtrip(ClaimValidator *claimValidator) {
   std::string json = claimValidator->toJson();
-  claim_ptr claim(ClaimValidatorFactory::build(json));
+  claim_ptr claim(ClaimValidatorFactory::Build(json));
   EXPECT_STREQ(json.c_str(), claim->toJson().c_str());
 }
 

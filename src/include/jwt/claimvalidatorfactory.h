@@ -20,40 +20,26 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-//
-#ifndef SRC_VALIDATORS_CLAIMS_LISTCLAIMVALIDATOR_H_
-#define SRC_VALIDATORS_CLAIMS_LISTCLAIMVALIDATOR_H_
+#ifndef SRC_INCLUDE_JWT_CLAIMVALIDATORFACTORY_H_
+#define SRC_INCLUDE_JWT_CLAIMVALIDATORFACTORY_H_
 
+#include <jansson.h>
+#include <exception>
 #include <string>
 #include <vector>
-#include "validators/claims/claimvalidator.h"
+#include "jwt/claimvalidator.h"
 
-class ListClaimValidator : public ClaimValidator {
+class ClaimValidatorFactory {
  public:
-  ListClaimValidator(const char *property, const char *const *lst_accepted, const size_t num_accepted);
-  ListClaimValidator(const char *property, std::vector<std::string> accepted);
-  bool IsValid(const json_t *claimset) const override;
-  std::string toJson() const override;
+  static ClaimValidator *Build(std::string fromJson);
+  ~ClaimValidatorFactory();
 
  private:
-  std::vector<std::string> accepted_;
+  std::vector<std::string> BuildList(json_t *lst);
+  std::vector<ClaimValidator*> BuildValidatorList(json_t *json);
+  ClaimValidator *Build(json_t *fromJson);
+
+  std::vector<ClaimValidator*> build_;
 };
 
-class IssValidator : public ListClaimValidator {
- public:
-  IssValidator(const char *const *lst_accepted, const size_t num_accepted) :
-    ListClaimValidator("iss", lst_accepted, num_accepted) { }
-};
-
-class SubValidator : public ListClaimValidator {
- public:
-  SubValidator(const char *const *lst_accepted, const size_t num_accepted) :
-    ListClaimValidator("sub", lst_accepted, num_accepted) { }
-};
-
-class AudValidator : public ListClaimValidator {
- public:
-  AudValidator(const char *const *lst_accepted, const size_t num_accepted) :
-    ListClaimValidator("aud", lst_accepted, num_accepted) { }
-};
-#endif  // SRC_VALIDATORS_CLAIMS_LISTCLAIMVALIDATOR_H_
+#endif  // SRC_INCLUDE_JWT_CLAIMVALIDATORFACTORY_H_
