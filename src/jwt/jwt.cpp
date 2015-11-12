@@ -132,6 +132,7 @@ JWT *JWT::Decode(const char *jws_token, size_t num_jws_token, MessageValidator *
   str_ptr dec_header(new char[num_dec_header]);
 
   if (Base64Encode::DecodeUrl(header, num_header, dec_header.get(), &num_dec_header) != 0) {
+    // This cannot happen, as we have checked for valid characters already..
     throw std::logic_error("validated header block has invalid characters");
   }
 
@@ -163,6 +164,7 @@ json_t *JWT::ExtractPayload(const char *payload, size_t num_payload) {
   str_ptr dec_payload(new char[num_dec_payload]);
 
   if (Base64Encode::DecodeUrl(payload, num_payload, dec_payload.get(), &num_dec_payload) != 0) {
+    // This cannot happen, as we have checked for valid characters already..
     throw std::logic_error("validated block has base64 error in payload");
   }
 
@@ -171,7 +173,7 @@ json_t *JWT::ExtractPayload(const char *payload, size_t num_payload) {
   json_error_t error;
   json_t *json = json_loads(dec_payload.get(), JSON_REJECT_DUPLICATES, &error);
   if (!json) {
-    throw TokenFormatError(std::string("header contains invalid json, ") += error.text);
+    throw TokenFormatError(std::string("payload contains invalid json, ") += error.text);
   }
   return json;
 }
@@ -205,6 +207,7 @@ bool JWT::VerifySignature(json_t *header_claims_, const char *header,
   }
 
   if (Base64Encode::DecodeUrl(signature, num_signature, dec_signature, &num_dec_signature)) {
+    // Shouldn't happen. At this point the token contains valid base64 chars.
     throw std::logic_error("validated block has base64 error in signature");
   }
 

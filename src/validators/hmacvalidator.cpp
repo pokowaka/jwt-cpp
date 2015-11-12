@@ -26,9 +26,6 @@
 #include <sstream>
 #include <string>
 
-HMACValidator::HMACValidator(const char *algorithm) : algorithm_(algorithm), key_size_(0) {
-}
-
 HMACValidator::HMACValidator(const char *algorithm,
     const EVP_MD *md, const std::string &key) :
   md_(md), algorithm_(algorithm), key_size_(md->md_size), key_(key) {

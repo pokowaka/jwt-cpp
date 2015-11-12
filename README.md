@@ -47,6 +47,14 @@ cmake -DCMAKE_BUILD_TYPE=Debug ..
 make
 ```
 
+Running the tests with code coverage:
+```
+mkdir debug 
+cd debug 
+cmake -DCMAKE_BUILD_TYPE=Debug ..
+make cov_all_tests
+```
+
 
 ### Dependencies in linux
 

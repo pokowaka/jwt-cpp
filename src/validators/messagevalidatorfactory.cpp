@@ -72,13 +72,13 @@ MessageSigner* MessageValidatorFactory::BuildSigner(std::string fromJson) {
     constructed.reset(new HS512Validator(ParseSecret("secret", json_object_get(json, "HS512"))));
   } else if (json_object_get(json, "RS256")) {
     constructed.reset(new RS256Validator(ParseSecret("public", json_object_get(json, "RS256")),
-        ParseSecret("public", json_object_get(json, "RS256"))));
+        ParseSecret("private", json_object_get(json, "RS256"))));
   } else if (json_object_get(json, "RS384")) {
-    constructed.reset(new RS384Validator(ParseSecret("public", json_object_get(json, "RS256")),
-        ParseSecret("public", json_object_get(json, "RS384"))));
+    constructed.reset(new RS384Validator(ParseSecret("public", json_object_get(json, "RS384")),
+        ParseSecret("private", json_object_get(json, "RS384"))));
   } else if (json_object_get(json, "RS512")) {
-    constructed.reset(new RS512Validator(ParseSecret("public", json_object_get(json, "RS256")),
-        ParseSecret("public", json_object_get(json, "RS512"))));
+    constructed.reset(new RS512Validator(ParseSecret("public", json_object_get(json, "RS512")),
+        ParseSecret("private", json_object_get(json, "RS512"))));
   }
 
   if (constructed.get() == nullptr) {
@@ -141,13 +141,10 @@ MessageValidator *MessageValidatorFactory::Build(json_t *json) {
 
   if (!constructed.get()) {
     char *fail = json_dumps(json, 0);
-    if (fail) {
-      std::ostringstream msg;
-      msg << "Missing property at: " << fail;
-      free(fail);
-      throw std::logic_error(msg.str());
-    }
-    throw std::logic_error("Missing property");
+    std::ostringstream msg;
+    msg << "Missing validator property at: " << fail;
+    free(fail);
+    throw std::logic_error(msg.str());
   }
 
   build_.push_back(constructed.get());
@@ -202,7 +199,11 @@ MessageValidator *MessageValidatorFactory::BuildKid(KidValidator *kid, json_t *k
 std::string MessageValidatorFactory::ParseSecret(const char *property, json_t *object) {
   json_t *secret = json_object_get(object, property);
   if (!secret) {
-    throw std::logic_error("There is no secret!");
+    std::ostringstream msg;
+    char* fail = object ? json_dumps(object, 0) : NULL;
+    msg <<  "parsing secret, property: " << property << " is missing from: " << fail;
+    free(fail);
+    throw std::logic_error(msg.str());
   }
 
   if (json_is_string(secret)) {

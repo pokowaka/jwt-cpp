@@ -124,15 +124,13 @@ std::string RSAValidator::toJson() const {
 
     if (private_key_) {
       msg << ", ";
+      BIO *out = BIO_new(BIO_s_mem());
+      PEM_write_bio_PrivateKey(out, private_key_, NULL, NULL, 0, 0, NULL);
+      uint64_t len = BIO_get_mem_data(out, &key);
+      std::string privkey = std::string(key, len);
+      msg << "\"private\" : \"" << std::regex_replace(privkey, newline, "\\n") << "\"";
+      BIO_free(out);
     }
-  }
-  if (private_key_) {
-    BIO *out = BIO_new(BIO_s_mem());
-    PEM_write_bio_PUBKEY(out, private_key_);
-    uint64_t len = BIO_get_mem_data(out, &key);
-    std::string privkey = std::string(key, len);
-    msg << "\"private\" : \"" << std::regex_replace(privkey, newline, "\\n") << "\"";
-    BIO_free(out);
   }
 
   msg << "} }";

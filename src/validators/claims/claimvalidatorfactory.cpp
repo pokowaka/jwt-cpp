@@ -82,9 +82,6 @@ ClaimValidator *ClaimValidatorFactory::Build(json_t *json) {
     } else if (json_object_get(json, "optional")) {
       json_t *val = json_object_get(json, "optional");
       ClaimValidator *inner = Build(val);
-      if (inner->property() == NULL) {
-        throw std::logic_error("optional property not defined for inner claim");
-      }
       constructed = new OptionalClaimValidator(inner);
     }
   } catch (std::exception &le) {

@@ -141,7 +141,10 @@ TEST(kidvalidator_test, no_kid) {
   EXPECT_FALSE(kid.Validate(json.get(), "", ""));
 
   json_ptr wrong_type(json_pack("{si}", "kid", 15));
-  EXPECT_FALSE(kid.Validate(json.get(), "", ""));
+  EXPECT_FALSE(kid.Validate(wrong_type.get(), "", ""));
+
+  json_ptr no_kid(json_pack("{si}", "nokid", 15));
+  EXPECT_FALSE(kid.Validate(no_kid.get(), "", ""));
 }
 
 TEST(kidvalidator_test, can_register_kid) {

@@ -37,8 +37,8 @@ class IClock {
 class UtcClock : public IClock {
  public:
     uint64_t Now() {
-      time_t rawtime;
-      struct tm ptm;
+      time_t rawtime = 0;
+      struct tm ptm = {0};
       time(&rawtime);
       gmtime_r(&rawtime, &ptm);
       return mktime(&ptm);

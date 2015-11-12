@@ -36,7 +36,6 @@
  */
 class HMACValidator : public MessageSigner {
  public:
-  explicit HMACValidator(const char *algorithm);
   explicit HMACValidator(const char *algorithm, const EVP_MD *md, const std::string &key);
   virtual ~HMACValidator();
 

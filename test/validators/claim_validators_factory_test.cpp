@@ -33,11 +33,23 @@ TEST(parse_test, any_not_a_list) {
   ASSERT_THROW(ClaimValidatorFactory::Build(json), std::logic_error);
 }
 
+TEST(parse_test, iss_not_a_stringlist) {
+  std::string json = "{ \"iss\" : [ { \"foo\" : \"bar\" } , \"zz\" ]}";
+  ASSERT_THROW(ClaimValidatorFactory::Build(json), std::logic_error);
+}
+
 TEST(parse_test, optional_exp) {
   std::string json = "{ \"optional\" : { \"exp\" : { \"leeway\" : 32} } }";
   claim_ptr valid(ClaimValidatorFactory::Build(json));
   EXPECT_NE(nullptr, valid.get());
   EXPECT_STREQ("exp", valid->property());
+  json_ptr iat(json_pack("{si}", "iat", 9));
+  EXPECT_TRUE(valid->IsValid(iat.get()));
+}
+
+TEST(parse_test, optional_bad) {
+  std::string json = "{ \"optional\" : { \"foo\" : \"bar\" } }";
+  ASSERT_THROW(ClaimValidatorFactory::Build(json), std::logic_error);
 }
 
 TEST(parse_test, optional_empty) {

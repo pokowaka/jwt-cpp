@@ -43,6 +43,17 @@ TEST_F(TokenTest, bad_format_tokens) {
       "TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ");
   BadHeader("foo");
   BadHeader("......");
+
+  // Bad JSON header
+  BadHeader("eyB7IGZvbyB9."
+      "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9."
+      "TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ");
+
+  // Bad JSON payload
+  BadHeader("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+      "eyB7IGZvbyB9."
+      "eyB7IGZvbyB9");
+
 }
 
 TEST_F(TokenTest, valid_hs256) {
@@ -73,11 +84,38 @@ TEST_F(TokenTest, encoded_token_has_duplicates) {
   ASSERT_THROW(JWT::Decode(token, &validator_, &lst_), InvalidTokenError);
 }
 
+TEST_F(TokenTest, token_with_large_wrong_signature) {
+
+  std::string token =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+    "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9."
+    "TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQTJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+    "TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQTJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+    "TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQTJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+    "TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQTJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+    "TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQTJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+    "TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQTJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+    "TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQTJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+    "TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQTJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+    "TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQTJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+    "TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQTJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+    "TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQTJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+    "TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQTJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ";
+    ASSERT_THROW(JWT::Decode(token, &validator_, &lst_), InvalidTokenError);
+}
+
 TEST_F(TokenTest, encoded_token_missing_alg) {
   std::string noAlg = "eyJmb28iOiJIUzI1NiJ9."
     "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9."
     "TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ";
   ASSERT_THROW(JWT::Decode(noAlg, &validator_, &lst_), InvalidTokenError);
+}
+
+TEST_F(TokenTest, bad_alg) {
+  std::string badAlg = "eyJhbGciOiJCTEEiLCJ0eXAiOiJKV1QifQ."
+  "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9."
+  "Pmjzsg4UPL6vKXK2pFGqH60qudcr4YHQ1e9Ddsl_ONo";
+  ASSERT_THROW(JWT::Decode(badAlg, &validator_, &lst_), InvalidSignatureError);
 }
 
 TEST_F(TokenTest, encoded_token_has_custom_header) {
@@ -106,6 +144,7 @@ TEST_F(TokenTest, just_parse) {
                               &validator_, &lst_));
   EXPECT_TRUE(token.get() != NULL);
 }
+
 
 TEST_F(TokenTest, parse_and_validate_bad_signature) {
   HS256Validator hs256("Not the right secret");

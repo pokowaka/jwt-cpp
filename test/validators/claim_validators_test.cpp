@@ -5,13 +5,27 @@
 #include "jwt/claimvalidator.h"
 #include "jwt/listclaimvalidator.h"
 #include "jwt/timevalidator.h"
+#include <unistd.h>
 
 // Test for the various validators.
+TEST(clock, clock_test) {
+  UtcClock clk;
+  uint64_t now = clk.Now();
+  sleep(1);
+  uint64_t later = clk.Now();
+  EXPECT_LT(now, later);
+}
 
 TEST(iat_test, before) {
   json_ptr json(json_pack("{si}", "iat", 9));
   IatValidator iat(0, &fakeClock);
   EXPECT_TRUE(iat.IsValid(json.get()));
+}
+
+TEST(iat_test, negative) {
+  json_ptr json(json_pack("{si}", "iat", -9));
+  IatValidator iat(0, &fakeClock);
+  ASSERT_THROW(iat.IsValid(json.get()), InvalidClaimError);
 }
 
 TEST(iat_test, wrong_type) {
@@ -205,6 +219,17 @@ TEST(any_test, no_aud_no_sub) {
   AnyClaimValidator any(claims, 2);
 
   ASSERT_THROW(any.IsValid(json.get()), InvalidClaimError);
+}
+
+TEST(all_test, has_sub_no_aud) {
+  json_ptr json(json_pack("{ss}", "sub", "foo"));
+  AudValidator aud(accepted, 2);
+  SubValidator sub(accepted, 2);
+
+  ClaimValidator *claims[] = {&aud, &sub};
+  AllClaimValidator all(claims, 2);
+
+  ASSERT_THROW(all.IsValid(json.get()), InvalidClaimError);
 }
 
 TEST(all_test, no_aud) {
