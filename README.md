@@ -25,6 +25,9 @@ Payload validators:
 - nbf check
 - iat check
 
+**NOTE**: We keep private and public keys unencrypted in memory for the duration of the 
+existence of any of the validators.
+
 ## Compilation and Installation
 
 Jwt-cpp uses the [CMake](http://www.cmake.org/) cross platform build tools to
@@ -289,7 +292,9 @@ validator ::=
 accepts the token.
 - A **kid** validator will accept the token if the kid field of the token is
   validated by the given validator. See the [sample](test/token/sample.cpp) for
-  more details.
+  more details. *Note*: Be careful when associating claim validators with this validator.
+  if you rely for example that the *iss* property relates to a specific kid. (i.e. if the 
+    issuer is foo, then the kid field should be 2, not 3).
 
 You can build a MessageValidator by invoking the factory:
 ``MessageValidator* MessageValidatorFactory::Build(std::string toBuild)``

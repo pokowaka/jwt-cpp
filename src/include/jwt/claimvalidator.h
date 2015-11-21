@@ -72,7 +72,7 @@ class ClaimValidator {
 };
 
 /**
- * An A;;ClaimValidator evaluates to true if all of its
+ * An AllClaimValidator evaluates to true if all of its
  * child ClaimValidators evaluate to true.
  */
 class AllClaimValidator : public ClaimValidator {

@@ -34,6 +34,10 @@ inline char Base64Encode::EncodeChar(uint8_t in) {
 }
 
 int Base64Encode::DecodeUrl(const char *decode, size_t num_decode, char *out, size_t *num_out) {
+  // No integer overflows please.
+  if ((decode + num_decode) < decode || (out + *num_out) < out)
+    return 1;
+
   if (*num_out < DecodeBytesNeeded(num_decode))
     return 1;
 
@@ -78,6 +82,10 @@ int Base64Encode::DecodeUrl(const char *decode, size_t num_decode, char *out, si
 
 int Base64Encode::EncodeUrl(const char* encode, size_t num_encode,
     char* result, size_t* num_result) {
+  // No integer overflows please.
+  if ((encode + num_encode) < encode || (result + *num_result) < result)
+    return 1;
+
   if (EncodeBytesNeeded(num_encode) > *num_result)
     return 1;
 

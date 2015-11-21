@@ -46,7 +46,7 @@ bool KidValidator::Verify(json_t *jsonHeader, const uint8_t *header, size_t num_
 
   auto kidvalidator = validator_map_.find(json_string_value(kid));
   if (kidvalidator == validator_map_.end()) {
-    return nullptr;
+    return false;
   }
 
   MessageValidator *validator = kidvalidator->second;
