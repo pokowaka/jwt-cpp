@@ -35,12 +35,12 @@ bool SetValidator::Verify(json_t *jsonHeader, const uint8_t *header, size_t num_
                           const uint8_t *signature, size_t num_signature) {
   json_t* algname = json_object_get(jsonHeader, "alg");
   if (!json_is_string(algname)) {
-    return  false;
+    return false;
   }
 
   auto alg = validator_map_.find(json_string_value(algname));
   if (alg == validator_map_.end()) {
-    return nullptr;
+    return false;
   }
 
   MessageValidator* validator = alg->second;

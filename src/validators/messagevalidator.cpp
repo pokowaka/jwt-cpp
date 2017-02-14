@@ -28,9 +28,9 @@ bool MessageValidator::Accepts(const char *algorithm) const {
 }
 bool MessageValidator::Validate(json_t *jsonHeader, std::string header, std::string signature) {
   return Verify(jsonHeader,
-                reinterpret_cast<u_int8_t *>(const_cast<char *>(header.c_str())),
+                reinterpret_cast<uint8_t *>(const_cast<char *>(header.c_str())),
                 header.size(),
-                reinterpret_cast<u_int8_t *>(const_cast<char *>(signature.c_str())),
+                reinterpret_cast<uint8_t *>(const_cast<char *>(signature.c_str())),
                 signature.size());
 }
 
