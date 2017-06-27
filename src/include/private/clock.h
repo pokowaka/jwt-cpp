@@ -40,7 +40,11 @@ class UtcClock : public IClock {
       time_t rawtime = 0;
       struct tm ptm = {0};
       time(&rawtime);
+      #ifdef _WIN32
+      gmtime_s(&ptm, &rawtime);
+      #else
       gmtime_r(&rawtime, &ptm);
+      #endif
       return mktime(&ptm);
     }
 };

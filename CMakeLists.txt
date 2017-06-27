@@ -12,7 +12,9 @@ LIST (APPEND CMAKE_MODULE_PATH "${TOOLS_DIRECTORY}/cmake")
 LIST (APPEND CMAKE_MODULE_PATH "${TOOLS_DIRECTORY}/cmake/doxygen")
 INCLUDE(GetGitRevisionDescription)
 INCLUDE(cpplint)
-INCLUDE(CodeCoverage)
+IF(UNIX)
+    INCLUDE(CodeCoverage)
+ENDIF(UNIX)
 INCLUDE(UseDoxygen)
 
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
@@ -39,19 +41,21 @@ set(JWT_INSTALL_INCLUDE_DIR   include CACHE PATH "Installation directory for hea
 #
 # Compiler SETtings
 #
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-IF(CMAKE_BUILD_TYPE MATCHES "Debug")
-  MESSAGE ("Setting debug flags")
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -fprofile-arcs -ftest-coverage")
-  SET(CMAKE_C_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
-  INCLUDE_DIRECTORIES ("/usr/local/include/valgrind")
-  IF (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    LINK_LIBRARIES(gcov)
-  ELSE()
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-optimize-sibling-calls")
-  ENDIF ()
-ENDIF(CMAKE_BUILD_TYPE MATCHES "Debug")
+IF(UNIX)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+    IF(CMAKE_BUILD_TYPE MATCHES "Debug")
+      MESSAGE ("Setting debug flags")
+      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -fprofile-arcs -ftest-coverage")
+      SET(CMAKE_C_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
+      INCLUDE_DIRECTORIES ("/usr/local/include/valgrind")
+      IF (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+        LINK_LIBRARIES(gcov)
+      ELSE()
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-optimize-sibling-calls")
+      ENDIF ()
+    ENDIF(CMAKE_BUILD_TYPE MATCHES "Debug")
+ENDIF(UNIX)
 
 
 # Jansson
@@ -72,7 +76,7 @@ ELSE (JANSSON)
 ENDIF (JANSSON)
 
 # Gperf tools
-IF(ENABLE_GPERF_TOOLS MATCHES "ON")
+IF(UNIX AND ENABLE_GPERF_TOOLS MATCHES "ON")
     MESSAGE("Looking for gperftools")
     FIND_PATH(GPERF_INCLUDE google/profiler.h PATHS /opt/include
         /usr/include
@@ -110,29 +114,40 @@ IF(ENABLE_GPERF_TOOLS MATCHES "ON")
     LINK_DIRECTORIES("${GPERF_PATH}")
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer")
     SET(WITH_GPERF_TOOLS 1)
-ENDIF(ENABLE_GPERF_TOOLS MATCHES "ON")
+ENDIF(UNIX AND ENABLE_GPERF_TOOLS MATCHES "ON")
 
 
 # Search OpenSSL
-FIND_PACKAGE(PkgConfig REQUIRED)
-PKG_SEARCH_MODULE(OPENSSL REQUIRED openssl openssl>=1.0.2)
+IF(UNIX)
+    FIND_PACKAGE(PkgConfig REQUIRED)
+    PKG_SEARCH_MODULE(OPENSSL REQUIRED openssl openssl>=1.0.2)
+    IF(OPENSSL_FOUND)
+        MESSAGE(STATUS "Using OpenSSL ${OPENSSL_VERSION} - ${OPENSSL_LIBDIR} - ${OPENSSL_LIBRARY_DIRS}")
+    ELSE()
+        # Error; with REQUIRED, pkg_search_module() will throw an error by it's own
+    ENDIF()
+ELSE(UNIX)
+    SET(OPENSSL_INCLUDE_DIRS ${OPENSSL_INCLUDE_DIRS})
+    SET(OPENSSL_LIBRARY_DIRS ${OPENSSL_LIBRARY_DIRS})
+    IF(NOT OPENSSL_INCLUDE_DIRS OR NOT OPENSSL_LIBRARY_DIRS)
+        MESSAGE(FATAL_ERROR "Set path to openssl include and library dirs: -DOPENSSL_INCLUDE_DIRS=path -DOPENSSL_LIBRARY_DIRS=path")
+    ENDIF()
+ENDIF(UNIX)
 
-IF(OPENSSL_FOUND)
-    INCLUDE_DIRECTORIES(${OPENSSL_INCLUDE_DIRS})
-    MESSAGE(STATUS "Using OpenSSL ${OPENSSL_VERSION} - ${OPENSSL_LIBDIR} - ${OPENSSL_LIBRARY_DIRS}")
-ELSE()
-    # Error; with REQUIRED, pkg_search_module() will throw an error by it's own
-ENDIF()
 
 # General include directories
-INCLUDE_DIRECTORIES (src/include/ src/include/private)
-INCLUDE_DIRECTORIES ( ${JANSSON_INCLUDE_DIRS} )
+INCLUDE_DIRECTORIES(src/include/ src/include/private)
+INCLUDE_DIRECTORIES(${JANSSON_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${OPENSSL_INCLUDE_DIRS})
 LINK_DIRECTORIES (${OPENSSL_LIBRARY_DIRS})
 ADD_SUBDIRECTORY (src)
 
 #-------------------
 # Test
 #-------------------
-ENABLE_TESTING (true)
-ADD_SUBDIRECTORY (ext/gtest-1.7.0)
-ADD_SUBDIRECTORY (test)
+ENABLE_TESTING(true)
+IF (MSVC)
+    SET(gtest_force_shared_crt ON CACHE BOOL "Force gtest to build with shared crt")
+ENDIF(MSVC)
+ADD_SUBDIRECTORY(ext/gtest-1.7.0)
+ADD_SUBDIRECTORY(test)

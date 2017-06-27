@@ -5,13 +5,22 @@
 #include "jwt/claimvalidator.h"
 #include "jwt/listclaimvalidator.h"
 #include "jwt/timevalidator.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <unistd.h>
+#endif
 
 // Test for the various validators.
 TEST(clock, clock_test) {
   UtcClock clk;
   uint64_t now = clk.Now();
+  #ifdef _WIN32
+  Sleep(1000);
+  #else
   sleep(1);
+  #endif
   uint64_t later = clk.Now();
   EXPECT_LT(now, later);
 }
