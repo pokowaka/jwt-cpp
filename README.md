@@ -79,6 +79,25 @@ brew link --force openssl
 pkg-config --modversion openssl
 ```
 
+### How to build in Windows
+Beside cmake and Visual Studio, you need to install OpenSSL binaries:
+[Win32 OpenSSL](https://slproweb.com/products/Win32OpenSSL.html)
+
+After installation, configure cmake for your Visual Studio and set openssl folders:
+```
+MD build
+CD build
+cmake -G "Visual Studio 14" -DCMAKE_INSTALL_PREFIX=..\install -DOPENSSL_INCLUDE_DIRS=C:\OpenSSL-Win32\include -DOPENSSL_LIBRARY_DIRS=C:\OpenSSL-Win32\lib ..
+cmake --build . --clean-first --target install
+```
+Find your binaries at `install` folder.
+
+To run tests on Windows, add openssl bins to your path:
+```
+set "PATH=C:\OpenSSL-Win32\bin;%PATH%"
+ctest
+```
+
 ## Usage
 
 You can find detailed [samples](test/token/sample.cpp) that are executed as part

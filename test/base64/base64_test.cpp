@@ -3,6 +3,12 @@
 
 #define MANY_TIMES 5000
 
+#ifdef _WIN32
+#define RANDOM rand
+#else
+#define RANDOM random
+#endif
+
 std::string combine(uint32_t fst, uint32_t snd) {
     std::string res;
     res.reserve(8);
@@ -110,8 +116,8 @@ TEST(base64_test, random) {
     char res[4096];
     char dec[4096];
     for (int i = 0; i < 10000; i++) {
-        uint32_t fst =  random();
-        uint32_t snd = random();
+        uint32_t fst =  RANDOM();
+        uint32_t snd = RANDOM();
         std::string input = combine(fst, snd);
         size_t cOut = 1 +  ((input.size()/3) + (input.size() % 3 > 0)) * 4;
         size_t cRes = 4096;
