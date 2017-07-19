@@ -45,7 +45,7 @@ class UtcClock : public IClock {
       #else
       gmtime_r(&rawtime, &ptm);
       #endif
-      return mktime(&ptm);
+      return timegm(&ptm);
     }
 };
 #endif  // SRC_INCLUDE_PRIVATE_CLOCK_H_
