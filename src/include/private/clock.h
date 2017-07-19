@@ -42,10 +42,11 @@ class UtcClock : public IClock {
       time(&rawtime);
       #ifdef _WIN32
       gmtime_s(&ptm, &rawtime);
+      return _mkgmtime(&ptm);
       #else
       gmtime_r(&rawtime, &ptm);
+      return timegm(&ptm);
       #endif
-      return mktime(&ptm);
     }
 };
 #endif  // SRC_INCLUDE_PRIVATE_CLOCK_H_
