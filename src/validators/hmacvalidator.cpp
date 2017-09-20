@@ -28,7 +28,7 @@
 
 HMACValidator::HMACValidator(const char *algorithm,
     const EVP_MD *md, const std::string &key) :
-  md_(md), algorithm_(algorithm), key_size_(md->md_size), key_(key) {
+  md_(md), algorithm_(algorithm), key_size_(EVP_MD_size(md)), key_(key) {
 }
 
 HMACValidator::~HMACValidator() {
@@ -64,13 +64,11 @@ bool HMACValidator::Sign(const uint8_t *header, size_t num_header,
       *num_signature = key_size_;
       return false;
   }
-
-  HMAC_CTX ctx;
-  HMAC_CTX_init(&ctx);
-  HMAC_Init_ex(&ctx, key_.c_str(), key_.size(), md_, NULL);
-  bool sign = HMAC_Update(&ctx, header, num_header) &&
-    HMAC_Final(&ctx, signature, (unsigned int*) num_signature);
-  HMAC_CTX_cleanup(&ctx);
+  HMAC_CTX* ctx = HMAC_CTX_new();
+  HMAC_Init_ex(ctx, key_.c_str(), key_.size(), md_, NULL);
+  bool sign = HMAC_Update(ctx, header, num_header) &&
+    HMAC_Final(ctx, signature, (unsigned int*) num_signature);
+  HMAC_CTX_free(ctx);
   return sign;
 }
 
