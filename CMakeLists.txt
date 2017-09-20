@@ -118,21 +118,30 @@ ENDIF(UNIX AND ENABLE_GPERF_TOOLS MATCHES "ON")
 
 
 # Search OpenSSL
-IF(UNIX)
+IF(APPLE)
+    # We rely on homebrew installing openssl in this location, if you use a homegrown
+    # location, you will have to change this.
+    SET(OPENSSL_INCLUDE_DIRS /usr/local/opt/openssl@1.1/include)
+    SET(OPENSSL_LIBRARY_DIRS /usr/local/opt/openssl@1.1/lib)
+    SET(OPENSSL_LIBRARIES "-lssl -lcrypto")
+    IF (NOT EXISTS ${OPENSSL_INCLUDE_DIRS})
+      MESSAGE(FATAL_ERROR "Cannot find /usr/local/opt/openssl@1.1, please run brew install openssl@1.1")
+    ENDIF()
+  ELSEIF(UNIX)
     FIND_PACKAGE(PkgConfig REQUIRED)
-    PKG_SEARCH_MODULE(OPENSSL REQUIRED openssl openssl>=1.0.2)
+    PKG_SEARCH_MODULE(OPENSSL REQUIRED openssl openssl>=1.1.0)
     IF(OPENSSL_FOUND)
         MESSAGE(STATUS "Using OpenSSL ${OPENSSL_VERSION} - ${OPENSSL_LIBDIR} - ${OPENSSL_LIBRARY_DIRS}")
     ELSE()
         # Error; with REQUIRED, pkg_search_module() will throw an error by it's own
     ENDIF()
-ELSE(UNIX)
+  ELSE(APPLE)
     SET(OPENSSL_INCLUDE_DIRS ${OPENSSL_INCLUDE_DIRS})
     SET(OPENSSL_LIBRARY_DIRS ${OPENSSL_LIBRARY_DIRS})
     IF(NOT OPENSSL_INCLUDE_DIRS OR NOT OPENSSL_LIBRARY_DIRS)
         MESSAGE(FATAL_ERROR "Set path to openssl include and library dirs: -DOPENSSL_INCLUDE_DIRS=path -DOPENSSL_LIBRARY_DIRS=path")
     ENDIF()
-ENDIF(UNIX)
+ENDIF(APPLE)
 
 
 # General include directories

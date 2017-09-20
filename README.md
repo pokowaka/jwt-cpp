@@ -73,10 +73,7 @@ First make sure you have the proper dependencies. The easiest way is to use
 [Homebrew](http://brew.sh/).
 
 ```
-brew install cmake lcov
-brew upgrade openssl
-brew link --force openssl
-pkg-config --modversion openssl
+brew install cmake lcov openssl@1.1
 ```
 
 ### How to build in Windows
