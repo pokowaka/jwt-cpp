@@ -26,15 +26,15 @@
 #include <string.h>
 #include <string>
 
-HMACValidator::HMACValidator(std::string algorithm, const EVP_MD *md,
+HMACValidator::HMACValidator(const std::string &algorithm, const EVP_MD *md,
                              const std::string &key)
     : md_(md), algorithm_(algorithm), key_size_(EVP_MD_size(md)), key_(key) {}
 
 HMACValidator::~HMACValidator() {}
 
-bool HMACValidator::Verify(json jsonHeader, const uint8_t *header,
+bool HMACValidator::Verify(const json &jsonHeader, const uint8_t *header,
                            size_t num_header, const uint8_t *signature,
-                           size_t num_signature) {
+                           size_t num_signature) const {
   // No need to calc the signature if it is going be the wrong size.
   if (num_signature != key_size_ || signature == nullptr)
     return false;
@@ -59,7 +59,7 @@ int HMACValidator::const_time_cmp(const uint8_t *a, const uint8_t *b,
 }
 
 bool HMACValidator::Sign(const uint8_t *header, size_t num_header,
-                         uint8_t *signature, size_t *num_signature) {
+                         uint8_t *signature, size_t *num_signature) const {
   if (signature == NULL || *num_signature < key_size_) {
     *num_signature = key_size_;
     return false;

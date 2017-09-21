@@ -29,7 +29,7 @@
 AllClaimValidator::AllClaimValidator(std::vector<ClaimValidator *> validators)
     : ClaimValidator(""), validators_(validators) {}
 
-bool AllClaimValidator::IsValid(const json claimset) const {
+bool AllClaimValidator::IsValid(const json &claimset) const {
   for (auto validator : validators_) {
     validator->IsValid(claimset);
   }
@@ -52,7 +52,7 @@ std::string AllClaimValidator::toJson() const {
 AnyClaimValidator::AnyClaimValidator(std::vector<ClaimValidator *> validators)
     : ClaimValidator(""), validators_(validators) {}
 
-bool AnyClaimValidator::IsValid(const json claimset) const {
+bool AnyClaimValidator::IsValid(const json &claimset) const {
   for (auto validator : validators_) {
     try {
       if (validator->IsValid(claimset))
@@ -79,7 +79,7 @@ std::string AnyClaimValidator::toJson() const {
 OptionalClaimValidator::OptionalClaimValidator(const ClaimValidator *inner)
     : ClaimValidator(inner->property()), inner_(inner) {}
 
-bool OptionalClaimValidator::IsValid(const json claimset) const {
+bool OptionalClaimValidator::IsValid(const json &claimset) const {
   return !claimset.count(property_) || inner_->IsValid(claimset);
 }
 

@@ -30,11 +30,11 @@
 
 class ParsedClaimvalidator : public ClaimValidator {
 public:
-  ParsedClaimvalidator(json json, const std::vector<ClaimValidator *> &children,
+  ParsedClaimvalidator(const json &json, const std::vector<ClaimValidator *> &children,
                        ClaimValidator *root);
   ~ParsedClaimvalidator();
 
-  bool IsValid(const json claimset) const;
+  bool IsValid(const json &claimset) const;
   std::string toJson() const;
 
 private:
@@ -45,15 +45,15 @@ private:
 
 class ParsedMessagevalidator : public MessageValidator {
 public:
-  ParsedMessagevalidator(json json,
+  ParsedMessagevalidator(const json &json,
                          const std::vector<MessageValidator *> &children,
                          MessageValidator *root);
   ~ParsedMessagevalidator();
 
-  bool Verify(json jsonHeader, const uint8_t *header, size_t num_header,
-              const uint8_t *signature, size_t num_signature);
+  bool Verify(const json &jsonHeader, const uint8_t *header, size_t num_header,
+              const uint8_t *signature, size_t num_signature) const;
   std::string algorithm() const;
-  bool Accepts(std::string algorithm) const;
+  bool Accepts(const std::string &algorithm) const;
   std::string toJson() const;
 
 private:

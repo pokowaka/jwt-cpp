@@ -23,12 +23,12 @@
 #ifndef SRC_INCLUDE_JWT_MESSAGEVALIDATOR_H_
 #define SRC_INCLUDE_JWT_MESSAGEVALIDATOR_H_
 
-#include "jwt/allocators.h"
-#include "jwt/json.hpp"
-#include "jwt/jwt_error.h"
 #include <stdint.h>
 #include <string.h>
 #include <string>
+#include "jwt/allocators.h"
+#include "jwt/json.hpp"
+#include "jwt/jwt_error.h"
 
 using json = nlohmann::json;
 
@@ -36,78 +36,80 @@ using json = nlohmann::json;
  * A MessageValidator can verify that a message is properly signed.
  */
 class MessageValidator {
-public:
-  virtual ~MessageValidator() {}
+   public:
+    virtual ~MessageValidator() {}
 
-  /**
-   * Verifies that the given signature belongs with the given header.
-   *
-   * @param jsonHeader The parsed jose header
-   * @param header the urlbase64 encoded JOSEHeader
-   * @param num_header Number of bytes in the header
-   * @param signature The binary signature. (Note base64 encoded).
-   * @param num_signature The length of the signature.
-   */
-  virtual bool Verify(json jsonHeader, const uint8_t *header, size_t num_header,
-                      const uint8_t *signature, size_t num_signature) = 0;
-  virtual std::string toJson() const = 0;
+    /**
+     * Verifies that the given signature belongs with the given header.
+     *
+     * @param jsonHeader The parsed jose header
+     * @param header the urlbase64 encoded JOSEHeader
+     * @param num_header Number of bytes in the header
+     * @param signature The binary signature. (Note base64 encoded).
+     * @param num_signature The length of the signature.
+     */
+    virtual bool Verify(const json &jsonHeader, const uint8_t *header,
+                        size_t num_header, const uint8_t *signature,
+                        size_t num_signature) const = 0;
+    virtual std::string toJson() const = 0;
 
-  /**
-   * The JWS algorithm that this message validator can handle, if any.
-   */
-  virtual std::string algorithm() const = 0;
+    /**
+     * The JWS algorithm that this message validator can handle, if any.
+     */
+    virtual std::string algorithm() const = 0;
 
-  /**
-   * True if the given algorithm can be validated by this validtor.
-   *
-   * @param algorithm Name of the algorithm
-   * @return true if the validator can verify a message signed with the given
-   * algorithm
-   */
-  virtual bool Accepts(std::string algorithm) const;
+    /**
+     * True if the given algorithm can be validated by this validtor.
+     *
+     * @param algorithm Name of the algorithm
+     * @return true if the validator can verify a message signed with the given
+     * algorithm
+     */
+    virtual bool Accepts(const std::string &algorithm) const;
 
-  /**
-   * Verfies that the given header is signed with the given signature.
-   *
-   * Calling this method is slower than the Verify method above.
-   *
-   * @param jsonHeader Deserialized JSON object contained in jose header
-   * @param header the urlbase64 encoded JOSEHeader
-   * @param signature the decoded signature
-   */
-  bool Validate(json jsonHeader, std::string header, std::string signature);
+    /**
+     * Verfies that the given header is signed with the given signature.
+     *
+     * Calling this method is slower than the Verify method above.
+     *
+     * @param jsonHeader Deserialized JSON object contained in jose header
+     * @param header the urlbase64 encoded JOSEHeader
+     * @param signature the decoded signature
+     */
+    bool Validate(const json &jsonHeader, const std::string &header,
+                  const std::string &signature) const;
 };
 
 /**
  * A MessageSigner is capable of signing a JWS Joseheader
  */
 class MessageSigner : public MessageValidator {
-public:
-  virtual ~MessageSigner() {}
+   public:
+    virtual ~MessageSigner() {}
 
-  /**
-   * Signs the given jose header.
-   * if signature == 0, or *num_signate is less than what is needed for a
-   * signature the method should return false, and num_signature should contain
-   * the number of bytes needed to place the signature in.
-   *
-   * @param header the urlbase64 encoded JOSEHeader
-   * @param num_header Number of bytes in the header
-   * @param signature The binary signature. (Note base64 encoded).
-   * @param num_signature The length of the signature.
-   */
-  virtual bool Sign(const uint8_t *header, size_t num_header,
-                    uint8_t *signature, size_t *num_signature) = 0;
+    /**
+     * Signs the given jose header.
+     * if signature == 0, or *num_signate is less than what is needed for a
+     * signature the method should return false, and num_signature should
+     * contain the number of bytes needed to place the signature in.
+     *
+     * @param header the urlbase64 encoded JOSEHeader
+     * @param num_header Number of bytes in the header
+     * @param signature The binary signature. (Note base64 encoded).
+     * @param num_signature The length of the signature.
+     */
+    virtual bool Sign(const uint8_t *header, size_t num_header,
+                      uint8_t *signature, size_t *num_signature) const = 0;
 
-  /**
-   * Creates the digital signature
-   *
-   * @param header the jose header to be signed
-   * @return The signature
-   */
-  std::string Digest(std::string header);
+    /**
+     * Creates the digital signature
+     *
+     * @param header the jose header to be signed
+     * @return The signature
+     */
+    std::string Digest(const std::string &header) const;
 };
 
 typedef std::unique_ptr<MessageValidator> validator_ptr;
 typedef std::unique_ptr<MessageSigner> signer_ptr;
-#endif // SRC_INCLUDE_JWT_MESSAGEVALIDATOR_H_
+#endif  // SRC_INCLUDE_JWT_MESSAGEVALIDATOR_H_

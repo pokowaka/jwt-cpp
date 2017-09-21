@@ -33,14 +33,14 @@ class ClaimValidatorFactory {
 public:
   using json = nlohmann::json;
 
-  static ClaimValidator *Build(std::string fromJson);
-  static ClaimValidator *Build(json claim);
+  static ClaimValidator *Build(const std::string &fromJson);
+  static ClaimValidator *Build(const json &claim);
   ~ClaimValidatorFactory();
 
 private:
-  std::vector<std::string> BuildList(json lst);
-  std::vector<ClaimValidator *> BuildValidatorList(json json);
-  ClaimValidator *BuildInternal(json fromJson);
+  std::vector<std::string> BuildList(const json &lst);
+  std::vector<ClaimValidator *> BuildValidatorList(const json &lst);
+  ClaimValidator *BuildInternal(const json &fromJson);
 
   std::vector<ClaimValidator *> build_;
 };

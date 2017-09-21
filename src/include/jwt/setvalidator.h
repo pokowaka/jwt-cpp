@@ -36,12 +36,12 @@
  */
 class SetValidator : public MessageValidator {
 public:
-  explicit SetValidator(std::vector<MessageValidator *> msg);
-  bool Verify(json jsonHeader, const uint8_t *header, size_t cHeader,
-              const uint8_t *signature, size_t cSignature);
+  explicit SetValidator(const std::vector<MessageValidator *> &msg);
+  bool Verify(const json &jsonHeader, const uint8_t *header, size_t cHeader,
+              const uint8_t *signature, size_t cSignature) const;
   std::string algorithm() const { return "SET"; }
   std::string toJson() const;
-  bool Accepts(std::string algorithm) const;
+  bool Accepts(const std::string &algorithm) const;
 
 private:
   std::map<std::string, MessageValidator *> validator_map_;

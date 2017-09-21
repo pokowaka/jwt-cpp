@@ -27,7 +27,7 @@
 
 KidValidator::KidValidator() : algorithm_("") {}
 
-void KidValidator::Register(std::string kid, MessageValidator *validator) {
+void KidValidator::Register(const std::string &kid, MessageValidator *validator) {
   validator_map_[kid] = validator;
   if (algorithm_.empty()) {
     algorithm_ = validator->algorithm();
@@ -37,9 +37,9 @@ void KidValidator::Register(std::string kid, MessageValidator *validator) {
   }
 }
 
-bool KidValidator::Verify(json jsonHeader, const uint8_t *header,
+bool KidValidator::Verify(const json &jsonHeader, const uint8_t *header,
                           size_t num_header, const uint8_t *signature,
-                          size_t num_signature) {
+                          size_t num_signature) const {
   if (!jsonHeader.count("kid") || !jsonHeader["kid"].is_string())
     return false;
 

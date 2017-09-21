@@ -35,7 +35,7 @@ TimeValidator::TimeValidator(const char *key, bool sign, uint64_t leeway,
                              IClock *clock)
     : ClaimValidator(key), sign_(sign), leeway_(leeway), clock_(clock) {}
 
-bool TimeValidator::IsValid(const json claim) const {
+bool TimeValidator::IsValid(const json &claim) const {
   if (!claim.count(property_) || !claim[property_].is_number()) {
     throw InvalidClaimError(std::string("Missing claim: ") += property_);
   }

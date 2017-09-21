@@ -36,14 +36,14 @@
  */
 class HMACValidator : public MessageSigner {
 public:
-  explicit HMACValidator(std::string algorithm, const EVP_MD *md,
+  explicit HMACValidator(const std::string &algorithm, const EVP_MD *md,
                          const std::string &key);
   virtual ~HMACValidator();
 
-  bool Verify(json jsonHeader, const uint8_t *header, size_t num_header,
-              const uint8_t *signature, size_t num_signature);
+  bool Verify(const json &jsonHeader, const uint8_t *header, size_t num_header,
+              const uint8_t *signature, size_t num_signature) const;
   bool Sign(const uint8_t *header, size_t num_header, uint8_t *signature,
-            size_t *num_signature);
+            size_t *num_signature) const;
 
   inline unsigned int key_size() const { return key_size_; }
   inline std::string algorithm() const { return algorithm_; }

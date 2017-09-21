@@ -33,7 +33,7 @@ public:
   TimeValidator(const char *key, bool sign, uint64_t leeway);
   TimeValidator(const char *key, bool sign);
   TimeValidator(const char *key, bool sign, uint64_t leeway, IClock *clock);
-  bool IsValid(const json claimset) const;
+  bool IsValid(const json &claimset) const;
   std::string toJson() const;
 
 private:

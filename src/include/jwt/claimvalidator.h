@@ -54,7 +54,7 @@ public:
    * @return true if the claim is valid.
    * @throw InvalidClaimError if the token cannot be validated
    */
-  virtual bool IsValid(const json claimset) const = 0;
+  virtual bool IsValid(const json &claimset) const = 0;
 
   /**
    * A Json representation of this validator. This can
@@ -84,7 +84,7 @@ public:
    * @param validators The list of claimvalidators that have to evaluate to true
    */
   explicit AllClaimValidator(std::vector<ClaimValidator *> validators);
-  bool IsValid(const json claimset) const;
+  bool IsValid(const json& claimset) const;
   std::string toJson() const;
 
 private:
@@ -101,7 +101,7 @@ private:
 class OptionalClaimValidator : public ClaimValidator {
 public:
   explicit OptionalClaimValidator(const ClaimValidator *inner);
-  bool IsValid(const json claimset) const;
+  bool IsValid(const json &claimset) const;
   std::string toJson() const;
 
 private:
@@ -115,7 +115,7 @@ private:
 class AnyClaimValidator : public ClaimValidator {
 public:
   explicit AnyClaimValidator(std::vector<ClaimValidator *> validators);
-  bool IsValid(const json claimset) const;
+  bool IsValid(const json &claimset) const;
   std::string toJson() const;
 
 private:

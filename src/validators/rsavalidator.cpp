@@ -27,13 +27,13 @@
 #include <sstream>
 #include <string>
 
-RSAValidator::RSAValidator(std::string algorithm, const EVP_MD *md,
+RSAValidator::RSAValidator(const std::string &algorithm, const EVP_MD *md,
                            const std::string &key)
     : algorithm_(algorithm), private_key_(NULL), public_key_(NULL), md_(md) {
   public_key_ = LoadKey(key.c_str(), true);
 }
 
-RSAValidator::RSAValidator(std::string algorithm, const EVP_MD *md,
+RSAValidator::RSAValidator(const std::string &algorithm, const EVP_MD *md,
                            const std::string &key,
                            const std::string &private_key)
     : RSAValidator(algorithm, md, key) {
@@ -45,9 +45,9 @@ RSAValidator::~RSAValidator() {
   EVP_PKEY_free(private_key_);
 }
 
-bool RSAValidator::Verify(json jsonHeader, const uint8_t *header,
+bool RSAValidator::Verify(const json &jsonHeader, const uint8_t *header,
                           size_t num_header, const uint8_t *signature,
-                          size_t num_signature) {
+                          size_t num_signature) const {
   EVP_MD_CTX *evp_md_ctx = EVP_MD_CTX_new();
   EVP_MD_CTX_init(evp_md_ctx);
   EVP_VerifyInit_ex(evp_md_ctx, md_, NULL);
@@ -59,7 +59,7 @@ bool RSAValidator::Verify(json jsonHeader, const uint8_t *header,
 }
 
 bool RSAValidator::Sign(const uint8_t *header, size_t num_header,
-                        uint8_t *signature, size_t *num_signature) {
+                        uint8_t *signature, size_t *num_signature) const {
   size_t needed = 0;
   bool success = false;
 

@@ -26,8 +26,8 @@
 #include <stddef.h>
 #include <memory>
 #include <string>
-#include <utility>
 #include <tuple>
+#include <utility>
 #include "jwt/claimvalidator.h"
 #include "jwt/json.hpp"
 #include "jwt/messagevalidator.h"
@@ -52,7 +52,6 @@ class JWT {
     using json = nlohmann::json;
 
    public:
-
     /**
      * Parses an encoded web token and validates it.
      *
@@ -65,7 +64,7 @@ class JWT {
      * @throw InvalidSignatureError in case the token is not signed
      * @throw InvalidClaimError in case the payload cannot be validated
      */
-    static std::tuple<json, json> Decode(std::string jwsToken,
+    static std::tuple<json, json> Decode(const std::string &jwsToken,
                                          MessageValidator *verifier = nullptr,
                                          ClaimValidator *validator = nullptr);
 
@@ -93,17 +92,17 @@ class JWT {
      *
      * @param signer The MessageSigner used to sign the resulting token.
      * @param payload The payload for this token.
-     * @param header The optional header. Note the "jwt" and "alg" fields will
-     * be set
+     * @param header The header. Note the "jwt" and "alg" fields will
+     * be added if they are not there.
      * @return a char[] with a signed token. To be cleared up with calling
      * delete[]
      */
-    static std::string Encode(MessageSigner *signer, json payload,
-                              json header = nullptr);
+    static std::string Encode(const MessageSigner &signer, const json &payload,
+                              json header = {});
 
    private:
     static json ExtractPayload(const char *payload, size_t num_payload);
-    static bool VerifySignature(json header_claims_, const char *header,
+    static bool VerifySignature(const json &header_claims_, const char *header,
                                 size_t num_header_and_payload,
                                 const char *signature, size_t num_signature,
                                 MessageValidator *verifier);

@@ -30,8 +30,8 @@
 
 class ListClaimValidator : public ClaimValidator {
 public:
-  ListClaimValidator(std::string property, std::vector<std::string> accepted);
-  bool IsValid(const json claimset) const;
+  ListClaimValidator(const std::string &property, const std::vector<std::string> &accepted);
+  bool IsValid(const json &claimset) const;
   std::string toJson() const;
 
 protected:
@@ -46,7 +46,7 @@ protected:
  */
 class IssValidator : public ListClaimValidator {
 public:
-  IssValidator(std::vector<std::string> accepted)
+  IssValidator(const std::vector<std::string> &accepted)
       : ListClaimValidator("iss", accepted) {}
 };
 
@@ -60,7 +60,7 @@ public:
  */
 class SubValidator : public ListClaimValidator {
 public:
-  SubValidator(std::vector<std::string> accepted)
+  SubValidator(const std::vector<std::string> &accepted)
       : ListClaimValidator("sub", accepted) {}
 };
 
@@ -78,8 +78,8 @@ public:
  */
 class AudValidator : public ListClaimValidator {
 public:
-  AudValidator(std::vector<std::string> accepted)
+  AudValidator(const std::vector<std::string> &accepted)
       : ListClaimValidator("aud", accepted) {}
-  bool IsValid(const json claimset) const;
+  bool IsValid(const json &claimset) const;
 };
 #endif // SRC_INCLUDE_JWT_LISTCLAIMVALIDATOR_H_

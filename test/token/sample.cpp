@@ -11,7 +11,7 @@ TEST(Sample, sign) {
     ::json json = {{"sub", "subject"}, {"exp", 1483228800}};
 
     // Let's encode the token to a char*
-    auto token = JWT::Encode(&signer, json);
+    auto token = JWT::Encode(signer, json);
 
     EXPECT_NE(nullptr, token.c_str());
 }
@@ -33,7 +33,7 @@ TEST(Sample, payload_deserialize) {
     ::json json = {{"sub", "subject"}, {"exp", time(NULL) + 360000}};
 
     // Encode the jwt token.
-    auto str_token = JWT::Encode(&signer, json);
+    auto str_token = JWT::Encode(signer, json);
 
     // Use the expiration validator
     ExpValidator exp;
@@ -41,6 +41,7 @@ TEST(Sample, payload_deserialize) {
     // Decode and validate the token
     try {
         ::json header, payload;
+        // Note in C++ 17 you can use: auto [ header, payload ] instead of tie.
         std::tie(header, payload) = JWT::Decode(str_token, &signer, &exp);
     } catch (TokenFormatError &tfe) {
         // Badly encoded token
@@ -53,7 +54,7 @@ TEST(Sample, from_json) {
     // 12:00am (UTC)
     HS256Validator signer("safe");
     ::json json = {{"iss", "foo"}, {"exp", 2208988800}};
-    auto str_token = JWT::Encode(&signer, json);
+    auto str_token = JWT::Encode(signer, json);
 
     // Let's setup a claim validator where we will accept tokens that
     // are have been issues by either foo or bar
@@ -85,6 +86,7 @@ TEST(Sample, from_json) {
 
     try {
         ::json header, payload;
+        // Note in C++ 17 you can use: auto [ header, payload ] instead of tie.
         std::tie(header, payload) = JWT::Decode(str_token, message_validator.get(),
                                 claim_validator.get());
     } catch (InvalidTokenError &tfe) {
@@ -102,7 +104,7 @@ TEST(Sample, kid) {
 
     // Lets add a header with a specific key id field set
     ::json keyid = {{"kid", "key_id_1"}};
-    auto token = JWT::Encode(&signer, json, keyid);
+    auto token = JWT::Encode(signer, json, keyid);
 
     // Next we are going to setup the message validators.
     // We will accept the various key ids that are mapped to the

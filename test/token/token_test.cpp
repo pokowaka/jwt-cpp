@@ -74,7 +74,7 @@ TEST_F(TokenTest, valid_hs256_claims) {
 TEST_F(TokenTest, encoded_token_is_valid) {
     ::json json = {
         {"sub", "1234567890"}, {"name", "John Doe"}, {"admin", true}};
-    auto str_token = JWT::Encode(&validator_, json);
+    auto str_token = JWT::Encode(validator_, json);
     auto token = JWT::Decode(str_token, &validator_, &lst_);
     ValidToken(str_token, &validator_, &lst_);
 }
@@ -83,7 +83,7 @@ TEST_F(TokenTest, encoded_token_with_none_is_valid) {
     NoneValidator none;
     ::json json = {
         {"sub", "1234567890"}, {"name", "John Doe"}, {"admin", true}};
-    auto str_token = JWT::Encode(&none, json);
+    auto str_token = JWT::Encode(none, json);
     ValidToken(str_token, &none, &lst_);
 }
 
@@ -160,7 +160,7 @@ TEST_F(TokenTest, encoded_token_has_custom_header) {
     ::json header = {{"foo", "bar"}};
     ::json dec_header, dec_payload;
 
-    auto tok = JWT::Encode(&validator_, json, header);
+    auto tok = JWT::Encode(validator_, json, header);
     std::tie(dec_header, dec_payload) = JWT::Decode(tok, &validator_, &lst_);
     ::json foo = dec_header["foo"];
     EXPECT_STREQ("bar", foo.get<std::string>().c_str());
@@ -174,7 +174,7 @@ TEST_F(TokenTest, encoded_token_has_custom_header_with_double_entries) {
                       {"admin", true}};
     ::json header = {{"foo", "bar"}, {"foo", "baz"}};
 
-    auto str_token = JWT::Encode(&validator_, payload, header);
+    auto str_token = JWT::Encode(validator_, payload, header);
     ::json dec_header, dec_payload;
     std::tie(dec_header, dec_payload) =
         JWT::Decode(str_token, &validator_, &lst_);

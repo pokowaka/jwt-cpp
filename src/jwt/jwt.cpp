@@ -29,17 +29,17 @@
 
 using json = nlohmann::json;
 
-std::string JWT::Encode(MessageSigner *validator, json payload, json header) {
+std::string JWT::Encode(const MessageSigner &validator, const json &payload, json header) {
     header["typ"] = "JWT";
-    header["alg"] = validator->algorithm();
+    header["alg"] = validator.algorithm();
     auto header_enc = Base64Encode::EncodeUrl(header.dump());
     auto payload_enc = Base64Encode::EncodeUrl(payload.dump());
     auto signed_area = header_enc + '.' + payload_enc;
-    auto digest = validator->Digest(signed_area);
+    auto digest = validator.Digest(signed_area);
     return (signed_area + '.' + Base64Encode::EncodeUrl(digest));
 }
 
-std::tuple<json, json> JWT::Decode(std::string jwsToken,
+std::tuple<json, json> JWT::Decode(const std::string &jwsToken,
                                 MessageValidator *verifier,
                                 ClaimValidator *validator) {
     return Decode(jwsToken.c_str(), jwsToken.size(), verifier, validator);
@@ -131,7 +131,7 @@ json JWT::ExtractPayload(const char *payload, size_t num_payload) {
     return json::parse(dec_payload.get());
 }
 
-bool JWT::VerifySignature(json header_claims_, const char *header,
+bool JWT::VerifySignature(const json &header_claims_, const char *header,
                           size_t num_header_and_payload, const char *signature,
                           size_t num_signature, MessageValidator *verifier) {
     if (verifier == nullptr) {

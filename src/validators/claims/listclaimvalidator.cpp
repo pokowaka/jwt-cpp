@@ -28,11 +28,11 @@
 #include <string>
 #include <vector>
 
-ListClaimValidator::ListClaimValidator(std::string property,
-                                       std::vector<std::string> accepted)
+ListClaimValidator::ListClaimValidator(const std::string &property,
+                                       const std::vector<std::string> &accepted)
     : ClaimValidator(property), accepted_(accepted) {}
 
-bool ListClaimValidator::IsValid(const json claim) const {
+bool ListClaimValidator::IsValid(const json &claim) const {
   if (!claim.count(property_)) {
     throw InvalidClaimError(std::string("Validator: missing: ") + property_);
   }
@@ -66,7 +66,7 @@ std::string ListClaimValidator::toJson() const {
   return msg.str();
 }
 
-bool AudValidator::IsValid(const json claim) const {
+bool AudValidator::IsValid(const json &claim) const {
   if (!claim.count(property_)) {
     throw InvalidClaimError(std::string("AudValidator claim: " + claim.dump() +
                                         " is missing: " + property_));
