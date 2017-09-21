@@ -25,7 +25,6 @@
 
 #include "jwt/claimvalidator.h"
 #include "jwt/messagevalidator.h"
-#include <jansson.h>
 #include <string>
 #include <vector>
 

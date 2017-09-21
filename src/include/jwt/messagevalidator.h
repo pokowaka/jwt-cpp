@@ -26,7 +26,6 @@
 #include "jwt/allocators.h"
 #include "jwt/json.hpp"
 #include "jwt/jwt_error.h"
-#include <jansson.h>
 #include <stdint.h>
 #include <string.h>
 #include <string>

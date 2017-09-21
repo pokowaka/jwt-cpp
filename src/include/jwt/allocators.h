@@ -22,17 +22,8 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef SRC_INCLUDE_JWT_ALLOCATORS_H_
 #define SRC_INCLUDE_JWT_ALLOCATORS_H_
-#include <jansson.h>
 #include <memory>
-
-class json_ptr_delete {
- public:
-  // constexpr default_delete() noexcept {}
-  // inline template <class U> default_delete(const default_delete<U>& d) noexcept { }
-  inline void operator() (json_t* ptr) const {
-    json_decref(ptr);
-  }
-};
+#include <stdlib.h>
 
 class json_str_delete {
  public:
@@ -41,7 +32,6 @@ class json_str_delete {
   }
 };
 
-typedef std::unique_ptr<json_t, json_ptr_delete> json_ptr;
 typedef std::unique_ptr<char, json_str_delete> json_str;
 typedef std::unique_ptr<char[]> str_ptr;
 #endif  // SRC_INCLUDE_JWT_ALLOCATORS_H_

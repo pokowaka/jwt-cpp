@@ -26,7 +26,6 @@
 #include "jwt/timevalidator.h"
 #include "private/buildwrappers.h"
 #include <iostream>
-#include <jansson.h>
 #include <sstream>
 #include <string>
 #include <vector>

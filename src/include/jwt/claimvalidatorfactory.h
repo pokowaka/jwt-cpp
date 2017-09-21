@@ -26,7 +26,6 @@
 #include "json.hpp"
 #include "jwt/claimvalidator.h"
 #include <exception>
-#include <jansson.h>
 #include <string>
 #include <vector>
 

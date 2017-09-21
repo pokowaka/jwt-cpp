@@ -24,7 +24,6 @@
 #include "jwt/allocators.h"
 #include "jwt/jwt_error.h"
 #include "private/base64.h"
-#include <jansson.h>
 #include <string>
 
 using json = nlohmann::json;
@@ -93,7 +92,6 @@ JWT *JWT::Decode(const char *jws_token, size_t num_jws_token,
   // Make sure we have a proper \0 termination
   dec_header.get()[num_dec_header] = 0;
 
-  json_error_t error;
   json header_claims = json::parse(dec_header.get());
 
   /*

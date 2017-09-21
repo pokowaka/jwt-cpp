@@ -57,24 +57,6 @@ IF(UNIX)
     ENDIF(CMAKE_BUILD_TYPE MATCHES "Debug")
 ENDIF(UNIX)
 
-
-# Jansson
-MESSAGE ("-- Looking for jansson")
-UNSET(JANSSON)
-FIND_LIBRARY (JANSSON NAMES jansson)
-If (JANSSON)
-    MESSAGE ("-- Jannson Already Available ${JANSSON}")
-ELSE (JANSSON)
-    MESSAGE ("-- Missing jansson, building locally")
-    # We are not really interested in the debug build of jannson
-    SET (CMAKE_C_FLAGS_DEBUG "-O3" CACHE STRING "Optimize a lot")
-    SET (JANSEN_EXAMPLES OFF CACHE BOOL "No samples")
-    SET (JANSSON_BUILD_DOCS OFF CACHE BOOL "No docs")
-    SET (JANSSON_COVERALLS_UPLOAD OFF CACHE BOOL "No coveralls")
-    SET (JANSSON_WITHOUT_TESTS ON CACHE BOOL "No tests")
-    ADD_SUBDIRECTORY (${JWT_SOURCE_DIR}/ext/jansson)
-ENDIF (JANSSON)
-
 # Gperf tools
 IF(UNIX AND ENABLE_GPERF_TOOLS MATCHES "ON")
     MESSAGE("Looking for gperftools")
@@ -119,13 +101,14 @@ ENDIF(UNIX AND ENABLE_GPERF_TOOLS MATCHES "ON")
 
 # Search OpenSSL
 IF(APPLE)
-    # We rely on homebrew installing openssl in this location, if you use a homegrown
-    # location, you will have to change this.
-    SET(OPENSSL_INCLUDE_DIRS /usr/local/opt/openssl@1.1/include)
-    SET(OPENSSL_LIBRARY_DIRS /usr/local/opt/openssl@1.1/lib)
-    SET(OPENSSL_LIBRARIES "-lssl -lcrypto")
+    # If it doesn't go to any Cellar it will not work.
+    EXECUTE_PROCESS(COMMAND bash -c "brew info openssl@1.1 | grep Cellar | sed 's/ .*//' | tr -d '\r\n'" OUTPUT_VARIABLE MAC_SSL_ROOT)
+    SET(OPENSSL_INCLUDE_DIRS ${MAC_SSL_ROOT}/include)
+    SET(OPENSSL_LIBRARY_DIRS ${MAC_SSL_ROOT}/lib)
+    SET(OPENSSL_LIBRARIES "-lcrypto")
+
     IF (NOT EXISTS ${OPENSSL_INCLUDE_DIRS})
-      MESSAGE(FATAL_ERROR "Cannot find /usr/local/opt/openssl@1.1, please run brew install openssl@1.1")
+        MESSAGE(FATAL_ERROR "Cannot find ${MAC_SSL_ROOT}, please run brew install openssl@1.1")
     ENDIF()
   ELSEIF(UNIX)
     FIND_PACKAGE(PkgConfig REQUIRED)
@@ -146,7 +129,6 @@ ENDIF(APPLE)
 
 # General include directories
 INCLUDE_DIRECTORIES(src/include/ src/include/private)
-INCLUDE_DIRECTORIES(${JANSSON_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${OPENSSL_INCLUDE_DIRS})
 LINK_DIRECTORIES (${OPENSSL_LIBRARY_DIRS})
 ADD_SUBDIRECTORY (src)

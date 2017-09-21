@@ -31,7 +31,6 @@
 #include "private/buildwrappers.h"
 #include <fstream>
 #include <iostream>
-#include <jansson.h>
 #include <sstream>
 #include <string>
 #include <vector>

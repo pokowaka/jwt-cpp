@@ -1,6 +1,5 @@
 #include "jwt/jwt_all.h"
 #include "gtest/gtest.h"
-#include <jansson.h>
 #include <string>
 
 class TokenTest : public ::testing::Test {

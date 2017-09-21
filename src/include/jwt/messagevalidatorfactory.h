@@ -27,7 +27,6 @@
 #include "jwt/kidvalidator.h"
 #include "jwt/messagevalidator.h"
 #include <exception>
-#include <jansson.h>
 #include <string>
 #include <vector>
 

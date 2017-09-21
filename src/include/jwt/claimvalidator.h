@@ -25,7 +25,6 @@
 
 #include "jwt/json.hpp"
 #include "jwt/jwt_error.h"
-#include <jansson.h>
 #include <memory>
 #include <string>
 #include <vector>
