@@ -38,6 +38,10 @@ ClaimValidatorFactory::~ClaimValidatorFactory() {
   }
 }
 
+ClaimValidator *ClaimValidatorFactory::Build(json msg) {
+  return Build(msg.dump());
+}
+
 ClaimValidator *ClaimValidatorFactory::Build(json_t *json) {
   if (json == NULL) {
     throw std::logic_error("Cannot construct from empty json!");

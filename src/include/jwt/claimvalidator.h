@@ -28,6 +28,7 @@
 #include <vector>
 #include <memory>
 #include "jwt/jwt_error.h"
+#include "jwt/json.hpp"
 
 /**
  * An InvalidClaimError indicats that the payload in the
@@ -43,6 +44,7 @@ class InvalidClaimError : public InvalidTokenError {
  */
 class ClaimValidator {
  public:
+  using json = nlohmann::json;
   virtual ~ClaimValidator() {}
 
   /**
@@ -54,6 +56,11 @@ class ClaimValidator {
    * @throw InvalidClaimError if the token cannot be validated
    */
   virtual bool IsValid(const json_t *claimset) const = 0;
+
+  virtual bool IsValid(const json *claimset) {
+    std::unique_ptr<json_t> json_str(json_loads(claimset->dump().c_str(), JSON_REJECT_DUPLICATES, nullptr));
+    return IsValid(json_str.get());
+  };
 
   /**
    * A Json representation of this validator. This can

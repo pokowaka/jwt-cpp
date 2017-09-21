@@ -29,11 +29,18 @@
 #include <vector>
 #include "jwt/messagevalidator.h"
 #include "jwt/kidvalidator.h"
+#include "json.hpp"
+
+using json = nlohmann::json;
 
 class MessageValidatorFactory {
  public:
   static MessageValidator *Build(std::string fromJson);
   static MessageSigner *BuildSigner(std::string fromJson);
+
+  static MessageValidator *Build(json msg);
+  static MessageSigner *BuildSigner(json sign);
+
   ~MessageValidatorFactory();
 
  private:

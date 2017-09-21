@@ -42,6 +42,14 @@ MessageValidatorFactory::~MessageValidatorFactory() {
   }
 }
 
+MessageValidator* MessageValidatorFactory::Build(json json) {
+  return Build(json.dump());
+}
+
+MessageSigner* MessageValidatorFactory::BuildSigner(json json) {
+  return BuildSigner(json.dump());
+}
+
 MessageSigner* MessageValidatorFactory::BuildSigner(std::string fromJson) {
   json_error_t error;
   json_ptr json_str(json_loads(fromJson.c_str(), JSON_REJECT_DUPLICATES, &error));

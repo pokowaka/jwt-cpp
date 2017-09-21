@@ -27,8 +27,10 @@
 #include <stddef.h>
 #include <memory>
 #include <string>
+#include <utility>
 #include "jwt/claimvalidator.h"
 #include "jwt/messagevalidator.h"
+#include "jwt/json.hpp"
 
 // Stack allocated signature.
 #define MAX_SIGNATURE_LENGTH 256
@@ -47,8 +49,10 @@
  * more details.
  */
 class JWT {
- public:
+  using json = nlohmann::json;
+  public:
   ~JWT();
+
 
   /**
    * Parses an encoded web token and validates it.
@@ -91,6 +95,8 @@ class JWT {
    */
   static char *Encode(MessageSigner *signer, json_t *payload, json_t *header = nullptr);
 
+
+
   /**
    * The contents of the JOSE Header describe the cryptographic operations
    * applied to the JWT Claims Set.  Callers do not own the reference returned
@@ -116,6 +122,13 @@ class JWT {
   json_t* payload_;
 };
 
+class JsonToken {
+  public:
+  using json = nlohmann::json;
+
+  static std::tuple<json, json> Decode(std::string token, MessageValidator *verifier = nullptr, ClaimValidator* validator = nullptr);
+  static std::string Encode(MessageSigner *signer, json payload, json header);
+};
 /** Auto pointer that will release the token when it goes out of scope */
 typedef std::unique_ptr<JWT> jwt_ptr;
 #endif  // SRC_INCLUDE_JWT_JWT_H_

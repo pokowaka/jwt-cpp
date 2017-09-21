@@ -135,7 +135,7 @@ std::string Base64Encode::EncodeUrl(const std::string &input) {
   str_ptr encoded(new char[num_encoded]);
   // Impossible to get a buffer overlow
   EncodeUrl(input.c_str(), input.size(), encoded.get(), &num_encoded);
-  return std::string(encoded.get(), num_encoded);
+  return std::string(encoded.get(), num_encoded-1);
 }
 
 std::string Base64Encode::DecodeUrl(const std::string &input) {

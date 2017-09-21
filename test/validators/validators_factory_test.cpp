@@ -142,34 +142,34 @@ TEST(parse_test, proper_rsa_from_file) {
 
 // Test for the various validators.
 TEST(parse_test, parse_set) {
-  const char *json = "{ \"set\" : [ "
+  std::string json = "{ \"set\" : [ "
       "{ \"HS256\" : { \"secret\" : \"safe\" } }, "
       "{ \"HS512\" : { \"secret\" : \"supersafe\" } }"
       " ] }";
   validator_ptr valid(MessageValidatorFactory::Build(json));
   EXPECT_NE(nullptr, valid.get());
-  EXPECT_STREQ(json, valid->toJson().c_str());
+  EXPECT_STREQ(json.c_str(), valid->toJson().c_str());
   EXPECT_TRUE(valid->Accepts("HS256"));
   EXPECT_FALSE(valid->Accepts("HS384"));
   EXPECT_TRUE(valid->Accepts("HS512"));
 }
 
 TEST(parse_test, parse_kid) {
-  const char *json = "{ \"kid\" : { "
+  std::string json = "{ \"kid\" : { "
       "\"key1\" : { \"HS256\" : { \"secret\" : \"key1\" } }, "
       "\"key2\" : { \"HS256\" : { \"secret\" : \"key2\" } }, "
       "\"key3\" : { \"HS256\" : { \"secret\" : \"key3\" } } "
       "} }";
   validator_ptr valid(MessageValidatorFactory::Build(json));
   EXPECT_NE(nullptr, valid.get());
-  EXPECT_STREQ(json, valid->toJson().c_str());
+  EXPECT_STREQ(json.c_str(), valid->toJson().c_str());
   EXPECT_TRUE(valid->Accepts("HS256"));
   EXPECT_FALSE(valid->Accepts("HS512"));
 }
 
 TEST(parse_test, bad_kid) {
   // have to be of the same type..
-  const char *json = "{ \"kid\" : { "
+  std::string json = "{ \"kid\" : { "
       "\"key1\" : { \"HS256\" : { \"secret\" : \"key1\" } }, "
       "\"key3\" : { \"HS512\" : { \"secret\" : \"key3\" } } "
       "} }";
@@ -177,37 +177,37 @@ TEST(parse_test, bad_kid) {
 }
 
 TEST(parse_test, non_existing) {
-  const char *json = "{ \"HS253\" : { \"secret\" : \"safe!\" } }";
+  std::string json = "{ \"HS253\" : { \"secret\" : \"safe!\" } }";
   ASSERT_THROW(MessageValidatorFactory::Build(json), std::logic_error);
 }
 
 TEST(parse_test, too_many_properties) {
-  const char *json = "{ \"HS256\" : { \"secret\" : \"safe!\" }, \"FOO\" : \"BAR\" }";
+  std::string json = "{ \"HS256\" : { \"secret\" : \"safe!\" }, \"FOO\" : \"BAR\" }";
   ASSERT_THROW(MessageValidatorFactory::Build(json), std::logic_error);
 }
 
 TEST(parse_signer, too_many_properties) {
-  const char *json = "{ \"HS256\" : { \"secret\" : \"safe!\" }, \"FOO\" : \"BAR\" }";
+  std::string json = "{ \"HS256\" : { \"secret\" : \"safe!\" }, \"FOO\" : \"BAR\" }";
   ASSERT_THROW(MessageValidatorFactory::BuildSigner(json), std::logic_error);
 }
 
 TEST(parse_signer, non_existing_signer) {
-  const char *json = "{ \"HS252\" : { \"secret\" : \"safe!\" }}";
+  std::string json = "{ \"HS252\" : { \"secret\" : \"safe!\" }}";
   ASSERT_THROW(MessageValidatorFactory::BuildSigner(json), std::logic_error);
 }
 
 TEST(parse_test, non_secret) {
-  const char *json = "{ \"HS256\" : { \"without_secret\" : \"safe!\" } }";
+  std::string json = "{ \"HS256\" : { \"without_secret\" : \"safe!\" } }";
   ASSERT_THROW(MessageValidatorFactory::Build(json), std::logic_error);
 }
 
 TEST(parse_test, bad_json) {
-  const char *json = "{ { \"HS256\" : { \"secret\" : \"safe!\" } }";
+  std::string json = "{ { \"HS256\" : { \"secret\" : \"safe!\" } }";
   ASSERT_THROW(MessageValidatorFactory::Build(json), std::logic_error);
 }
 
 TEST(parse_signer_test, bad_json) {
-  const char *json = "{ { \"HS256\" : { \"secret\" : \"safe!\" } }";
+  std::string json = "{ { \"HS256\" : { \"secret\" : \"safe!\" } }";
   ASSERT_THROW(MessageValidatorFactory::BuildSigner(json), std::logic_error);
 }
 

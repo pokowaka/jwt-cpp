@@ -27,6 +27,8 @@
 #include "jwt/allocators.h"
 #include "jwt/jwt_error.h"
 
+using json = nlohmann::json;
+
 
 JWT::JWT(json_t *header_claims, json_t *payload_claims)
     : header_(header_claims), payload_(payload_claims)  { }
@@ -34,6 +36,25 @@ JWT::JWT(json_t *header_claims, json_t *payload_claims)
 JWT::~JWT() {
   json_decref(header_);
   json_decref(payload_);
+}
+
+std::string JsonToken::Encode(MessageSigner *validator, json payload, json header) {
+  header["typ"] = "JWT";
+  header["alg"] = validator->algorithm();
+  auto header_enc = Base64Encode::EncodeUrl(header.dump());
+  auto payload_enc = Base64Encode::EncodeUrl(payload.dump());
+  auto signed_area = header_enc + '.' + payload_enc;
+  auto digest = validator->Digest(signed_area);
+  return signed_area + '.' + Base64Encode::EncodeUrl(digest);
+}
+
+
+
+std::tuple<json, json> JsonToken::Decode(std::string token, MessageValidator *verifier, ClaimValidator* validator) {
+  jwt_ptr jwt(JWT::Decode(token, verifier, validator));
+  json_str header(json_dumps(jwt->header(), 0));
+  json_str payload(json_dumps(jwt->payload(), 0));
+  return std::make_tuple(json::parse(header.get()), json::parse(payload.get()));
 }
 
 char *JWT::Encode(MessageSigner *validator, json_t *payload, json_t *header) {
@@ -123,7 +144,7 @@ JWT *JWT::Decode(const char *jws_token, size_t num_jws_token, MessageValidator *
   }
 
   if (idx != 2) {
-    throw TokenFormatError("More than two header sections.");
+    throw TokenFormatError("Invalid number of header sections.");
   }
 
   // Base64url decode the Encoded JOSE Header following the restriction that no line breaks,

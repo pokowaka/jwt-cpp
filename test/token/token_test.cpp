@@ -71,6 +71,13 @@ TEST_F(TokenTest, encoded_token_is_valid) {
   ValidToken(str_token.get(), &validator_, &lst_);
 }
 
+TEST_F(TokenTest, modern_encoded_token_is_valid) {
+  json json = { {"sub", "1234567890" }, { "name", "John Doe" }, {"admin" , true }};
+  std::string enc_token = JsonToken::Encode(&validator_, json, {});
+  jwt_ptr token(JWT::Decode(enc_token.c_str(), &validator_, &lst_));
+  ValidToken(enc_token.c_str(), &validator_, &lst_);
+}
+
 TEST_F(TokenTest, encoded_token_with_none_is_valid) {
   NoneValidator none;
   json_ptr json(json_pack("{ss, ss, sb}", "sub", "1234567890", "name", "John Doe", "admin", true));

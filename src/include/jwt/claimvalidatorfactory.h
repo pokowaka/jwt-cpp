@@ -28,10 +28,15 @@
 #include <string>
 #include <vector>
 #include "jwt/claimvalidator.h"
+#include "json.hpp"
+
 
 class ClaimValidatorFactory {
  public:
+  using json = nlohmann::json;
+
   static ClaimValidator *Build(std::string fromJson);
+  static ClaimValidator *Build(json claim);
   ~ClaimValidatorFactory();
 
  private:

@@ -26,6 +26,7 @@
 bool MessageValidator::Accepts(const char *algorithm) const {
   return strcmp(algorithm, this->algorithm()) == 0;
 }
+
 bool MessageValidator::Validate(json_t *jsonHeader, std::string header, std::string signature) {
   return Verify(jsonHeader,
                 reinterpret_cast<uint8_t *>(const_cast<char *>(header.c_str())),
