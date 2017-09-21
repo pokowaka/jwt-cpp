@@ -4,8 +4,7 @@
 // some meaningful numbers
 #include "base64/base64_test.cpp"
 #include "token/token_test.cpp"
-#include "validators/claim_validators_test.cpp"
 #include "validators/claim_validators_factory_test.cpp"
-#include "validators/validators_test.cpp"
+#include "validators/claim_validators_test.cpp"
 #include "validators/validators_factory_test.cpp"
-
+#include "validators/validators_test.cpp"

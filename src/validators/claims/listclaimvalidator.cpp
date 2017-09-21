@@ -22,6 +22,7 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "jwt/listclaimvalidator.h"
 #include "jwt/jwt_error.h"
+
 #include <sstream>
 #include <string.h>
 #include <string>
@@ -33,16 +34,23 @@ ListClaimValidator::ListClaimValidator(std::string property,
 
 bool ListClaimValidator::IsValid(const json claim) const {
   if (!claim.count(property_)) {
-    throw InvalidClaimError(std::string("Missing: ") += property_);
+    throw InvalidClaimError(std::string("Validator: missing: ") + property_);
   }
 
-  std::string value = claim[property_].get<std::string>();
+  auto object = claim[property_];
+  if (!object.is_string()) {
+    throw InvalidClaimError(std::string("Validator: ") + property_ +
+                            ", in: " + object.dump() + " not a string, but " +
+                            object.type_name());
+  }
+
+  std::string value = object.get<std::string>();
   for (auto accept : accepted_) {
     if (accept == value)
       return true;
   }
 
-  throw InvalidClaimError(std::string("Invalid: ") += property_);
+  throw InvalidClaimError(std::string("Validator invalid: ") + property_);
 }
 
 std::string ListClaimValidator::toJson() const {
@@ -60,12 +68,15 @@ std::string ListClaimValidator::toJson() const {
 
 bool AudValidator::IsValid(const json claim) const {
   if (!claim.count(property_)) {
-    throw InvalidClaimError(std::string("aud not a string/array: "));
+    throw InvalidClaimError(std::string("AudValidator claim: " + claim.dump() +
+                                        " is missing: " + property_));
   }
 
   json object = claim[property_];
-  if (!object.is_string() || !object.is_array()) {
-    throw InvalidClaimError(std::string("aud not a string/array: "));
+  if (!object.is_string() && !object.is_array()) {
+    throw InvalidClaimError(std::string("AudValidator: " + object.dump() +
+                                        " not a string/array, but " +
+                                        object.type_name()));
   }
   if (object.is_string()) {
     return ListClaimValidator::IsValid(claim);

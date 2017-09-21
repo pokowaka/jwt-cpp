@@ -22,17 +22,17 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef SRC_INCLUDE_JWT_JWT_ALL_H_
 #define SRC_INCLUDE_JWT_JWT_ALL_H_
-#include "jwt/jwt.h"
 #include "jwt/allocators.h"
+#include "jwt/jwt.h"
 
 // Validators
+#include "jwt/hmacvalidator.h"
 #include "jwt/messagevalidatorfactory.h"
 #include "jwt/nonevalidator.h"
 #include "jwt/rsavalidator.h"
-#include "jwt/hmacvalidator.h"
 
 // Claims
 #include "jwt/claimvalidatorfactory.h"
 #include "jwt/listclaimvalidator.h"
 #include "jwt/timevalidator.h"
-#endif  // SRC_INCLUDE_JWT_JWT_ALL_H_
+#endif // SRC_INCLUDE_JWT_JWT_ALL_H_

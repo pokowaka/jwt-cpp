@@ -186,13 +186,13 @@ TEST(aud_test, wrong_type) {
 }
 
 TEST(aud_test, wrong_subject) {
-  json json = {{"aud", "baz"}};
+  json json = json::parse("[\"aud\", \"baz\"]");
   AudValidator aud(accepted);
   ASSERT_THROW(aud.IsValid(json), InvalidClaimError);
 }
 
 TEST(aud_test, wrong_subject_from_list) {
-  json json = { { "aud", { "baz", "gnu", "cpp" }}};
+  json json = {{"aud", {"baz", "gnu", "cpp"}}};
   AudValidator aud(accepted);
   ASSERT_THROW(aud.IsValid(json), InvalidClaimError);
 }
@@ -204,7 +204,7 @@ TEST(aud_test, right_subject) {
 }
 
 TEST(aud_test, right_subject_from_list) {
-  json json = {{ "aud", { "bar", "baz", "foo"}}};
+  json json = {{"aud", {"bar", "baz", "foo"}}};
   AudValidator aud(accepted);
   EXPECT_TRUE(aud.IsValid(json));
 }
@@ -214,7 +214,7 @@ TEST(any_test, has_sub) {
   AudValidator aud(accepted);
   SubValidator sub(accepted);
 
-  std::vector<ClaimValidator*> claims = {&aud, &sub};
+  std::vector<ClaimValidator *> claims = {&aud, &sub};
   AnyClaimValidator any(claims);
 
   EXPECT_TRUE(any.IsValid(json));
@@ -225,7 +225,7 @@ TEST(any_test, no_aud_no_sub) {
   AudValidator aud(accepted);
   SubValidator sub(accepted);
 
-  std::vector<ClaimValidator*> claims = {&aud, &sub};
+  std::vector<ClaimValidator *> claims = {&aud, &sub};
   AnyClaimValidator any(claims);
 
   ASSERT_THROW(any.IsValid(json), InvalidClaimError);
@@ -236,7 +236,7 @@ TEST(all_test, has_sub_no_aud) {
   AudValidator aud(accepted);
   SubValidator sub(accepted);
 
-  std::vector<ClaimValidator*> claims = {&aud, &sub};
+  std::vector<ClaimValidator *> claims = {&aud, &sub};
   AllClaimValidator all(claims);
 
   ASSERT_THROW(all.IsValid(json), InvalidClaimError);
@@ -247,7 +247,7 @@ TEST(all_test, no_aud) {
   AudValidator aud(accepted);
   SubValidator sub(accepted);
 
-  std::vector<ClaimValidator*> claims = {&aud, &sub};
+  std::vector<ClaimValidator *> claims = {&aud, &sub};
   AllClaimValidator all(claims);
 
   ASSERT_THROW(all.IsValid(json), InvalidClaimError);
@@ -258,14 +258,14 @@ TEST(all_test, aud_and_sub) {
   AudValidator aud(accepted);
   SubValidator sub(accepted);
 
-  std::vector<ClaimValidator*> claims = {&aud, &sub};
+  std::vector<ClaimValidator *> claims = {&aud, &sub};
   AllClaimValidator all(claims);
 
   EXPECT_TRUE(all.IsValid(json));
 }
 
 TEST(option_test, optional_value_missing) {
-  json json = {{"aud" , "foo"}};
+  json json = {{"aud", "foo"}};
   IssValidator iss(accepted);
   OptionalClaimValidator option(&iss);
   EXPECT_TRUE(option.IsValid(json));

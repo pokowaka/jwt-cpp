@@ -30,9 +30,9 @@
 /**
  * Indicates that we failed to validate and parse the token.
  */
-class InvalidTokenError :public std::runtime_error {
- public:
-  explicit InvalidTokenError(std::string msg) : std::runtime_error(msg) { }
+class InvalidTokenError : public std::runtime_error {
+public:
+  explicit InvalidTokenError(std::string msg) : std::runtime_error(msg) {}
 };
 
 /**
@@ -41,16 +41,16 @@ class InvalidTokenError :public std::runtime_error {
  * from this set of bytes.
  */
 class TokenFormatError : public InvalidTokenError {
- public:
-  explicit TokenFormatError(std::string msg) : InvalidTokenError(msg) { }
+public:
+  explicit TokenFormatError(std::string msg) : InvalidTokenError(msg) {}
 };
 
 /**
  * The token is not properly signed.
  */
 class InvalidSignatureError : public InvalidTokenError {
- public:
-  explicit InvalidSignatureError(std::string msg) : InvalidTokenError(msg) { }
+public:
+  explicit InvalidSignatureError(std::string msg) : InvalidTokenError(msg) {}
 };
 
-#endif  // SRC_INCLUDE_JWT_JWT_ERROR_H_
+#endif // SRC_INCLUDE_JWT_JWT_ERROR_H_

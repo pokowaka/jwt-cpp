@@ -26,12 +26,10 @@
 #include <stdlib.h>
 
 class json_str_delete {
- public:
-  inline void operator() (char* ptr) const {
-    free(ptr);
-  }
+public:
+  inline void operator()(char *ptr) const { free(ptr); }
 };
 
 typedef std::unique_ptr<char, json_str_delete> json_str;
 typedef std::unique_ptr<char[]> str_ptr;
-#endif  // SRC_INCLUDE_JWT_ALLOCATORS_H_
+#endif // SRC_INCLUDE_JWT_ALLOCATORS_H_

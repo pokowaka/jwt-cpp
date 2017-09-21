@@ -23,31 +23,31 @@
 #ifndef SRC_INCLUDE_PRIVATE_CLOCK_H_
 #define SRC_INCLUDE_PRIVATE_CLOCK_H_
 
-#include <time.h>
 #include <stdint.h>
+#include <time.h>
 
 /**
  * Clock interface, mainly used so we can stub out behavior.
  */
 class IClock {
- public:
-    virtual uint64_t Now()  = 0;
-    virtual ~IClock() {}
+public:
+  virtual uint64_t Now() = 0;
+  virtual ~IClock() {}
 };
 
 class UtcClock : public IClock {
- public:
-    uint64_t Now() {
-      time_t rawtime = 0;
-      struct tm ptm = {0};
-      time(&rawtime);
-      #ifdef _WIN32
-      gmtime_s(&ptm, &rawtime);
-      return _mkgmtime(&ptm);
-      #else
-      gmtime_r(&rawtime, &ptm);
-      return timegm(&ptm);
-      #endif
-    }
+public:
+  uint64_t Now() {
+    time_t rawtime = 0;
+    struct tm ptm = {0};
+    time(&rawtime);
+#ifdef _WIN32
+    gmtime_s(&ptm, &rawtime);
+    return _mkgmtime(&ptm);
+#else
+    gmtime_r(&rawtime, &ptm);
+    return timegm(&ptm);
+#endif
+  }
 };
-#endif  // SRC_INCLUDE_PRIVATE_CLOCK_H_
+#endif // SRC_INCLUDE_PRIVATE_CLOCK_H_

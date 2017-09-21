@@ -4,15 +4,16 @@
 #include "private/clock.h"
 
 class FakeClock : public IClock {
- public:
-    explicit FakeClock(uint64_t time) { now_ = time; }
-    inline uint64_t Now() { return now_; }
- private:
-    uint64_t now_;
+public:
+  explicit FakeClock(uint64_t time) { now_ = time; }
+  inline uint64_t Now() { return now_; }
+
+private:
+  uint64_t now_;
 };
 
-
-const char *privkey = "-----BEGIN RSA PRIVATE KEY-----\n"
+const char *privkey =
+    "-----BEGIN RSA PRIVATE KEY-----\n"
     "MIIEowIBAAKCAQEA4SWe3cgEULKiz2wP+fYqN2TxEx6DiL4rvyqZfl0CFpVMH7wC\n"
     "ZqvglxOMtUzpdO7USdlFmyOEjtH1tioll9EAg6DMs0QrLgBj7U0XHRHeJcRrbYxm\n"
     "HqtmtRxjEmLBpClJoYaJ2fEdeaVcV5D1+kWMIRLM1q3RNafb1Q62nwSyojgX09/X\n"
@@ -40,7 +41,8 @@ const char *privkey = "-----BEGIN RSA PRIVATE KEY-----\n"
     "zBJNQZl5S6qKrqr0ypYs6ekAQ5MEe3twWWyXG2y1QgeMIs3BTnJ1\n"
     "-----END RSA PRIVATE KEY-----";
 
-const char *pubkey = "-----BEGIN PUBLIC KEY-----\n"
+const char *pubkey =
+    "-----BEGIN PUBLIC KEY-----\n"
     "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4SWe3cgEULKiz2wP+fYq\n"
     "N2TxEx6DiL4rvyqZfl0CFpVMH7wCZqvglxOMtUzpdO7USdlFmyOEjtH1tioll9EA\n"
     "g6DMs0QrLgBj7U0XHRHeJcRrbYxmHqtmtRxjEmLBpClJoYaJ2fEdeaVcV5D1+kWM\n"
@@ -50,10 +52,8 @@ const char *pubkey = "-----BEGIN PUBLIC KEY-----\n"
     "3QIDAQAB\n"
     "-----END PUBLIC KEY-----";
 
-
 const char *hmacs[] = {"HS256", "HS384", "HS512"};
 const char *rs[] = {"RS256", "RS384", "RS512"};
 
-
 FakeClock fakeClock(11);
-#endif  // TEST_VALIDATORS_CONSTANTS_H_
+#endif // TEST_VALIDATORS_CONSTANTS_H_

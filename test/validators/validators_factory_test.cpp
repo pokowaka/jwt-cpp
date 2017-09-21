@@ -38,8 +38,10 @@ TEST(parse_test, can_use_validator) {
                          "eyJzdWIiOiJzdWJqZWN0IiwiZXhwIjoxNDM3NDMzMzk3fQ."
                          "VGPkHXap_i2zwUCxr7dsjBq7Nnx83h5dNGjzuifjpx8";
 
-  jwt_ptr token(JWT::Decode(strtoken, valid.get()));
-  EXPECT_NE(nullptr, token.get());
+  ::json header, payload;
+  std::tie(header, payload) = JWT::Decode(strtoken, valid.get());
+  EXPECT_FALSE(header.empty());
+  EXPECT_FALSE(payload.empty());
 }
 
 // Test for the various validators.
