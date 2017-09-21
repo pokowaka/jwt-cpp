@@ -24,19 +24,17 @@
 #ifndef SRC_INCLUDE_JWT_LISTCLAIMVALIDATOR_H_
 #define SRC_INCLUDE_JWT_LISTCLAIMVALIDATOR_H_
 
+#include "jwt/claimvalidator.h"
 #include <string>
 #include <vector>
-#include "jwt/claimvalidator.h"
 
 class ListClaimValidator : public ClaimValidator {
- public:
-  ListClaimValidator(const char *property,
-      const char *const *lst_accepted, const size_t num_accepted);
-  ListClaimValidator(const char *property, std::vector<std::string> accepted);
-  bool IsValid(const json_t *claimset) const;
+public:
+  ListClaimValidator(std::string property, std::vector<std::string> accepted);
+  bool IsValid(const json claimset) const;
   std::string toJson() const;
 
- protected:
+protected:
   std::vector<std::string> accepted_;
 };
 
@@ -47,9 +45,9 @@ class ListClaimValidator : public ClaimValidator {
  * OPTIONAL.
  */
 class IssValidator : public ListClaimValidator {
- public:
-  IssValidator(const char *const *lst_accepted, const size_t num_accepted) :
-    ListClaimValidator("iss", lst_accepted, num_accepted) { }
+public:
+  IssValidator(std::vector<std::string> accepted)
+      : ListClaimValidator("iss", accepted) {}
 };
 
 /**
@@ -61,27 +59,27 @@ class IssValidator : public ListClaimValidator {
  * StringOrURI value. Use of this claim is OPTIONAL.
  */
 class SubValidator : public ListClaimValidator {
- public:
-  SubValidator(const char *const *lst_accepted, const size_t num_accepted) :
-    ListClaimValidator("sub", lst_accepted, num_accepted) { }
+public:
+  SubValidator(std::vector<std::string> accepted)
+      : ListClaimValidator("sub", accepted) {}
 };
 
 /**
  * The aud (audience) claim identifies the recipients that the JWT is intended
  * for. Each principal intended to process the JWT MUST identify itself with a
  * value in the audience claim. If the principal processing the claim does not
- * identify itself with a value in the aud claim when this claim is present, then
- * the JWT MUST be rejected. In the general case, the aud value is an array of
- * case-sensitive strings, each containing a StringOrURI value. In the special
- * case when the JWT has one audience, the aud value MAY be a single
+ * identify itself with a value in the aud claim when this claim is present,
+ * then the JWT MUST be rejected. In the general case, the aud value is an array
+ * of case-sensitive strings, each containing a StringOrURI value. In the
+ * special case when the JWT has one audience, the aud value MAY be a single
  * case-sensitive string containing a StringOrURI value. The interpretation of
  * audience values is generally application specific. Use of this claim is
  * OPTIONAL.
  */
 class AudValidator : public ListClaimValidator {
- public:
-  AudValidator(const char *const *lst_accepted, const size_t num_accepted) :
-    ListClaimValidator("aud", lst_accepted, num_accepted) { }
-  bool IsValid(const json_t *claimset) const;
+public:
+  AudValidator(std::vector<std::string> accepted)
+      : ListClaimValidator("aud", accepted) {}
+  bool IsValid(const json claimset) const;
 };
-#endif  // SRC_INCLUDE_JWT_LISTCLAIMVALIDATOR_H_
+#endif // SRC_INCLUDE_JWT_LISTCLAIMVALIDATOR_H_

@@ -21,24 +21,17 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "jwt/claimvalidator.h"
+#include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <iostream>
 
-AllClaimValidator::AllClaimValidator(const ClaimValidator *const *lstClaims,
-    const size_t numClaims) : ClaimValidator(NULL) {
-  for (size_t i = 0; i < numClaims; i++) {
-    validators_.push_back(const_cast<ClaimValidator*>(lstClaims[i]));
-  }
-}
+AllClaimValidator::AllClaimValidator(std::vector<ClaimValidator *> validators)
+    : ClaimValidator(""), validators_(validators) {}
 
-AllClaimValidator::AllClaimValidator(std::vector<ClaimValidator*> validators) :
-  ClaimValidator(NULL), validators_(validators)  { }
-
-bool AllClaimValidator::IsValid(const json_t *claimset) const {
+bool AllClaimValidator::IsValid(const json claimset) const {
   for (auto validator : validators_) {
-      validator->IsValid(claimset);
+    validator->IsValid(claimset);
   }
   return true;
 }
@@ -48,32 +41,24 @@ std::string AllClaimValidator::toJson() const {
   msg << "{ \"all\" : [ ";
   int num = validators_.size();
   for (auto validator : validators_) {
-      msg << validator->toJson();
-      if (--num != 0)
-        msg << ", ";
+    msg << validator->toJson();
+    if (--num != 0)
+      msg << ", ";
   }
   msg << " ] }";
   return msg.str();
 }
 
-AnyClaimValidator::AnyClaimValidator(std::vector<ClaimValidator*> validators) :
-  ClaimValidator(NULL), validators_(validators)  { }
+AnyClaimValidator::AnyClaimValidator(std::vector<ClaimValidator *> validators)
+    : ClaimValidator(""), validators_(validators) {}
 
-AnyClaimValidator::AnyClaimValidator(const ClaimValidator *const *lstClaims, const size_t
-    numClaims) : ClaimValidator(NULL) {
-      for (size_t i = 0; i < numClaims; i++) {
-        validators_.push_back(const_cast<ClaimValidator*>(lstClaims[i]));
-      }
-    }
-
-bool AnyClaimValidator::IsValid(const json_t *claimset) const {
+bool AnyClaimValidator::IsValid(const json claimset) const {
   for (auto validator : validators_) {
-      try {
-        if (validator->IsValid(claimset))
-          return true;
-      } catch(InvalidClaimError ice) {
-
-      }
+    try {
+      if (validator->IsValid(claimset))
+        return true;
+    } catch (InvalidClaimError ice) {
+    }
   }
   throw InvalidClaimError("None of the children validate");
 }
@@ -83,19 +68,19 @@ std::string AnyClaimValidator::toJson() const {
   msg << "{ \"any\" : [ ";
   int num = validators_.size();
   for (auto validator : validators_) {
-      msg << validator->toJson();
-      if (--num != 0)
-        msg << ", ";
+    msg << validator->toJson();
+    if (--num != 0)
+      msg << ", ";
   }
   msg << " ] }";
   return msg.str();
 }
 
-OptionalClaimValidator::OptionalClaimValidator(const ClaimValidator *inner) : ClaimValidator
-(inner->property()), inner_(inner) { }
+OptionalClaimValidator::OptionalClaimValidator(const ClaimValidator *inner)
+    : ClaimValidator(inner->property()), inner_(inner) {}
 
-bool OptionalClaimValidator::IsValid(const json_t *claimset) const  {
-  return json_object_get(claimset, property_) == NULL || inner_->IsValid(claimset);
+bool OptionalClaimValidator::IsValid(const json claimset) const {
+  return !claimset.count(property_) || inner_->IsValid(claimset);
 }
 
 std::string OptionalClaimValidator::toJson() const {
@@ -103,4 +88,3 @@ std::string OptionalClaimValidator::toJson() const {
   msg << "{ \"optional\" : " << inner_->toJson() << " }";
   return msg.str();
 }
-

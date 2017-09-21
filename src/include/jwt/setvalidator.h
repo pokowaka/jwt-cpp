@@ -23,27 +23,28 @@
 #ifndef SRC_INCLUDE_JWT_SETVALIDATOR_H_
 #define SRC_INCLUDE_JWT_SETVALIDATOR_H_
 
-#include <stdint.h>
-#include <stddef.h>
+#include "jwt/messagevalidator.h"
 #include <map>
+#include <stddef.h>
+#include <stdint.h>
 #include <string>
 #include <vector>
-#include "jwt/messagevalidator.h"
 
 /**
  * A validator that delegates to a set of registered
  * validators.
  */
 class SetValidator : public MessageValidator {
- public:
-  explicit SetValidator(std::vector<MessageValidator*> msg);
-  bool Verify(json_t *jsonHeader, const uint8_t *header, size_t cHeader,
+public:
+  explicit SetValidator(std::vector<MessageValidator *> msg);
+  bool Verify(json jsonHeader, const uint8_t *header, size_t cHeader,
               const uint8_t *signature, size_t cSignature);
-  const char *algorithm() const  { return "SET"; }
+  std::string algorithm() const { return "SET"; }
   std::string toJson() const;
-  bool Accepts(const char* algorithm) const;
- private:
+  bool Accepts(std::string algorithm) const;
+
+private:
   std::map<std::string, MessageValidator *> validator_map_;
 };
 
-#endif  // SRC_INCLUDE_JWT_SETVALIDATOR_H_
+#endif // SRC_INCLUDE_JWT_SETVALIDATOR_H_

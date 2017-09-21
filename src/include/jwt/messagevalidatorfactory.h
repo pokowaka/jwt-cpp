@@ -23,36 +23,34 @@
 #ifndef SRC_INCLUDE_JWT_MESSAGEVALIDATORFACTORY_H_
 #define SRC_INCLUDE_JWT_MESSAGEVALIDATORFACTORY_H_
 
-#include <jansson.h>
+#include "json.hpp"
+#include "jwt/kidvalidator.h"
+#include "jwt/messagevalidator.h"
 #include <exception>
+#include <jansson.h>
 #include <string>
 #include <vector>
-#include "jwt/messagevalidator.h"
-#include "jwt/kidvalidator.h"
-#include "json.hpp"
 
 using json = nlohmann::json;
 
 class MessageValidatorFactory {
- public:
-  static MessageValidator *Build(std::string fromJson);
-  static MessageSigner *BuildSigner(std::string fromJson);
-
+public:
+  static MessageValidator *Build(std::string msg);
   static MessageValidator *Build(json msg);
+  static MessageSigner *BuildSigner(std::string msg);
   static MessageSigner *BuildSigner(json sign);
 
   ~MessageValidatorFactory();
 
- private:
-  static std::string ParseSecret(const char *property, json_t *object);
+private:
+  static std::string ParseSecret(std::string property, json object);
 
-  std::vector<std::string> BuildList(json_t *lst);
-  std::vector<MessageValidator*> BuildValidatorList(json_t *json);
-  MessageValidator *Build(json_t *fromJson);
-  MessageValidator *BuildKid(KidValidator *kid, json_t *kidlist);
+  std::vector<std::string> BuildList(json lst);
+  std::vector<MessageValidator *> BuildValidatorList(json list);
+  MessageValidator *BuildInternal(json fromJson);
+  MessageValidator *BuildKid(KidValidator *kid, json kidlist);
 
-  std::vector<MessageValidator*> build_;
+  std::vector<MessageValidator *> build_;
 };
 
-#endif  // SRC_INCLUDE_JWT_MESSAGEVALIDATORFACTORY_H_
-
+#endif // SRC_INCLUDE_JWT_MESSAGEVALIDATORFACTORY_H_

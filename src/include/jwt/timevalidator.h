@@ -23,21 +23,20 @@
 #ifndef SRC_INCLUDE_JWT_TIMEVALIDATOR_H_
 #define SRC_INCLUDE_JWT_TIMEVALIDATOR_H_
 
-#include <string>
 #include "jwt/claimvalidator.h"
+#include <string>
 class IClock;
 class UtcClock;
 
 class TimeValidator : public ClaimValidator {
- public:
+public:
   TimeValidator(const char *key, bool sign, uint64_t leeway);
   TimeValidator(const char *key, bool sign);
-  TimeValidator(const char *key, bool sign, uint64_t leeway,
-      IClock *clock);
-  bool IsValid(const json_t *claimset) const;
+  TimeValidator(const char *key, bool sign, uint64_t leeway, IClock *clock);
+  bool IsValid(const json claimset) const;
   std::string toJson() const;
 
- private:
+private:
   bool sign_;
   uint64_t leeway_;
   IClock *clock_;
@@ -54,10 +53,12 @@ class TimeValidator : public ClaimValidator {
  * OPTIONAL.
  */
 class ExpValidator : public TimeValidator {
- public:
-  ExpValidator() : TimeValidator("exp", false) { }
-  explicit ExpValidator(uint64_t leeway) : TimeValidator("exp", false, leeway) { }
-  ExpValidator(uint64_t leeway, IClock *clock) : TimeValidator("exp", false, leeway, clock) { }
+public:
+  ExpValidator() : TimeValidator("exp", false) {}
+  explicit ExpValidator(uint64_t leeway)
+      : TimeValidator("exp", false, leeway) {}
+  ExpValidator(uint64_t leeway, IClock *clock)
+      : TimeValidator("exp", false, leeway, clock) {}
 };
 
 /**
@@ -69,16 +70,18 @@ class ExpValidator : public TimeValidator {
  * number containing a NumericDate value. Use of this claim is OPTIONAL.
  */
 class NbfValidator : public TimeValidator {
- public:
-  NbfValidator() : TimeValidator("nbf", true) { }
-  explicit NbfValidator(uint64_t leeway) : TimeValidator("nbf", true, leeway) { }
-  NbfValidator(uint64_t leeway, IClock *clock) : TimeValidator("nbf", true, leeway, clock) { }
+public:
+  NbfValidator() : TimeValidator("nbf", true) {}
+  explicit NbfValidator(uint64_t leeway) : TimeValidator("nbf", true, leeway) {}
+  NbfValidator(uint64_t leeway, IClock *clock)
+      : TimeValidator("nbf", true, leeway, clock) {}
 };
 
 class IatValidator : public TimeValidator {
- public:
-  IatValidator() : TimeValidator("iat", true) { }
-  explicit IatValidator(uint64_t leeway) : TimeValidator("iat", true, leeway) { }
-  IatValidator(uint64_t leeway, IClock *clock) : TimeValidator("iat", true, leeway, clock) { }
+public:
+  IatValidator() : TimeValidator("iat", true) {}
+  explicit IatValidator(uint64_t leeway) : TimeValidator("iat", true, leeway) {}
+  IatValidator(uint64_t leeway, IClock *clock)
+      : TimeValidator("iat", true, leeway, clock) {}
 };
-#endif  // SRC_INCLUDE_JWT_TIMEVALIDATOR_H_
+#endif // SRC_INCLUDE_JWT_TIMEVALIDATOR_H_

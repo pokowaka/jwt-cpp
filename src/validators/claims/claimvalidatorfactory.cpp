@@ -21,16 +21,18 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "jwt/claimvalidatorfactory.h"
-#include <jansson.h>
-#include <iostream>
-#include <string>
-#include <sstream>
-#include <vector>
-#include "private/buildwrappers.h"
 #include "jwt/allocators.h"
 #include "jwt/listclaimvalidator.h"
 #include "jwt/timevalidator.h"
+#include "private/buildwrappers.h"
+#include <iostream>
+#include <jansson.h>
+#include <sstream>
+#include <string>
+#include <vector>
 
+#include "jwt/json.hpp"
+using json = nlohmann::json;
 
 ClaimValidatorFactory::~ClaimValidatorFactory() {
   for (auto it = build_.begin(); it != build_.end(); it++) {
@@ -38,150 +40,117 @@ ClaimValidatorFactory::~ClaimValidatorFactory() {
   }
 }
 
-ClaimValidator *ClaimValidatorFactory::Build(json msg) {
-  return Build(msg.dump());
+ClaimValidator *ClaimValidatorFactory::Build(std::string fromJson) {
+  json json = json::parse(fromJson);
+  return Build(json);
 }
 
-ClaimValidator *ClaimValidatorFactory::Build(json_t *json) {
-  if (json == NULL) {
+ClaimValidator *ClaimValidatorFactory::BuildInternal(json json) {
+  if (json.empty()) {
     throw std::logic_error("Cannot construct from empty json!");
   }
-  if (json_object_size(json) > 1) {
-    char *fail = json_dumps(json, 0);
+  if (json.size() > 1) {
     std::ostringstream msg;
-    msg << "More than one property at: " << fail;
-    free(fail);
+    msg << "More than one property at: " << json;
     throw std::logic_error(msg.str());
   }
 
   ClaimValidator *constructed = nullptr;
-  if (json_object_get(json, "iss")) {
-    constructed = new ListClaimValidator("iss",
-                                         BuildList(json_object_get(json, "iss")));
-  } else if (json_object_get(json, "sub")) {
-    constructed = new ListClaimValidator("sub",
-                                         BuildList(json_object_get(json, "sub")));
-  } else if (json_object_get(json, "aud")) {
-    constructed = new ListClaimValidator("aud",
-                                         BuildList(json_object_get(json, "aud")));
-  } else if (json_object_get(json, "exp")) {
-    json_t *val = json_object_get(json, "exp");
-    json_t *leeway = json_object_get(val, "leeway");
-    constructed = new ExpValidator(json_integer_value(leeway));
-  } else if (json_object_get(json, "nbf")) {
-    json_t *val = json_object_get(json, "nbf");
-    json_t *leeway = json_object_get(val, "leeway");
-    constructed = new NbfValidator(json_integer_value(leeway));
-  } else if (json_object_get(json, "iat")) {
-    json_t *val = json_object_get(json, "iat");
-    json_t *leeway = json_object_get(val, "leeway");
-    constructed = new IatValidator(json_integer_value(leeway));
+  if (json.count("iss")) {
+    constructed = new ListClaimValidator("iss", BuildList(json["iss"]));
+  } else if (json.count("sub")) {
+    constructed = new ListClaimValidator("sub", BuildList(json["sub"]));
+  } else if (json.count("aud")) {
+    constructed = new ListClaimValidator("aud", BuildList(json["aud"]));
+  } else if (json.count("exp")) {
+    ::json val = json["exp"];
+    ::json leeway = val["leeway"];
+    constructed = new ExpValidator(leeway.is_null() ? 0 : leeway.get<int>());
+  } else if (json.count("nbf")) {
+    ::json val = json["nbf"];
+    ::json leeway = val["leeway"];
+    constructed = new NbfValidator(leeway.is_null() ? 0 : leeway.get<int>());
+  } else if (json.count("iat")) {
+    ::json val = json["iat"];
+    ::json leeway = val["leeway"];
+    constructed = new IatValidator(leeway.is_null() ? 0 : leeway.get<int>());
   }
 
   try {
-    if (json_object_get(json, "all")) {
-      constructed = new AllClaimValidator(BuildValidatorList(json_object_get(json, "all")));
-    } else if (json_object_get(json, "any")) {
-      constructed = new AnyClaimValidator(BuildValidatorList(json_object_get(json, "any")));
-    } else if (json_object_get(json, "optional")) {
-      json_t *val = json_object_get(json, "optional");
+    if (json.count("all")) {
+      constructed = new AllClaimValidator(BuildValidatorList(json["all"]));
+    } else if (json.count("any")) {
+      constructed = new AnyClaimValidator(BuildValidatorList(json["any"]));
+    } else if (json.count("optional")) {
+      ::json val = json["optional"];
       ClaimValidator *inner = Build(val);
       constructed = new OptionalClaimValidator(inner);
     }
   } catch (std::exception &le) {
     std::ostringstream msg;
     msg << "Json error inside: " << le.what();
-    char *fail = json_dumps(json, 0);
-    if (fail) {
-      msg << ", at: " << fail;
-      free(fail);
-    }
-
+    msg << ", at: " << json;
     throw std::logic_error(msg.str());
   }
 
   if (!constructed) {
-    char *fail = json_dumps(json, 0);
-    if (fail) {
-      std::ostringstream msg;
-      msg << "Missing property at: " << fail;
-      free(fail);
-      throw std::logic_error(msg.str());
-    }
-    throw std::logic_error("Missing property");
+    std::ostringstream msg;
+    msg << "Missing property at: " << json;
+    throw std::logic_error(msg.str());
   }
 
   build_.push_back(constructed);
   return constructed;
 }
 
-
-ClaimValidator *ClaimValidatorFactory::Build(std::string fromJson) {
-  json_error_t error;
-  json_ptr json_str(json_loads(fromJson.c_str(), JSON_REJECT_DUPLICATES, &error));
-
-  if (!json_str) {
-    std::ostringstream msg;
-    msg << "Failed to parse JSON: " << error.text
-      << ", at line: " << error.line << ", col: " << error.column;
-    throw std::logic_error(msg.str());
-  }
-
+ClaimValidator *ClaimValidatorFactory::Build(json json) {
   ClaimValidatorFactory factory;
 
-  ClaimValidator *root = factory.Build(json_str.get());
-  ParsedClaimvalidator *validator = new ParsedClaimvalidator(
-      json_str.release(), factory.build_, root);
+  ClaimValidator *root = factory.BuildInternal(json);
+  ParsedClaimvalidator *validator =
+      new ParsedClaimvalidator(json, factory.build_, root);
   factory.build_.clear();
 
   return validator;
 }
 
-std::vector<ClaimValidator*> ClaimValidatorFactory::BuildValidatorList(json_t *json) {
-  if (!json_is_array(json)) {
-    throw std::logic_error("not an array!");
+std::vector<ClaimValidator *>
+ClaimValidatorFactory::BuildValidatorList(json json) {
+  if (!json.is_array()) {
+    throw std::logic_error(json.dump() + " is not an array!");
   }
 
-  size_t idx;
-  json_t *value;
-  std::vector<ClaimValidator*> result;
-
-  json_array_foreach(json, idx, value) {
-    result.push_back(Build(value));
+  std::vector<ClaimValidator *> result;
+  for (json::iterator it = json.begin(); it != json.end(); ++it) {
+    result.push_back(BuildInternal(*it));
   }
 
   return result;
 }
 
-std::vector<std::string> ClaimValidatorFactory::BuildList(json_t *object) {
-  if (!json_is_array(object)) {
-    throw std::logic_error("not an array!");
-  }
-
-  size_t idx;
-  json_t *value;
-
-  // Validate
-  json_array_foreach(object, idx, value) {
-    if (!json_is_string(value)) {
-      throw std::logic_error("array can only contain strings");
-    }
+std::vector<std::string> ClaimValidatorFactory::BuildList(json object) {
+  if (!object.is_array()) {
+    throw std::logic_error(object.dump() + " is not an array!");
   }
 
   std::vector<std::string> result;
-  json_array_foreach(object, idx, value) {
-    const char *str = json_string_value(value);
-    result.push_back(std::string(str));
+  for (json::iterator it = object.begin(); it != object.end(); ++it) {
+    if (!it->is_string()) {
+      throw std::logic_error("array can only contain strings");
+    }
+    result.push_back(it->get<std::string>());
   }
 
   return result;
 }
 
-ParsedClaimvalidator::ParsedClaimvalidator(json_t *json,
-    const std::vector<ClaimValidator*> &children, ClaimValidator *root) :
-    ClaimValidator(root->property()), json_(json), children_(children), root_(root) { }
+ParsedClaimvalidator::ParsedClaimvalidator(
+    json json, const std::vector<ClaimValidator *> &children,
+    ClaimValidator *root)
+    : ClaimValidator(root->property()), json_(json), children_(children),
+      root_(root) {}
 
-bool ParsedClaimvalidator::IsValid(const json_t *claimset) const {
+bool ParsedClaimvalidator::IsValid(const json claimset) const {
   return root_->IsValid(claimset);
 }
 
@@ -189,9 +158,6 @@ ParsedClaimvalidator::~ParsedClaimvalidator() {
   for (auto it = children_.begin(); it != children_.end(); it++) {
     delete *it;
   }
-  json_decref(json_);
 }
 
-std::string ParsedClaimvalidator::toJson() const {
-  return root_->toJson();
-}
+std::string ParsedClaimvalidator::toJson() const { return root_->toJson(); }

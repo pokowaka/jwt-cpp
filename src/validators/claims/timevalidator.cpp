@@ -21,33 +21,33 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "jwt/timevalidator.h"
-#include <sstream>
-#include <string>
 #include "jwt/jwt_error.h"
 #include "private/clock.h"
+#include <sstream>
+#include <string>
 
 UtcClock TimeValidator::utc_clock_ = UtcClock();
-TimeValidator::TimeValidator(const char *key, bool sign, uint64_t leeway) : TimeValidator(key, sign, leeway,
-    &utc_clock_) { }
-TimeValidator::TimeValidator(const char *key, bool sign) : TimeValidator(key, sign, 0) { }
+TimeValidator::TimeValidator(const char *key, bool sign, uint64_t leeway)
+    : TimeValidator(key, sign, leeway, &utc_clock_) {}
+TimeValidator::TimeValidator(const char *key, bool sign)
+    : TimeValidator(key, sign, 0) {}
 TimeValidator::TimeValidator(const char *key, bool sign, uint64_t leeway,
-    IClock *clock) : ClaimValidator(key), sign_(sign), leeway_(leeway),
-  clock_(clock) { }
+                             IClock *clock)
+    : ClaimValidator(key), sign_(sign), leeway_(leeway), clock_(clock) {}
 
-bool TimeValidator::IsValid(const json_t *claim) const {
-  json_t *object = json_object_get(claim, property_);
-  if (!json_is_integer(object)) {
+bool TimeValidator::IsValid(const json claim) const {
+  if (!claim.count(property_) || !claim[property_].is_number()) {
     throw InvalidClaimError(std::string("Missing claim: ") += property_);
   }
 
-  json_int_t time = json_integer_value(object);
+  int64_t time = claim[property_].get<int64_t>();
   if (time < 0) {
     throw InvalidClaimError(std::string("Negative time for: ") += property_);
   }
 
-  json_int_t diff = clock_->Now() - time;
-  json_int_t min = diff - leeway_;
-  json_int_t max = diff + leeway_;
+  int64_t diff = clock_->Now() - time;
+  int64_t min = diff - leeway_;
+  int64_t max = diff + leeway_;
 
   if (sign_) {
     if (!(min >= 0 || max >= 0)) {
@@ -66,12 +66,10 @@ std::string TimeValidator::toJson() const {
   std::ostringstream msg;
   msg << "{ \"" << property() << "\" : ";
   if (leeway_ == 0) {
-    msg <<  "null";
+    msg << "null";
   } else {
     msg << "{ \"leeway\" : " << std::to_string(leeway_) << " }";
   }
-  msg  << " }";
+  msg << " }";
   return msg.str();
 }
-
-

@@ -21,33 +21,33 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "jwt/hmacvalidator.h"
-#include <string.h>
 #include <memory>
 #include <sstream>
+#include <string.h>
 #include <string>
 
-HMACValidator::HMACValidator(const char *algorithm,
-    const EVP_MD *md, const std::string &key) :
-  md_(md), algorithm_(algorithm), key_size_(EVP_MD_size(md)), key_(key) {
-}
+HMACValidator::HMACValidator(std::string algorithm, const EVP_MD *md,
+                             const std::string &key)
+    : md_(md), algorithm_(algorithm), key_size_(EVP_MD_size(md)), key_(key) {}
 
-HMACValidator::~HMACValidator() {
-}
+HMACValidator::~HMACValidator() {}
 
-bool HMACValidator::Verify(json_t *jsonHeader, const uint8_t *header, size_t num_header,
-                           const uint8_t *signature, size_t num_signature) {
+bool HMACValidator::Verify(json jsonHeader, const uint8_t *header,
+                           size_t num_header, const uint8_t *signature,
+                           size_t num_signature) {
   // No need to calc the signature if it is going be the wrong size.
   if (num_signature != key_size_ || signature == nullptr)
     return false;
 
   size_t num_local_signature = MAX_HMAC_KEYLENGTH;
   uint8_t local_signature[MAX_HMAC_KEYLENGTH];
-  return Sign(header, num_header, local_signature, &num_local_signature)
-    && num_local_signature == key_size_
-    && const_time_cmp(local_signature, signature, key_size_) == 0;
+  return Sign(header, num_header, local_signature, &num_local_signature) &&
+         num_local_signature == key_size_ &&
+         const_time_cmp(local_signature, signature, key_size_) == 0;
 }
 
-int HMACValidator::const_time_cmp(const uint8_t *a, const uint8_t *b, const size_t size) {
+int HMACValidator::const_time_cmp(const uint8_t *a, const uint8_t *b,
+                                  const size_t size) {
   uint8_t result = 0;
   size_t i;
 
@@ -59,19 +59,18 @@ int HMACValidator::const_time_cmp(const uint8_t *a, const uint8_t *b, const size
 }
 
 bool HMACValidator::Sign(const uint8_t *header, size_t num_header,
-                           uint8_t *signature, size_t *num_signature) {
+                         uint8_t *signature, size_t *num_signature) {
   if (signature == NULL || *num_signature < key_size_) {
-      *num_signature = key_size_;
-      return false;
+    *num_signature = key_size_;
+    return false;
   }
-  HMAC_CTX* ctx = HMAC_CTX_new();
+  HMAC_CTX *ctx = HMAC_CTX_new();
   HMAC_Init_ex(ctx, key_.c_str(), key_.size(), md_, NULL);
   bool sign = HMAC_Update(ctx, header, num_header) &&
-    HMAC_Final(ctx, signature, (unsigned int*) num_signature);
+              HMAC_Final(ctx, signature, (unsigned int *)num_signature);
   HMAC_CTX_free(ctx);
   return sign;
 }
-
 
 std::string HMACValidator::toJson() const {
   std::ostringstream msg;

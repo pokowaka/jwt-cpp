@@ -23,25 +23,23 @@
 #ifndef SRC_INCLUDE_JWT_NONEVALIDATOR_H_
 #define SRC_INCLUDE_JWT_NONEVALIDATOR_H_
 
+#include "jwt/messagevalidator.h"
 #include <stdint.h>
 #include <string>
-#include "jwt/messagevalidator.h"
 
 /**
  * A validator that really doesn't do any validation at all.
  */
 class NoneValidator : public MessageSigner {
- public:
-  bool Verify(json_t *jsonHeader, const uint8_t *header, size_t cHeader,
+public:
+  bool Verify(json jsonHeader, const uint8_t *header, size_t cHeader,
               const uint8_t *signature, size_t cSignature);
-  bool Sign(const uint8_t *header, size_t num_header,
-            uint8_t *signature, size_t *num_signature);
+  bool Sign(const uint8_t *header, size_t num_header, uint8_t *signature,
+            size_t *num_signature);
 
-  const char *algorithm() const { return "none"; }
+  std::string algorithm() const { return "none"; }
 
-  std::string toJson() const  {
-    return "{ \"none\" : null }";
-  }
+  std::string toJson() const { return "{ \"none\" : null }"; }
 };
 
-#endif  // SRC_INCLUDE_JWT_NONEVALIDATOR_H_
+#endif // SRC_INCLUDE_JWT_NONEVALIDATOR_H_

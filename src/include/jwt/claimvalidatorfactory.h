@@ -23,28 +23,27 @@
 #ifndef SRC_INCLUDE_JWT_CLAIMVALIDATORFACTORY_H_
 #define SRC_INCLUDE_JWT_CLAIMVALIDATORFACTORY_H_
 
-#include <jansson.h>
+#include "json.hpp"
+#include "jwt/claimvalidator.h"
 #include <exception>
+#include <jansson.h>
 #include <string>
 #include <vector>
-#include "jwt/claimvalidator.h"
-#include "json.hpp"
-
 
 class ClaimValidatorFactory {
- public:
+public:
   using json = nlohmann::json;
 
   static ClaimValidator *Build(std::string fromJson);
   static ClaimValidator *Build(json claim);
   ~ClaimValidatorFactory();
 
- private:
-  std::vector<std::string> BuildList(json_t *lst);
-  std::vector<ClaimValidator*> BuildValidatorList(json_t *json);
-  ClaimValidator *Build(json_t *fromJson);
+private:
+  std::vector<std::string> BuildList(json lst);
+  std::vector<ClaimValidator *> BuildValidatorList(json json);
+  ClaimValidator *BuildInternal(json fromJson);
 
-  std::vector<ClaimValidator*> build_;
+  std::vector<ClaimValidator *> build_;
 };
 
-#endif  // SRC_INCLUDE_JWT_CLAIMVALIDATORFACTORY_H_
+#endif // SRC_INCLUDE_JWT_CLAIMVALIDATORFACTORY_H_

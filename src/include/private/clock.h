@@ -24,6 +24,7 @@
 #define SRC_INCLUDE_PRIVATE_CLOCK_H_
 
 #include <time.h>
+#include <stdint.h>
 
 /**
  * Clock interface, mainly used so we can stub out behavior.

@@ -23,19 +23,19 @@
 #include "jwt/nonevalidator.h"
 #include <string.h>
 
-bool NoneValidator::Verify(json_t *jsonHeader, const uint8_t *header, size_t num_header,
-                           const uint8_t *signature, size_t num_signature) {
+bool NoneValidator::Verify(json jsonHeader, const uint8_t *header,
+                           size_t num_header, const uint8_t *signature,
+                           size_t num_signature) {
   return num_signature == 0;
 }
 
 bool NoneValidator::Sign(const uint8_t *header, size_t num_header,
-                           uint8_t *signature, size_t *num_signature) {
+                         uint8_t *signature, size_t *num_signature) {
   if (signature == NULL) {
-      *num_signature = 0;
-      return false;
+    *num_signature = 0;
+    return false;
   }
 
   *num_signature = 0;
   return true;
 }
-

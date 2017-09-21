@@ -20,20 +20,23 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#include "jwt/rsavalidator.h"
 #include <openssl/err.h>
 #include <openssl/pem.h>
 #include <regex> // NOLINT(*)
 #include <sstream>
 #include <string>
-#include "jwt/rsavalidator.h"
 
-RSAValidator::RSAValidator(const char *algorithm, const EVP_MD *md, const std::string &key)
-  : algorithm_(algorithm), private_key_(NULL), public_key_(NULL), md_(md) {
-    public_key_ = LoadKey(key.c_str(), true);
-  }
+RSAValidator::RSAValidator(std::string algorithm, const EVP_MD *md,
+                           const std::string &key)
+    : algorithm_(algorithm), private_key_(NULL), public_key_(NULL), md_(md) {
+  public_key_ = LoadKey(key.c_str(), true);
+}
 
-RSAValidator::RSAValidator(const char *algorithm, const EVP_MD *md, const std::string &key,
-    const std::string &private_key) : RSAValidator(algorithm, md, key) {
+RSAValidator::RSAValidator(std::string algorithm, const EVP_MD *md,
+                           const std::string &key,
+                           const std::string &private_key)
+    : RSAValidator(algorithm, md, key) {
   private_key_ = LoadKey(private_key.c_str(), false);
 }
 
@@ -42,19 +45,21 @@ RSAValidator::~RSAValidator() {
   EVP_PKEY_free(private_key_);
 }
 
-bool RSAValidator::Verify(json_t *jsonHeader, const uint8_t *header, size_t num_header,
-                          const uint8_t *signature, size_t num_signature) {
+bool RSAValidator::Verify(json jsonHeader, const uint8_t *header,
+                          size_t num_header, const uint8_t *signature,
+                          size_t num_signature) {
   EVP_MD_CTX *evp_md_ctx = EVP_MD_CTX_new();
   EVP_MD_CTX_init(evp_md_ctx);
   EVP_VerifyInit_ex(evp_md_ctx, md_, NULL);
-  bool valid = EVP_VerifyUpdate(evp_md_ctx, header, num_header) == 1 &&
-    EVP_VerifyFinal(evp_md_ctx, signature, num_signature, public_key_) == 1;
+  bool valid =
+      EVP_VerifyUpdate(evp_md_ctx, header, num_header) == 1 &&
+      EVP_VerifyFinal(evp_md_ctx, signature, num_signature, public_key_) == 1;
   EVP_MD_CTX_free(evp_md_ctx);
   return valid;
 }
 
 bool RSAValidator::Sign(const uint8_t *header, size_t num_header,
-    uint8_t *signature, size_t *num_signature) {
+                        uint8_t *signature, size_t *num_signature) {
   size_t needed = 0;
   bool success = false;
 
@@ -85,7 +90,7 @@ Error:
 EVP_PKEY *RSAValidator::LoadKey(const char *key, bool public_key) {
   EVP_PKEY *evp_pkey = NULL;
   BIO *keybio = BIO_new_mem_buf(
-      const_cast<void*>(reinterpret_cast<const void *>(key)), -1);
+      const_cast<void *>(reinterpret_cast<const void *>(key)), -1);
   if (keybio == NULL) {
     return NULL;
   }
@@ -119,7 +124,8 @@ std::string RSAValidator::toJson() const {
     PEM_write_bio_PUBKEY(out, public_key_);
     uint64_t len = BIO_get_mem_data(out, &key);
     std::string pubkey = std::string(key, len);
-    msg << "\"public\" : \"" << std::regex_replace(pubkey, newline, "\\n")  << "\"";
+    msg << "\"public\" : \"" << std::regex_replace(pubkey, newline, "\\n")
+        << "\"";
     BIO_free(out);
 
     if (private_key_) {
@@ -128,7 +134,8 @@ std::string RSAValidator::toJson() const {
       PEM_write_bio_PrivateKey(out, private_key_, NULL, NULL, 0, 0, NULL);
       uint64_t len = BIO_get_mem_data(out, &key);
       std::string privkey = std::string(key, len);
-      msg << "\"private\" : \"" << std::regex_replace(privkey, newline, "\\n") << "\"";
+      msg << "\"private\" : \"" << std::regex_replace(privkey, newline, "\\n")
+          << "\"";
       BIO_free(out);
     }
   }
@@ -136,4 +143,3 @@ std::string RSAValidator::toJson() const {
   msg << "} }";
   return msg.str();
 }
-

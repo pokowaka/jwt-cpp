@@ -25,32 +25,32 @@
 #include <string>
 #include <vector>
 
-SetValidator::SetValidator(std::vector<MessageValidator*> validators) {
+SetValidator::SetValidator(std::vector<MessageValidator *> validators) {
   for (auto validator : validators) {
     validator_map_[validator->algorithm()] = validator;
   }
 }
 
-bool SetValidator::Verify(json_t *jsonHeader, const uint8_t *header, size_t num_header,
-                          const uint8_t *signature, size_t num_signature) {
-  json_t* algname = json_object_get(jsonHeader, "alg");
-  if (!json_is_string(algname)) {
+bool SetValidator::Verify(json jsonHeader, const uint8_t *header,
+                          size_t num_header, const uint8_t *signature,
+                          size_t num_signature) {
+  if (!jsonHeader.count("alg")) {
     return false;
   }
 
-  auto alg = validator_map_.find(json_string_value(algname));
+  auto alg = validator_map_.find(jsonHeader["alg"].get<std::string>());
   if (alg == validator_map_.end()) {
     return false;
   }
 
-  MessageValidator* validator = alg->second;
-  return validator->Verify(nullptr, header, num_header, signature, num_signature);
+  MessageValidator *validator = alg->second;
+  return validator->Verify(nullptr, header, num_header, signature,
+                           num_signature);
 }
 
-
-bool SetValidator::Accepts(const char* algorithm) const {
+bool SetValidator::Accepts(std::string algorithm) const {
   auto alg = validator_map_.find(algorithm);
-  return  alg != validator_map_.end();
+  return alg != validator_map_.end();
 }
 
 std::string SetValidator::toJson() const {

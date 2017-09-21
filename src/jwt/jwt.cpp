@@ -21,107 +21,39 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "jwt/jwt.h"
-#include <jansson.h>
-#include <string>
-#include "private/base64.h"
 #include "jwt/allocators.h"
 #include "jwt/jwt_error.h"
+#include "private/base64.h"
+#include <jansson.h>
+#include <string>
 
 using json = nlohmann::json;
 
+JWT::JWT(json header_claims, json payload_claims)
+    : header_(header_claims), payload_(payload_claims) {}
 
-JWT::JWT(json_t *header_claims, json_t *payload_claims)
-    : header_(header_claims), payload_(payload_claims)  { }
+JWT::~JWT() {}
 
-JWT::~JWT() {
-  json_decref(header_);
-  json_decref(payload_);
-}
-
-std::string JsonToken::Encode(MessageSigner *validator, json payload, json header) {
+std::string JWT::Encode(MessageSigner *validator, json payload, json header) {
   header["typ"] = "JWT";
   header["alg"] = validator->algorithm();
   auto header_enc = Base64Encode::EncodeUrl(header.dump());
   auto payload_enc = Base64Encode::EncodeUrl(payload.dump());
   auto signed_area = header_enc + '.' + payload_enc;
   auto digest = validator->Digest(signed_area);
-  return signed_area + '.' + Base64Encode::EncodeUrl(digest);
+  return (signed_area + '.' + Base64Encode::EncodeUrl(digest));
 }
 
-
-
-std::tuple<json, json> JsonToken::Decode(std::string token, MessageValidator *verifier, ClaimValidator* validator) {
-  jwt_ptr jwt(JWT::Decode(token, verifier, validator));
-  json_str header(json_dumps(jwt->header(), 0));
-  json_str payload(json_dumps(jwt->payload(), 0));
-  return std::make_tuple(json::parse(header.get()), json::parse(payload.get()));
-}
-
-char *JWT::Encode(MessageSigner *validator, json_t *payload, json_t *header) {
-  json_ptr jose_header(json_object());
-  if (!header) {
-    header = jose_header.get();
-  }
-
-  // Set proper header flags.
-  json_ptr jwt(json_string("JWT"));
-  json_object_set(header, "typ", jwt.get());
-
-  json_ptr alg(json_string(validator->algorithm()));
-  json_object_set(header, "alg", alg.get());
-
-  // Encode the header
-  json_str str_header(json_dumps(header, JSON_COMPACT));
-  size_t num_header = strlen(str_header.get());
-  size_t num_enc_header = Base64Encode::EncodeBytesNeeded(num_header);
-  str_ptr enc_header(new char[num_enc_header]);
-  Base64Encode::EncodeUrl(str_header.get(), num_header, enc_header.get(), &num_enc_header);
-
-  // Encode the payload
-  json_str str_payload(json_dumps(payload, JSON_COMPACT));
-  size_t num_payload = strlen(str_payload.get());
-  size_t num_enc_payload = Base64Encode::EncodeBytesNeeded(num_payload);
-  str_ptr enc_payload(new char[num_enc_payload]);
-  Base64Encode::EncodeUrl(str_payload.get(), num_payload, enc_payload.get(), &num_enc_payload);
-
-  // Now combine the header & payload (Note, that num_enc_payload & num_enc_header contain \0 char)
-  size_t num_signed_area = num_enc_payload + num_enc_header;
-  str_ptr str_signed_area(new char[num_signed_area]);
-
-  snprintf(str_signed_area.get(), num_signed_area, "%s.%s", enc_header.get(), enc_payload.get());
-
-  size_t num_signature = 0;
-  size_t strlen_signed_area = num_signed_area - 1;  // We don't want to sign the null terminator!
-  validator->Sign(reinterpret_cast<uint8_t *>(str_signed_area.get()),
-                  strlen_signed_area, NULL, &num_signature);
-
-  str_ptr str_signature(new char[num_signature]);
-  if (!validator->Sign(reinterpret_cast<uint8_t *>(str_signed_area.get()),
-                       strlen_signed_area, reinterpret_cast<uint8_t *> (str_signature.get()),
-                       &num_signature)) {
-    return nullptr;
-  }
-
-  size_t num_enc_signature = Base64Encode::EncodeBytesNeeded(num_signature);
-  str_ptr enc_signature(new char[num_enc_signature]);
-  Base64Encode::EncodeUrl(str_signature.get(), num_signature,
-                          enc_signature.get(), &num_enc_signature);
-
-  size_t num_token = num_signed_area + num_enc_signature + 1;
-  str_ptr token(new char[num_token]);
-  snprintf(token.get(), num_token, "%s.%s", str_signed_area.get(), enc_signature.get());
-
-  return token.release();
-}
-
-JWT *JWT::Decode(std::string jwsToken, MessageValidator *verifier, ClaimValidator *validator) {
+JWT *JWT::Decode(std::string jwsToken, MessageValidator *verifier,
+                 ClaimValidator *validator) {
   return Decode(jwsToken.c_str(), jwsToken.size(), verifier, validator);
 }
 
-JWT *JWT::Decode(const char *jws_token, size_t num_jws_token, MessageValidator *verifier,
-                 ClaimValidator *validator) {
+JWT *JWT::Decode(const char *jws_token, size_t num_jws_token,
+                 MessageValidator *verifier, ClaimValidator *validator) {
   int idx = 0;
-  const char *header = jws_token, *payload = jws_token, *signature = jws_token, *it = jws_token;
+  const char *header = jws_token, *payload = jws_token, *signature = jws_token,
+             *it = jws_token;
   size_t num_header = 0, num_payload = 0, num_signature = 0;
 
   for (; it < (jws_token + num_jws_token) && idx < 3; it++) {
@@ -147,12 +79,13 @@ JWT *JWT::Decode(const char *jws_token, size_t num_jws_token, MessageValidator *
     throw TokenFormatError("Invalid number of header sections.");
   }
 
-  // Base64url decode the Encoded JOSE Header following the restriction that no line breaks,
-  // whitespace, or other additional characters have been used.
+  // Base64url decode the Encoded JOSE Header following the restriction that no
+  // line breaks, whitespace, or other additional characters have been used.
   size_t num_dec_header = Base64Encode::DecodeBytesNeeded(num_header);
   str_ptr dec_header(new char[num_dec_header]);
 
-  if (Base64Encode::DecodeUrl(header, num_header, dec_header.get(), &num_dec_header) != 0) {
+  if (Base64Encode::DecodeUrl(header, num_header, dec_header.get(),
+                              &num_dec_header) != 0) {
     // This cannot happen, as we have checked for valid characters already..
     throw std::logic_error("validated header block has invalid characters");
   }
@@ -161,59 +94,56 @@ JWT *JWT::Decode(const char *jws_token, size_t num_jws_token, MessageValidator *
   dec_header.get()[num_dec_header] = 0;
 
   json_error_t error;
-  json_ptr header_claims(json_loads(dec_header.get(), JSON_REJECT_DUPLICATES, &error));
+  json header_claims = json::parse(dec_header.get());
 
-  if (!header_claims.get()) {
-    throw TokenFormatError(std::string("header contains invalid json, ") += error.text);
+  /*
+  if (!header_claims) {
+    throw TokenFormatError(std::string("header contains invalid json, ") +=
+  error.text);
   }
+  */
 
-  json_ptr payload_claims(ExtractPayload(payload, num_payload));
+  json payload_claims = ExtractPayload(payload, num_payload);
 
-  VerifySignature(header_claims.get(),
-                                  header, num_header + num_payload + 1,
-                                  signature, num_signature,
-                                  verifier);
+  VerifySignature(header_claims, header, num_header + num_payload + 1,
+                  signature, num_signature, verifier);
   if (validator) {
-    validator->IsValid(payload_claims.get());
+    validator->IsValid(payload_claims);
   }
 
-  return new JWT(header_claims.release(), payload_claims.release());
+  return new JWT(header_claims, payload_claims);
 }
 
-json_t *JWT::ExtractPayload(const char *payload, size_t num_payload) {
+json JWT::ExtractPayload(const char *payload, size_t num_payload) {
   size_t num_dec_payload = Base64Encode::DecodeBytesNeeded(num_payload);
   str_ptr dec_payload(new char[num_dec_payload]);
 
-  if (Base64Encode::DecodeUrl(payload, num_payload, dec_payload.get(), &num_dec_payload) != 0) {
+  if (Base64Encode::DecodeUrl(payload, num_payload, dec_payload.get(),
+                              &num_dec_payload) != 0) {
     // This cannot happen, as we have checked for valid characters already..
     throw std::logic_error("validated block has base64 error in payload");
   }
 
   // Make sure we have a proper \0 termination
   dec_payload.get()[num_dec_payload] = 0;
-  json_error_t error;
-  json_t *json = json_loads(dec_payload.get(), JSON_REJECT_DUPLICATES, &error);
-  if (!json) {
-    throw TokenFormatError(std::string("payload contains invalid json, ") += error.text);
-  }
-  return json;
+  return json::parse(dec_payload.get());
 }
 
-bool JWT::VerifySignature(json_t *header_claims_, const char *header,
-                            size_t num_header_and_payload, const char *signature,
-                            size_t num_signature, MessageValidator *verifier) {
+bool JWT::VerifySignature(json header_claims_, const char *header,
+                          size_t num_header_and_payload, const char *signature,
+                          size_t num_signature, MessageValidator *verifier) {
   if (verifier == nullptr) {
     return true;
   }
 
-  json_t *alg = json_object_get(header_claims_, "alg");
-  if (!json_is_string(alg)) {
+  if (!header_claims_.count("alg")) {
     throw InvalidSignatureError("Missing alg header");
   }
 
-  if (!verifier->Accepts(json_string_value(alg))) {
-    throw InvalidSignatureError(std::string("Verifier does not accept alg header: ") +=
-                             json_string_value(alg));
+  if (!verifier->Accepts(header_claims_["alg"].get<std::string>())) {
+    throw InvalidSignatureError(
+        std::string("Verifier does not accept alg header: ") +=
+        header_claims_["alg"]);
   }
 
   str_ptr heapsig;
@@ -227,16 +157,18 @@ bool JWT::VerifySignature(json_t *header_claims_, const char *header,
     dec_signature = heapsig.get();
   }
 
-  if (Base64Encode::DecodeUrl(signature, num_signature, dec_signature, &num_dec_signature)) {
+  if (Base64Encode::DecodeUrl(signature, num_signature, dec_signature,
+                              &num_dec_signature)) {
     // Shouldn't happen. At this point the token contains valid base64 chars.
     throw std::logic_error("validated block has base64 error in signature");
   }
 
-  if (!verifier->Verify(header_claims_,
-                          reinterpret_cast<uint8_t *>(const_cast<char *>(header)),
-                          num_header_and_payload,
-                          reinterpret_cast<uint8_t *>(const_cast<char *>(dec_signature)),
-                          num_dec_signature)) {
+  if (!verifier->Verify(
+          header_claims_,
+          reinterpret_cast<uint8_t *>(const_cast<char *>(header)),
+          num_header_and_payload,
+          reinterpret_cast<uint8_t *>(const_cast<char *>(dec_signature)),
+          num_dec_signature)) {
     throw InvalidSignatureError("Unable to verify signature");
   }
 

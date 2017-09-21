@@ -1,11 +1,11 @@
-#include "gtest/gtest.h"
-#include <memory>
-#include <string>
-#include <array>
-#include <vector>
+#include "constants.h"
 #include "jwt/jwt_all.h"
 #include "jwt/setvalidator.h"
-#include "constants.h"
+#include "gtest/gtest.h"
+#include <array>
+#include <memory>
+#include <string>
+#include <vector>
 
 class MessageValidatorTest : public ::testing::Test {
 public:
@@ -27,8 +27,10 @@ public:
   void SignOnSubstr(MessageSigner *validator) {
     size_t len = 4096;
     std::unique_ptr<uint8_t[]> pSignature(new uint8_t[len]);
-    EXPECT_TRUE(validator->Sign((uint8_t *) message_.c_str(), 6, pSignature.get(), &len));
-    EXPECT_TRUE(validator->Verify(nullptr, (uint8_t *) message_.c_str(), 6, pSignature.get(), len));
+    EXPECT_TRUE(validator->Sign((uint8_t *)message_.c_str(), 6,
+                                pSignature.get(), &len));
+    EXPECT_TRUE(validator->Verify(nullptr, (uint8_t *)message_.c_str(), 6,
+                                  pSignature.get(), len));
   }
 
   void DoubleValidate(MessageSigner *validator) {
@@ -134,17 +136,16 @@ TEST(kidvalidator_test, same_algs) {
   ASSERT_THROW(kid.Register("kid2", &hs2), std::logic_error);
 }
 
-
 TEST(kidvalidator_test, no_kid) {
   KidValidator kid;
-  json_ptr json(json_pack("{ss}", "kid", "kid1"));
-  EXPECT_FALSE(kid.Validate(json.get(), "", ""));
+  ::json json = {{"kid", "kid1"}};
+  EXPECT_FALSE(kid.Validate(json, "", ""));
 
-  json_ptr wrong_type(json_pack("{si}", "kid", 15));
-  EXPECT_FALSE(kid.Validate(wrong_type.get(), "", ""));
+  ::json wrong_type = {{"kid", 15}};
+  EXPECT_FALSE(kid.Validate(wrong_type, "", ""));
 
-  json_ptr no_kid(json_pack("{si}", "nokid", 15));
-  EXPECT_FALSE(kid.Validate(no_kid.get(), "", ""));
+  ::json no_kid = {{"nokid", 15}};
+  EXPECT_FALSE(kid.Validate(no_kid, "", ""));
 }
 
 TEST(kidvalidator_test, can_register_kid) {
@@ -156,38 +157,37 @@ TEST(kidvalidator_test, can_register_kid) {
   std::string message = "Hello World!";
   std::string sig1 = hs1.Digest(message);
   std::string sig2 = hs2.Digest(message);
-  json_ptr json(json_pack("{ss}", "kid", "kid1"));
+  ::json json = {{"kid", "kid1"}};
 
-  //Key id set to kid1, so  hs1 should validate
-  EXPECT_TRUE(kid.Validate(json.get(), message, sig1));
+  // Key id set to kid1, so  hs1 should validate
+  EXPECT_TRUE(kid.Validate(json, message, sig1));
 
-  //Key id set to kid1, so  hs1 should validate, which
-  //should fail
-  EXPECT_FALSE(kid.Validate(json.get(), message, sig2));
+  // Key id set to kid1, so  hs1 should validate, which
+  // should fail
+  EXPECT_FALSE(kid.Validate(json, message, sig2));
 }
 
 TEST_F(MessageValidatorTest, wrong_algo) {
-  std::vector<MessageValidator*> validators(hslist_.begin(), hslist_.end());
+  std::vector<MessageValidator *> validators(hslist_.begin(), hslist_.end());
   SetValidator set(validators);
-  json_ptr json_rs256(json_pack("{ss}", "alg", "RS256"));
-  json_ptr json_512(json_pack("{ss}", "foo", "HS512"));
+  ::json json_rs256 = {{"alg", "RS256"}};
+  ::json json_512 = {{"foo", "HS512"}};
 
-  //Should pick the alg, so  hs1 should validate
-  EXPECT_FALSE(set.Validate(json_rs256.get(), "", ""));
-  EXPECT_FALSE(set.Validate(json_512.get(), "", ""));
+  // Should pick the alg, so  hs1 should validate
+  EXPECT_FALSE(set.Validate(json_rs256, "", ""));
+  EXPECT_FALSE(set.Validate(json_512, "", ""));
 }
 
 TEST_F(MessageValidatorTest, picks_algo) {
-  std::vector<MessageValidator*> validators(hslist_.begin(), hslist_.end());
+  std::vector<MessageValidator *> validators(hslist_.begin(), hslist_.end());
   SetValidator set(validators);
-  json_ptr json_256(json_pack("{ss}", "alg", "HS256"));
-  json_ptr json_512(json_pack("{ss}", "alg", "HS512"));
+  ::json json_256 = {{"alg", "HS256"}};
+  ::json json_512 = {{"alg", "HS512"}};
 
   std::string message = "Hello World!";
   std::string sig1 = hslist_.front()->Digest(message);
 
-  //Should pick the alg, so  hs1 should validate
-  EXPECT_TRUE(set.Validate(json_256.get(), message, sig1));
-  EXPECT_FALSE(set.Validate(json_512.get(), message, sig1));
+  // Should pick the alg, so  hs1 should validate
+  EXPECT_TRUE(set.Validate(json_256, message, sig1));
+  EXPECT_FALSE(set.Validate(json_512, message, sig1));
 }
-

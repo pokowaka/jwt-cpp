@@ -1,14 +1,14 @@
-#include <string>
-#include "gtest/gtest.h"
-#include "jwt/jwt_all.h"
 #include "constants.h"
+#include "jwt/jwt_all.h"
+#include "gtest/gtest.h"
+#include <string>
 
 // Test for the various validators.
 TEST(parse_test, proper_exp) {
   std::string json = "{ \"exp\" : null }";
   claim_ptr valid(ClaimValidatorFactory::Build(json));
   EXPECT_NE(nullptr, valid.get());
-  EXPECT_STREQ("exp", valid->property());
+  EXPECT_STREQ("exp", valid->property().c_str());
 }
 
 TEST(parse_test, iss_not_a_list) {
@@ -17,15 +17,14 @@ TEST(parse_test, iss_not_a_list) {
 }
 
 TEST(parse_test, any) {
-  std::string json =
-      "{ \"any\" : [ \n"
-          "  { \"optional\" : { \"exp\" : { \"leeway\" : 32} } },\n"
-          "  { \"iss\" : [\"foo\", \"bar\"] }\n"
-          "] \n"
-          "}";
+  std::string json = "{ \"any\" : [ \n"
+                     "  { \"optional\" : { \"exp\" : { \"leeway\" : 32} } },\n"
+                     "  { \"iss\" : [\"foo\", \"bar\"] }\n"
+                     "] \n"
+                     "}";
   claim_ptr valid(ClaimValidatorFactory::Build(json));
   EXPECT_NE(nullptr, valid.get());
-  EXPECT_STREQ(NULL, valid->property());
+  EXPECT_STREQ("", valid->property().c_str());
 }
 
 TEST(parse_test, any_not_a_list) {
@@ -42,9 +41,9 @@ TEST(parse_test, optional_exp) {
   std::string json = "{ \"optional\" : { \"exp\" : { \"leeway\" : 32} } }";
   claim_ptr valid(ClaimValidatorFactory::Build(json));
   EXPECT_NE(nullptr, valid.get());
-  EXPECT_STREQ("exp", valid->property());
-  json_ptr iat(json_pack("{si}", "iat", 9));
-  EXPECT_TRUE(valid->IsValid(iat.get()));
+  EXPECT_STREQ("exp", valid->property().c_str());
+  ::json iat = {{"iat", 9}};
+  EXPECT_TRUE(valid->IsValid(iat));
 }
 
 TEST(parse_test, optional_bad) {
@@ -63,16 +62,15 @@ TEST(parse_test, optional_inner_bad) {
 }
 
 TEST(parse_test, double_properties) {
-  std::string json =  "{ \"exp\" : null, \"nbf\" : null }";
+  std::string json = "{ \"exp\" : null, \"nbf\" : null }";
   ASSERT_THROW(ClaimValidatorFactory::Build(json), std::logic_error);
 }
 
 TEST(parse_test, bad_type) {
-  std::string json =
-      "{ \"all\" : [ \n"
-          "  \"optional\" : { \"exp\" : { \"leeway\" : 32} }, \n"
-          "  \"iss\" : [\"foo\", \"bar\"]] \n"
-          "}";
+  std::string json = "{ \"all\" : [ \n"
+                     "  \"optional\" : { \"exp\" : { \"leeway\" : 32} }, \n"
+                     "  \"iss\" : [\"foo\", \"bar\"]] \n"
+                     "}";
   ASSERT_THROW(ClaimValidatorFactory::Build(json), std::logic_error);
 }
 
@@ -102,44 +100,43 @@ TEST(parse, round_trip_iat) {
   roundtrip(&validator);
 }
 
-const char *const lst[] = {"foo", "bar"};
+std::vector<std::string> lst = {"foo", "bar"};
 
 TEST(parse, round_trip_aud) {
-  AudValidator validator(lst, 2);
+  AudValidator validator(lst);
   roundtrip(&validator);
 }
 
 TEST(parse, round_trip_iss) {
-  IssValidator validator(lst, 2);
+  IssValidator validator(lst);
   roundtrip(&validator);
 }
 
 TEST(parse, round_trip_sub) {
-  SubValidator validator(lst, 2);
+  SubValidator validator(lst);
   roundtrip(&validator);
 }
 
-
 TEST(parse, round_trip_all) {
-  SubValidator val1(lst, 2);
-  AudValidator val2(lst, 2);
+  SubValidator val1(lst);
+  AudValidator val2(lst);
 
-  ClaimValidator *claims[] = {&val1, &val2};
-  AllClaimValidator validator(claims, 2);
+  std::vector<ClaimValidator *> claims = {&val1, &val2};
+  AllClaimValidator validator(claims);
   roundtrip(&validator);
 }
 
 TEST(parse, round_trip_any) {
-  SubValidator val1(lst, 2);
-  AudValidator val2(lst, 2);
+  SubValidator val1(lst);
+  AudValidator val2(lst);
 
-  ClaimValidator *claims[] = {&val1, &val2};
-  AnyClaimValidator validator(claims, 2);
+  std::vector<ClaimValidator *> claims = {&val1, &val2};
+  AnyClaimValidator validator(claims);
   roundtrip(&validator);
 }
 
 TEST(parse, round_trip_option) {
-  SubValidator val1(lst, 2);
+  SubValidator val1(lst);
   OptionalClaimValidator validator(&val1);
   roundtrip(&validator);
 }

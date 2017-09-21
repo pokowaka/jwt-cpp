@@ -23,27 +23,27 @@
 #ifndef SRC_INCLUDE_JWT_CLAIMVALIDATOR_H_
 #define SRC_INCLUDE_JWT_CLAIMVALIDATOR_H_
 
+#include "jwt/json.hpp"
+#include "jwt/jwt_error.h"
 #include <jansson.h>
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
-#include "jwt/jwt_error.h"
-#include "jwt/json.hpp"
 
 /**
  * An InvalidClaimError indicats that the payload in the
  * JWT could not be validated.
  */
 class InvalidClaimError : public InvalidTokenError {
- public:
-  explicit InvalidClaimError(std::string msg) : InvalidTokenError(msg) { }
+public:
+  explicit InvalidClaimError(std::string msg) : InvalidTokenError(msg) {}
 };
 
 /**
  * A ClaimValidator is capable of validating a JWT payload
  */
 class ClaimValidator {
- public:
+public:
   using json = nlohmann::json;
   virtual ~ClaimValidator() {}
 
@@ -55,12 +55,7 @@ class ClaimValidator {
    * @return true if the claim is valid.
    * @throw InvalidClaimError if the token cannot be validated
    */
-  virtual bool IsValid(const json_t *claimset) const = 0;
-
-  virtual bool IsValid(const json *claimset) {
-    std::unique_ptr<json_t> json_str(json_loads(claimset->dump().c_str(), JSON_REJECT_DUPLICATES, nullptr));
-    return IsValid(json_str.get());
-  };
+  virtual bool IsValid(const json claimset) const = 0;
 
   /**
    * A Json representation of this validator. This can
@@ -71,11 +66,11 @@ class ClaimValidator {
   /**
    * The key in the payload this claim validator validates.
    */
-  inline const char* property() const { return property_; }
+  inline const std::string property() const { return property_; }
 
- protected:
-  explicit ClaimValidator(const char* property) : property_(property) {}
-  const char* property_;
+protected:
+  explicit ClaimValidator(std::string property) : property_(property) {}
+  std::string property_;
 };
 
 /**
@@ -83,34 +78,34 @@ class ClaimValidator {
  * child ClaimValidators evaluate to true.
  */
 class AllClaimValidator : public ClaimValidator {
- public:
-  AllClaimValidator(const ClaimValidator *const *lstClaims, const size_t numClaims);
+public:
   /**
    * Constructs a new AllClaimValidator with a list validators that need to
    * evaluate to true.
    * @param validators The list of claimvalidators that have to evaluate to true
    */
-  explicit AllClaimValidator(std::vector<ClaimValidator*> validators);
-  bool IsValid(const json_t *claimset) const;
+  explicit AllClaimValidator(std::vector<ClaimValidator *> validators);
+  bool IsValid(const json claimset) const;
   std::string toJson() const;
 
- private:
-  std::vector<ClaimValidator*> validators_;
+private:
+  std::vector<ClaimValidator *> validators_;
 };
 
 /**
  * An OptionalClaimValidator wraps a ClaimValidator and makes the wrapped
  * ClaimValidator optional. This evaluates to true when:
- * - The key required by the wrapped claimvalidator does not exist in the payload
+ * - The key required by the wrapped claimvalidator does not exist in the
+ * payload
  * - The wrapped claimvalidator evualtes to true
  */
 class OptionalClaimValidator : public ClaimValidator {
- public:
+public:
   explicit OptionalClaimValidator(const ClaimValidator *inner);
-  bool IsValid(const json_t *claimset) const;
+  bool IsValid(const json claimset) const;
   std::string toJson() const;
 
- private:
+private:
   const ClaimValidator *inner_;
 };
 
@@ -118,16 +113,15 @@ class OptionalClaimValidator : public ClaimValidator {
  * An AnyClaimValidator evaluates to true at least one of its
  * child ClaimValidators evaluates to true.
  */
-class AnyClaimValidator :  public ClaimValidator {
- public:
-  AnyClaimValidator(const ClaimValidator *const *lstClaims, const size_t numClaims);
-  explicit AnyClaimValidator(std::vector<ClaimValidator*> validators);
-  bool IsValid(const json_t *claimset) const;
+class AnyClaimValidator : public ClaimValidator {
+public:
+  explicit AnyClaimValidator(std::vector<ClaimValidator *> validators);
+  bool IsValid(const json claimset) const;
   std::string toJson() const;
 
- private:
-  std::vector<ClaimValidator*> validators_;
+private:
+  std::vector<ClaimValidator *> validators_;
 };
 
 typedef std::unique_ptr<ClaimValidator> claim_ptr;
-#endif  // SRC_INCLUDE_JWT_CLAIMVALIDATOR_H_
+#endif // SRC_INCLUDE_JWT_CLAIMVALIDATOR_H_

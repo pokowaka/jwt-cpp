@@ -23,12 +23,12 @@
 #ifndef SRC_INCLUDE_JWT_KIDVALIDATOR_H_
 #define SRC_INCLUDE_JWT_KIDVALIDATOR_H_
 
-#include <stdint.h>
-#include <stddef.h>
+#include "jwt/messagevalidator.h"
 #include <map>
+#include <stddef.h>
+#include <stdint.h>
 #include <string>
 #include <vector>
-#include "jwt/messagevalidator.h"
 
 /**
  * A simple dictionary to handle kid headers in a JWS token. The kid
@@ -42,21 +42,21 @@
  * string.
  */
 class KidValidator : public MessageValidator {
- public:
+public:
   KidValidator();
 
   /** Registers the given validator to handle the given key id.
    * @param kid The key id
    * @param validator The validator that should handle this key id
    */
-  void Register(std::string kid, MessageValidator* validator);
-  bool Verify(json_t *jsonHeader, const uint8_t *header, size_t cHeader,
+  void Register(std::string kid, MessageValidator *validator);
+  bool Verify(json jsonHeader, const uint8_t *header, size_t cHeader,
               const uint8_t *signature, size_t cSignature);
-  const char *algorithm() const { return algorithm_; }
+  std::string algorithm() const { return algorithm_; }
   std::string toJson() const;
 
- private:
+private:
   std::map<std::string, MessageValidator *> validator_map_;
-  const char* algorithm_;
+  std::string algorithm_;
 };
-#endif  // SRC_INCLUDE_JWT_KIDVALIDATOR_H_
+#endif // SRC_INCLUDE_JWT_KIDVALIDATOR_H_

@@ -23,44 +23,43 @@
 #ifndef SRC_INCLUDE_PRIVATE_BUILDWRAPPERS_H_
 #define SRC_INCLUDE_PRIVATE_BUILDWRAPPERS_H_
 
+#include "jwt/claimvalidator.h"
+#include "jwt/messagevalidator.h"
 #include <jansson.h>
 #include <string>
 #include <vector>
-#include "jwt/messagevalidator.h"
-#include "jwt/claimvalidator.h"
-
 
 class ParsedClaimvalidator : public ClaimValidator {
 public:
-  ParsedClaimvalidator(json_t *json, const std::vector<ClaimValidator*> &children,
+  ParsedClaimvalidator(json json, const std::vector<ClaimValidator *> &children,
                        ClaimValidator *root);
   ~ParsedClaimvalidator();
 
-  bool IsValid(const json_t *claimset) const;
+  bool IsValid(const json claimset) const;
   std::string toJson() const;
 
 private:
-  json_t *json_;
-  std::vector<ClaimValidator*> children_;
+  json json_;
+  std::vector<ClaimValidator *> children_;
   ClaimValidator *root_;
 };
 
-
 class ParsedMessagevalidator : public MessageValidator {
 public:
-  ParsedMessagevalidator(json_t *json, const std::vector<MessageValidator*> &children,
+  ParsedMessagevalidator(json json,
+                         const std::vector<MessageValidator *> &children,
                          MessageValidator *root);
   ~ParsedMessagevalidator();
 
-  bool Verify(json_t *jsonHeader, const uint8_t *header, size_t num_header,
+  bool Verify(json jsonHeader, const uint8_t *header, size_t num_header,
               const uint8_t *signature, size_t num_signature);
-  const char *algorithm() const;
-  bool Accepts(const char* algorithm) const;
+  std::string algorithm() const;
+  bool Accepts(std::string algorithm) const;
   std::string toJson() const;
 
 private:
-  json_t *json_;
-  std::vector<MessageValidator*> children_;
+  json json_;
+  std::vector<MessageValidator *> children_;
   MessageValidator *root_;
 };
-#endif  // SRC_INCLUDE_PRIVATE_BUILDWRAPPERS_H_
+#endif // SRC_INCLUDE_PRIVATE_BUILDWRAPPERS_H_

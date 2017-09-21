@@ -23,69 +23,74 @@
 #ifndef SRC_INCLUDE_JWT_RSAVALIDATOR_H_
 #define SRC_INCLUDE_JWT_RSAVALIDATOR_H_
 
+#include "jwt/messagevalidator.h"
 #include <openssl/evp.h>
 #include <openssl/ossl_typ.h>
 #include <string>
-#include "jwt/messagevalidator.h"
 
 /**
  * The RSAValidator can sign and validate the RSASSA-PKCX-v1_5 family of
  * signature algorithms.
  */
 class RSAValidator : public MessageSigner {
- public:
-  explicit RSAValidator(const char *algorithm, const EVP_MD *md, const std::string &public_key);
-  explicit RSAValidator(const char *algorithm, const EVP_MD *md, const std::string &public_key,
-      const std::string &private_key);
+public:
+  explicit RSAValidator(std::string algorithm, const EVP_MD *md,
+                        const std::string &public_key);
+  explicit RSAValidator(std::string algorithm, const EVP_MD *md,
+                        const std::string &public_key,
+                        const std::string &private_key);
   virtual ~RSAValidator();
 
-  bool Verify(json_t *jsonHeader, const uint8_t *header, size_t num_header,
+  bool Verify(json jsonHeader, const uint8_t *header, size_t num_header,
               const uint8_t *signature, size_t num_signature);
-  bool Sign(const uint8_t *header, size_t num_header,
-      uint8_t *signature, size_t *num_signature);
+  bool Sign(const uint8_t *header, size_t num_header, uint8_t *signature,
+            size_t *num_signature);
 
-  inline const char *algorithm() const { return algorithm_; }
+  inline std::string algorithm() const { return algorithm_; }
   std::string toJson() const;
 
- private:
-  EVP_PKEY* LoadKey(const char *key, bool public_key);
+private:
+  EVP_PKEY *LoadKey(const char *key, bool public_key);
 
-  const char *algorithm_;
-  EVP_PKEY*   private_key_;
-  EVP_PKEY*   public_key_;
-  const EVP_MD* md_;
+  std::string algorithm_;
+  EVP_PKEY *private_key_;
+  EVP_PKEY *public_key_;
+  const EVP_MD *md_;
 };
 
 /**
  * RSASSA-PKCS-v1_5 using SHA-256 hash
  */
-class RS256Validator : public RSAValidator  {
- public:
-  explicit RS256Validator(const std::string &public_key) :
-    RSAValidator("RS256", EVP_sha256(), public_key) { }
-  explicit RS256Validator(const std::string &public_key, const std::string &private_key) :
-    RSAValidator("RS256", EVP_sha256(), public_key, private_key) { }
+class RS256Validator : public RSAValidator {
+public:
+  explicit RS256Validator(const std::string &public_key)
+      : RSAValidator("RS256", EVP_sha256(), public_key) {}
+  explicit RS256Validator(const std::string &public_key,
+                          const std::string &private_key)
+      : RSAValidator("RS256", EVP_sha256(), public_key, private_key) {}
 };
 
 /**
  * RSASSA-PKCS-v1_5 using SHA-384 hash
  */
-class RS384Validator : public RSAValidator  {
- public:
-  explicit RS384Validator(const std::string &public_key) :
-    RSAValidator("RS384", EVP_sha384(), public_key) { }
-  explicit RS384Validator(const std::string &public_key, const std::string &private_key) :
-    RSAValidator("RS384", EVP_sha384(), public_key, private_key) { }
+class RS384Validator : public RSAValidator {
+public:
+  explicit RS384Validator(const std::string &public_key)
+      : RSAValidator("RS384", EVP_sha384(), public_key) {}
+  explicit RS384Validator(const std::string &public_key,
+                          const std::string &private_key)
+      : RSAValidator("RS384", EVP_sha384(), public_key, private_key) {}
 };
 
 /**
  * RSASSA-PKCS-v1_5 using SHA-512 hash
  */
-class RS512Validator : public RSAValidator  {
- public:
-  explicit RS512Validator(const std::string &public_key) :
-    RSAValidator("RS512", EVP_sha512(), public_key) { }
-  explicit RS512Validator(const std::string &public_key, const std::string &private_key) :
-    RSAValidator("RS512", EVP_sha512(), public_key, private_key) { }
+class RS512Validator : public RSAValidator {
+public:
+  explicit RS512Validator(const std::string &public_key)
+      : RSAValidator("RS512", EVP_sha512(), public_key) {}
+  explicit RS512Validator(const std::string &public_key,
+                          const std::string &private_key)
+      : RSAValidator("RS512", EVP_sha512(), public_key, private_key) {}
 };
-#endif  // SRC_INCLUDE_JWT_RSAVALIDATOR_H_
+#endif // SRC_INCLUDE_JWT_RSAVALIDATOR_H_

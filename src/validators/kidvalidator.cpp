@@ -25,32 +25,32 @@
 #include <string>
 #include <vector>
 
-
-KidValidator::KidValidator() : algorithm_(NULL) { }
+KidValidator::KidValidator() : algorithm_("") {}
 
 void KidValidator::Register(std::string kid, MessageValidator *validator) {
   validator_map_[kid] = validator;
-  if (algorithm_ == NULL) {
+  if (algorithm_.empty()) {
     algorithm_ = validator->algorithm();
   }
-  if (strcmp(algorithm_, validator->algorithm()) != 0) {
+  if (algorithm_ != validator->algorithm()) {
     throw std::logic_error("algorithm types have to be uniform");
   }
 }
 
-bool KidValidator::Verify(json_t *jsonHeader, const uint8_t *header, size_t num_header,
-                          const uint8_t *signature, size_t num_signature) {
-  json_t *kid = json_object_get(jsonHeader, "kid");
-  if (!json_is_string(kid))
+bool KidValidator::Verify(json jsonHeader, const uint8_t *header,
+                          size_t num_header, const uint8_t *signature,
+                          size_t num_signature) {
+  if (!jsonHeader.count("kid") || !jsonHeader["kid"].is_string())
     return false;
 
-  auto kidvalidator = validator_map_.find(json_string_value(kid));
+  auto kidvalidator = validator_map_.find(jsonHeader["kid"].get<std::string>());
   if (kidvalidator == validator_map_.end()) {
     return false;
   }
 
   MessageValidator *validator = kidvalidator->second;
-  return validator->Verify(jsonHeader, header, num_header, signature, num_signature);
+  return validator->Verify(jsonHeader, header, num_header, signature,
+                           num_signature);
 }
 
 std::string KidValidator::toJson() const {
