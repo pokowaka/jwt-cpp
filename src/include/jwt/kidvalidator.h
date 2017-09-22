@@ -51,9 +51,10 @@ public:
    */
   void Register(const std::string &kid, MessageValidator *validator);
   bool Verify(const json &jsonHeader, const uint8_t *header, size_t cHeader,
-              const uint8_t *signature, size_t cSignature) const;
-  std::string algorithm() const { return algorithm_; }
-  std::string toJson() const;
+              const uint8_t *signature, size_t cSignature) const override;
+  bool Accepts(const json &jose) const override;
+  std::string algorithm() const override { return algorithm_; }
+  std::string toJson() const override;
 
 private:
   std::map<std::string, MessageValidator *> validator_map_;

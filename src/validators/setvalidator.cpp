@@ -31,14 +31,14 @@ SetValidator::SetValidator(const std::vector<MessageValidator *> &validators) {
     }
 }
 
-bool SetValidator::Verify(const json &jsonHeader, const uint8_t *header,
+bool SetValidator::Verify(const json &jose, const uint8_t *header,
                           size_t num_header, const uint8_t *signature,
                           size_t num_signature) const {
-    if (!jsonHeader.count("alg")) {
+    if (!jose.count("alg")) {
         return false;
     }
 
-    auto alg = validator_map_.find(jsonHeader["alg"].get<std::string>());
+    auto alg = validator_map_.find(jose["alg"].get<std::string>());
     if (alg == validator_map_.end()) {
         return false;
     }
@@ -48,9 +48,14 @@ bool SetValidator::Verify(const json &jsonHeader, const uint8_t *header,
                              num_signature);
 }
 
-bool SetValidator::Accepts(const std::string &algorithm) const {
-    auto alg = validator_map_.find(algorithm);
-    return alg != validator_map_.end();
+bool SetValidator::Accepts(const json &jose) const {
+    if (!jose.count("alg") || !jose["alg"].is_string()) return false;
+
+    auto alg = validator_map_.find(jose["alg"].get<std::string>());
+    if (alg == validator_map_.end()) {
+        return false;
+    }
+    return alg->second->Accepts(jose);
 }
 
 std::string SetValidator::toJson() const {

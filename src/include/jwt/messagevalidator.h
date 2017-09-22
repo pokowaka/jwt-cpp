@@ -59,13 +59,13 @@ class MessageValidator {
     virtual std::string algorithm() const = 0;
 
     /**
-     * True if the given algorithm can be validated by this validtor.
+     * True if the given jose header can be validated by this validtor.
      *
-     * @param algorithm Name of the algorithm
+     * @param jose JSON jose header
      * @return true if the validator can verify a message signed with the given
-     * algorithm
+     * jose header
      */
-    virtual bool Accepts(const std::string &algorithm) const;
+    virtual bool Accepts(const json &jose) const;
 
     /**
      * Verfies that the given header is signed with the given signature.

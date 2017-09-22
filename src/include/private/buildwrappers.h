@@ -53,7 +53,7 @@ public:
   bool Verify(const json &jsonHeader, const uint8_t *header, size_t num_header,
               const uint8_t *signature, size_t num_signature) const;
   std::string algorithm() const;
-  bool Accepts(const std::string &algorithm) const;
+  bool Accepts(const json &jose) const;
   std::string toJson() const;
 
 private:

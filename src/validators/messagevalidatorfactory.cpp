@@ -199,12 +199,10 @@ std::string MessageValidatorFactory::ParseSecret(const std::string &property,
     throw std::logic_error("fromfile is not specified");
 }
 
-bool ParsedMessagevalidator::Verify(const json &jsonHeader,
-                                    const uint8_t *header, size_t num_header,
-                                    const uint8_t *signature,
+bool ParsedMessagevalidator::Verify(const json &jose, const uint8_t *header,
+                                    size_t num_header, const uint8_t *signature,
                                     size_t num_signature) const {
-    return root_->Verify(jsonHeader, header, num_header, signature,
-                         num_signature);
+    return root_->Verify(jose, header, num_header, signature, num_signature);
 }
 
 std::string ParsedMessagevalidator::algorithm() const {
@@ -219,8 +217,8 @@ ParsedMessagevalidator::~ParsedMessagevalidator() {
     }
 }
 
-bool ParsedMessagevalidator::Accepts(const std::string &algorithm) const {
-    return root_->Accepts(algorithm);
+bool ParsedMessagevalidator::Accepts(const json &jose) const {
+    return root_->Accepts(jose);
 }
 
 ParsedMessagevalidator::ParsedMessagevalidator(

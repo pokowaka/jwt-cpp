@@ -42,12 +42,12 @@ public:
   virtual ~RSAValidator();
 
   bool Verify(const json &jsonHeader, const uint8_t *header, size_t num_header,
-              const uint8_t *signature, size_t num_signature) const;
+              const uint8_t *signature, size_t num_signature) const override;
   bool Sign(const uint8_t *header, size_t num_header, uint8_t *signature,
-            size_t *num_signature) const;
+            size_t *num_signature) const override;
 
-  inline std::string algorithm() const { return algorithm_; }
-  std::string toJson() const;
+  inline std::string algorithm() const override { return algorithm_; }
+  std::string toJson() const override;
 
 private:
   EVP_PKEY *LoadKey(const char *key, bool public_key);

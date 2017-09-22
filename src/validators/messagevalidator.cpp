@@ -23,8 +23,9 @@
 #include "jwt/messagevalidator.h"
 #include <string>
 
-bool MessageValidator::Accepts(const std::string &algorithm) const {
-    return algorithm == this->algorithm();
+bool MessageValidator::Accepts(const json &jose) const {
+    return jose.count("alg") &&
+           jose["alg"].get<std::string>() == this->algorithm();
 }
 
 bool MessageValidator::Validate(const json &jsonHeader,

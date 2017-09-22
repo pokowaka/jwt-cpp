@@ -38,10 +38,10 @@ class SetValidator : public MessageValidator {
 public:
   explicit SetValidator(const std::vector<MessageValidator *> &msg);
   bool Verify(const json &jsonHeader, const uint8_t *header, size_t cHeader,
-              const uint8_t *signature, size_t cSignature) const;
-  std::string algorithm() const { return "SET"; }
-  std::string toJson() const;
-  bool Accepts(const std::string &algorithm) const;
+              const uint8_t *signature, size_t cSignature) const override;
+  std::string algorithm() const override { return "SET"; }
+  std::string toJson() const override;
+  bool Accepts(const json &jose) const override;
 
 private:
   std::map<std::string, MessageValidator *> validator_map_;
