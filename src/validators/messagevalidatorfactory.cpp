@@ -99,30 +99,28 @@ MessageValidator *MessageValidatorFactory::BuildInternal(const json &json) {
     }
 
     std::unique_ptr<MessageValidator> constructed = nullptr;
-    if (json.count("none")) {
-        constructed.reset(new NoneValidator());
-    } else if (json.count("HS256")) {
-        constructed.reset(
-            new HS256Validator(ParseSecret("secret", json["HS256"])));
-    } else if (json.count("HS384")) {
-        constructed.reset(
-            new HS384Validator(ParseSecret("secret", json["HS384"])));
-    } else if (json.count("HS512")) {
-        constructed.reset(
-            new HS512Validator(ParseSecret("secret", json["HS512"])));
-    } else if (json.count("RS256")) {
-        constructed.reset(
-            new RS256Validator(ParseSecret("public", json["RS256"])));
-    } else if (json.count("RS384")) {
-        constructed.reset(
-            new RS384Validator(ParseSecret("public", json["RS384"])));
-    } else if (json.count("RS512")) {
-        constructed.reset(
-            new RS512Validator(ParseSecret("public", json["RS512"])));
-    }
-
     try {
-        if (json.count("set")) {
+        if (json.count("none")) {
+            constructed.reset(new NoneValidator());
+        } else if (json.count("HS256")) {
+            constructed.reset(
+                new HS256Validator(ParseSecret("secret", json["HS256"])));
+        } else if (json.count("HS384")) {
+            constructed.reset(
+                new HS384Validator(ParseSecret("secret", json["HS384"])));
+        } else if (json.count("HS512")) {
+            constructed.reset(
+                new HS512Validator(ParseSecret("secret", json["HS512"])));
+        } else if (json.count("RS256")) {
+            constructed.reset(
+                new RS256Validator(ParseSecret("public", json["RS256"])));
+        } else if (json.count("RS384")) {
+            constructed.reset(
+                new RS384Validator(ParseSecret("public", json["RS384"])));
+        } else if (json.count("RS512")) {
+            constructed.reset(
+                new RS512Validator(ParseSecret("public", json["RS512"])));
+        } else if (json.count("set")) {
             auto lst = BuildValidatorList(json["set"]);
             constructed.reset(new SetValidator(lst));
         } else if (json.count("kid")) {
@@ -130,17 +128,15 @@ MessageValidator *MessageValidatorFactory::BuildInternal(const json &json) {
             constructed.reset(kid);
             BuildKid(kid, json["kid"]);
         }
-    } catch (std::exception &le) {
-        std::ostringstream msg;
-        msg << "Json error inside: " << le.what();
-        msg << ", at: " << json;
-        throw std::logic_error(msg.str());
+    } catch (std::exception &e) {
+        throw std::logic_error(
+            std::string("Failed to construct validator at: ") + json.dump() +
+            ", " + e.what());
     }
 
     if (!constructed.get()) {
-        std::ostringstream msg;
-        msg << "Missing validator property at: " << json;
-        throw std::logic_error(msg.str());
+        throw std::logic_error(std::string("No validator declared at: ") +
+                               json.dump());
     }
 
     build_.push_back(constructed.get());

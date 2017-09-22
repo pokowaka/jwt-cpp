@@ -185,6 +185,16 @@ TEST(parse_test, bad_kid) {
   ASSERT_THROW(MessageValidatorFactory::Build(json), std::logic_error);
 }
 
+TEST(parse_test, rsa_not_in_pem_format) {
+  std::string json = "{ \"kid\" : { "
+    "\"key1\" : { \"RS256\" : { \"public\" : \"key1\" } }, "
+    "\"key2\" : { \"RS256\" : { \"public\" : \"key2\" } }, "
+    "\"key3\" : { \"RS256\" : { \"public\" : \"key3\" } } "
+    "} }";
+  ASSERT_THROW(MessageValidatorFactory::Build(json), std::logic_error);
+
+}
+
 TEST(parse_test, non_existing) {
   std::string json = "{ \"HS253\" : { \"secret\" : \"safe!\" } }";
   ASSERT_THROW(MessageValidatorFactory::Build(json), std::logic_error);

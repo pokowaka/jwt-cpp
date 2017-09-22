@@ -55,52 +55,47 @@ ClaimValidator *ClaimValidatorFactory::BuildInternal(const json &json) {
     }
 
     ClaimValidator *constructed = nullptr;
-    if (json.count("iss")) {
-        constructed = new ListClaimValidator("iss", BuildList(json["iss"]));
-    } else if (json.count("sub")) {
-        constructed = new ListClaimValidator("sub", BuildList(json["sub"]));
-    } else if (json.count("aud")) {
-        constructed = new ListClaimValidator("aud", BuildList(json["aud"]));
-    } else if (json.count("exp")) {
-        ::json val = json["exp"];
-        ::json leeway = val["leeway"];
-        constructed =
-            new ExpValidator(leeway.is_null() ? 0 : leeway.get<int>());
-    } else if (json.count("nbf")) {
-        ::json val = json["nbf"];
-        ::json leeway = val["leeway"];
-        constructed =
-            new NbfValidator(leeway.is_null() ? 0 : leeway.get<int>());
-    } else if (json.count("iat")) {
-        ::json val = json["iat"];
-        ::json leeway = val["leeway"];
-        constructed =
-            new IatValidator(leeway.is_null() ? 0 : leeway.get<int>());
-    }
-
     try {
-        if (json.count("all")) {
+        if (json.count("iss")) {
+            constructed = new ListClaimValidator("iss", BuildList(json["iss"]));
+        } else if (json.count("sub")) {
+            constructed = new ListClaimValidator("sub", BuildList(json["sub"]));
+        } else if (json.count("aud")) {
+            constructed = new ListClaimValidator("aud", BuildList(json["aud"]));
+        } else if (json.count("exp")) {
+            ::json val = json["exp"];
+            ::json leeway = val["leeway"];
+            constructed =
+                new ExpValidator(leeway.is_null() ? 0 : leeway.get<int>());
+        } else if (json.count("nbf")) {
+            ::json val = json["nbf"];
+            ::json leeway = val["leeway"];
+            constructed =
+                new NbfValidator(leeway.is_null() ? 0 : leeway.get<int>());
+        } else if (json.count("iat")) {
+            ::json val = json["iat"];
+            ::json leeway = val["leeway"];
+            constructed =
+                new IatValidator(leeway.is_null() ? 0 : leeway.get<int>());
+        } else if (json.count("all")) {
             constructed =
                 new AllClaimValidator(BuildValidatorList(json["all"]));
         } else if (json.count("any")) {
             constructed =
                 new AnyClaimValidator(BuildValidatorList(json["any"]));
         } else if (json.count("optional")) {
-            ::json val = json["optional"];
-            ClaimValidator *inner = Build(val);
+            ClaimValidator *inner = BuildInternal(json["optional"]);
             constructed = new OptionalClaimValidator(inner);
         }
     } catch (std::exception &le) {
-        std::ostringstream msg;
-        msg << "Json error inside: " << le.what();
-        msg << ", at: " << json;
-        throw std::logic_error(msg.str());
+        throw std::logic_error(
+            std::string("Failed to construct validator at: ") + json.dump() +
+            ", " + le.what());
     }
 
     if (!constructed) {
-        std::ostringstream msg;
-        msg << "Missing property at: " << json;
-        throw std::logic_error(msg.str());
+        throw std::logic_error(std::string("No validator declared at: ") +
+                               json.dump());
     }
 
     build_.push_back(constructed);
