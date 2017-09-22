@@ -39,14 +39,19 @@ TEST(Sample, payload_deserialize) {
     ExpValidator exp;
 
     // Decode and validate the token
+    ::json header, payload;
     try {
-        ::json header, payload;
         // Note in C++ 17 you can use: auto [ header, payload ] instead of tie.
         std::tie(header, payload) = JWT::Decode(str_token, &signer, &exp);
     } catch (TokenFormatError &tfe) {
         // Badly encoded token
         FAIL();
     }
+
+    // We can also decode with using a validator, you can use this to
+    // inspect tokens that are not properly signed.
+    std::tie(header, payload) = JWT::Decode(str_token);
+    EXPECT_STREQ(json.dump().c_str(), payload.dump().c_str());
 }
 
 TEST(Sample, from_json) {
@@ -87,8 +92,10 @@ TEST(Sample, from_json) {
     try {
         ::json header, payload;
         // Note in C++ 17 you can use: auto [ header, payload ] instead of tie.
-        std::tie(header, payload) = JWT::Decode(str_token, message_validator.get(),
-                                claim_validator.get());
+        std::tie(header, payload) = JWT::Decode(
+            str_token, message_validator.get(), claim_validator.get());
+        std::cout << "Header: " << header << std::endl;
+        std::cout << "Payload: " << payload << std::endl;
     } catch (InvalidTokenError &tfe) {
         std::cout << tfe.what() << std::endl;
         // Bad token
