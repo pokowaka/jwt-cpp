@@ -132,7 +132,7 @@ g++ -std=c++11 \
 -I ~/homebrew/opt/openssl@1.1/include \
 -L ~/homebrew/opt/openssl@1.1/lib \
 -L ~/homebrew/lib -lcrypto -ljwt \
-sign.cpp -o sign.cpp
+sign.cpp -o sign
 ```
 
 Executing this should result in something like:
@@ -339,7 +339,31 @@ validator ::=
 
 - A **set** validator will accept the token if any of the validators in the set accepts the token.
 - A **kid** validator will accept the token if the kid field of the token is
-  validated by the given validator. See the [sample](test/token/sample.cpp) for more details on how this works. 
+  validated by the given validator. For example if the validator is declared as follows:
+  
+  ```json
+  {
+    "kid" : { "id1" : { "HS256" : { "secret" : "f13rc3" } },
+              "id2" : { "HS256" : { "secret" : "d0ntt3llmama" } },
+              "id3" : { "HS256" : { "secret" : "longlama" } }
+            }
+  }
+  
+  ```
+  
+  and a token is being validated with the following JOSE header:
+  
+  ```json
+  {
+    "kid" : "id2",
+    "alg" : "HS256",
+    "typ" : "JWT"
+  }
+  ```
+  
+  it will try to validate the token using the validator with "id2". In the example above it is the HMAC256 validator with the secret "d0ntt3llmama".	
+  
+  See the [sample](test/token/sample.cpp) for more details on how this works. 
 
 You can build a MessageValidator by invoking the factory:
 ``MessageValidator* MessageValidatorFactory::Build(std::string toBuild)``

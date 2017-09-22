@@ -32,6 +32,7 @@ void KidValidator::Register(const std::string &kid, MessageValidator *validator)
   if (algorithm_.empty()) {
     algorithm_ = validator->algorithm();
   }
+  // This is due to the accept call not looking at the whole jose header.
   if (algorithm_ != validator->algorithm()) {
     throw std::logic_error("algorithm types have to be uniform");
   }
