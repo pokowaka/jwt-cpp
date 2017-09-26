@@ -145,7 +145,7 @@ bool JWT::VerifySignature(const json &header_claims_, const char *header,
     if (!verifier->Accepts(header_claims_)) {
         throw InvalidSignatureError(
             std::string("Verifier does not accept alg header: ") +=
-            header_claims_["alg"]);
+            header_claims_["alg"].get<std::string>());
     }
 
     str_ptr heapsig;
