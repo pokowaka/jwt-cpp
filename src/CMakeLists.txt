@@ -12,7 +12,7 @@ FOREACH( DIR ${JWT_SOURCE_DIRS} )
   SET(JWT_SRC ${JWT_SRC} ${SRC} )
 ENDFOREACH( DIR ${JWT_SOURCE_DIRS} )
 
-FILE(GLOB JWT_HDR include/jwt/*.h??)
+FILE(GLOB JWT_HDR include/jwt/*.h include/jwt/*.h??)
 
 
 ADD_LIBRARY(jwt ${JWT_SRC} ${JWT_HDR})
