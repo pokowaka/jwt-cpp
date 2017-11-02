@@ -89,7 +89,7 @@ Error:
 
 EVP_PKEY *RSAValidator::LoadKey(const char *key, bool public_key) {
     EVP_PKEY *evp_pkey = NULL;
-    BIO *keybio = BIO_new_mem_buf(
+    BIO *keybio = !key || !*key ? NULL : BIO_new_mem_buf(
         const_cast<void *>(reinterpret_cast<const void *>(key)), -1);
     if (keybio == NULL) {
         return NULL;
