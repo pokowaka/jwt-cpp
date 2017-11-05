@@ -1,11 +1,16 @@
 Jwt-cpp
 =======
 
+![Build status](https://travis-ci.org/pokowaka/jwt-cpp.svg?branch=master)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/pokowaka/jwt-cpp/master/LICENSE.MIT)
+[![Github Issues](https://img.shields.io/github/issues/pokowaka/jwt-cpp.svg)](http://github.com/pokowaka/jwt-cpp/issues)
+
+
 A C++11 implementation of the [JSON Web
 Token](http://self-issued.info/docs/draft-ietf-oauth-json-web-token.html)
 standard.
 
-jwt-cpp is licensed under the [MIT license](http://opensource.org/licenses/mit-license.php); 
+jwt-cpp is licensed under the [MIT license](http://opensource.org/licenses/mit-license.php);
 see LICENSE in the source distribution for details.
 
 Currently it supports the following:
@@ -25,7 +30,7 @@ Payload validators:
 - nbf check
 - iat check
 
-**NOTE**: We keep private and public keys unencrypted in memory for the duration of the 
+**NOTE**: We keep private and public keys unencrypted in memory for the duration of the
 existence of any of the validators.
 
 ## Compilation and Installation
@@ -36,24 +41,24 @@ build. Once you have installed the proper dependencies you can do the following:
 For release:
 
 ```
-mkdir release 
-cd release 
+mkdir release
+cd release
 cmake -DCMAKE_BUILD_TYPE=Release ..
 make install
 ```
 
 For debug:
 ```
-mkdir debug 
-cd debug 
+mkdir debug
+cd debug
 cmake -DCMAKE_BUILD_TYPE=Debug ..
 make
 ```
 
 Running the tests with code coverage:
 ```
-mkdir debug 
-cd debug 
+mkdir debug
+cd debug
 cmake -DCMAKE_BUILD_TYPE=Debug ..
 make cov_all_tests
 ```
@@ -98,8 +103,8 @@ ctest
 ## Usage
 
 You can find detailed [samples](test/token/sample.cpp) that are executed as part
-of the tests.  We make use of [JSON for Modern C++](https://github.com/nlohmann/json) library 
-to create json payload. 
+of the tests.  We make use of [JSON for Modern C++](https://github.com/nlohmann/json) library
+to create json payload.
 
 ### Signing tokens
 
@@ -187,7 +192,7 @@ Usually your validators will be a little more complex than just validating one
 property. The easiest way to use more complex verifiers and validators is by
 using ``ClaimValidatorFactory::Build`` or ``MessageValidatorFactory::Build``.
 Both methods accept a json string or a json object, and produce a claim validator or message
-validator. 
+validator.
 
 ```cpp
 #include <iostream>
@@ -309,38 +314,38 @@ Payload: {"exp":1483228800,"iss":"foo"}
 The json factories make it easier to construct signers and validators. The BNF schemas below show you how you can construct signers. Note that signers can also be used as validators as well.
 
 ```
-signer ::= 
+signer ::=
   "none"  : null |
   "HS256" : { "secret" : "*your actual secret*} |
   "HS384" : { "secret" : "*your actual secret*} |
   "HS512" : { "secret" : "*your actual secret*" } |
-  "RS256" : { "public"  : ("PEM block with key" | { "fromfile" : "/path/to/file/with/pem" }), 
+  "RS256" : { "public"  : ("PEM block with key" | { "fromfile" : "/path/to/file/with/pem" }),
               "private" : ("PEM..." | { "fromfile" : "...." }) } |
-  "RS384" : { "public"  : ("PEM..." | { "fromfile" : "...." }), 
+  "RS384" : { "public"  : ("PEM..." | { "fromfile" : "...." }),
               "private" : ("PEM..." | { "fromfile" : "...." }) } |
-  "RS512" : { "public"  : ("PEM..." | { "fromfile" : "...." }), 
+  "RS512" : { "public"  : ("PEM..." | { "fromfile" : "...." }),
               "private" : ("PEM..." | { "fromfile" : "...." }) } |
 ```
 
 The BNF used to construct validators looks as follows:
 
 ```
-validator ::= 
+validator ::=
   "none"  : null |
   "HS256" : { "secret" : "...." } |
   "HS384" : { "secret" : "...." } |
   "HS512" : { "secret" : "...." } |
-  "RS256" : { "public" : ("PEM..." | { "fromfile" : "...." }) } |  
+  "RS256" : { "public" : ("PEM..." | { "fromfile" : "...." }) } |
   "RS384" : { "public" : ("PEM..." | { "fromfile" : "...." }) } |
   "RS512" : { "public" : ("PEM..." | { "fromfile" : "...." }) } |
   "set"   : [ validator+ ] |
-  "kid"   : ( { id : validator } )+   
+  "kid"   : ( { id : validator } )+
 ```
 
 - A **set** validator will accept the token if any of the validators in the set accepts the token.
 - A **kid** validator will accept the token if the kid field of the token is
   validated by the given validator. For example if the validator is declared as follows:
-  
+
   ```json
   {
     "kid" : { "id1" : { "HS256" : { "secret" : "f13rc3" } },
@@ -348,11 +353,11 @@ validator ::=
               "id3" : { "HS256" : { "secret" : "longlama" } }
             }
   }
-  
+
   ```
-  
+
   and a token is being validated with the following JOSE header:
-  
+
   ```json
   {
     "kid" : "id2",
@@ -360,10 +365,10 @@ validator ::=
     "typ" : "JWT"
   }
   ```
-  
-  it will try to validate the token using the validator with "id2". In the example above it is the HMAC256 validator with the secret "d0ntt3llmama".	
-  
-  See the [sample](test/token/sample.cpp) for more details on how this works. 
+
+  it will try to validate the token using the validator with "id2". In the example above it is the HMAC256 validator with the secret "d0ntt3llmama".
+
+  See the [sample](test/token/sample.cpp) for more details on how this works.
 
 You can build a MessageValidator by invoking the factory:
 ``MessageValidator* MessageValidatorFactory::Build(std::string toBuild)``
@@ -371,7 +376,7 @@ You can build a MessageValidator by invoking the factory:
 
 *Note: Never include the none validator alongside other validators! See this
 [blog post](https://auth0.com/blog/2015/03/31/critical-vulnerabilities-in-json-web-token-libraries/)
-for details.*	
+for details.*
 
 Claimvalidators:
 
@@ -380,8 +385,8 @@ claims ::=
   single_claim |
   "optional" : { (single_claim) } |
   "any" : [ (claim)+ ] |
-  "all" : [ (claim)+ ] 
- single_claim ::= 
+  "all" : [ (claim)+ ]
+ single_claim ::=
   "exp" : (null | { "leeway" : .... }) |
   "nbf" : (null | { "leeway" : .... }) |
   "iat" : (null | { "leeway" : .... }) |

@@ -14,7 +14,6 @@ sudo: required
 matrix:
   include:
   # OSX / Clang
-
   - os: osx
     osx_image: xcode6.4
 
@@ -25,23 +24,14 @@ matrix:
     osx_image: xcode9
 
   # Linux / GCC
-
-  - os: linux
-    compiler: gcc
-    env: CXX=++-4.9
-    addons:
-      apt:
-        sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-4.9', 'ninja-build']
-
   - os: linux
     compiler: gcc
     env: MATRIX_EVAL="CXX=g++-7 && CXXFLAGS=-std=c++17"
 
     addons:
       apt:
-        sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-7', 'ninja-build']
+        sources: ['ubuntu-toolchain-r-test' ]
+        packages: ['g++-7' ]
 
   # Linux / Clang
   - os: linux
@@ -50,7 +40,7 @@ matrix:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-5.0']
-        packages: ['g++-6', 'clang-5.0', 'ninja-build']
+        packages: ['g++-6', 'clang-5.0' ]
 
 ################
 # build script #
@@ -63,10 +53,9 @@ before_install:
 script:
   # get CMake and Ninja (only for systems with brew - macOS)
   - |
-     if [[ (-x $(which brew)) ]]; then
+     if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
        brew update
-       brew install cmake ninja openssl@1.1
-       cmake --version
+       brew install openssl@1.1
      fi
 
   # show OS/compiler version
@@ -75,7 +64,5 @@ script:
 
   # compile and execute unit tests
   - mkdir -p build && cd build
-  - cmake .. ${CMAKE_OPTIONS} -GNinja && cmake --build ..
+  - cmake .. ${CMAKE_OPTIONS} && make
   - ctest -C Release -V -j
-  - cd ..
-

@@ -10,9 +10,6 @@ LIST (APPEND CMAKE_MODULE_PATH "${TOOLS_DIRECTORY}/cmake/doxygen")
 
 INCLUDE(GetGitRevisionDescription)
 INCLUDE(cpplint)
-IF(UNIX)
-    INCLUDE(CodeCoverage)
-ENDIF(UNIX)
 INCLUDE(UseDoxygen)
 
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
@@ -27,6 +24,7 @@ ELSE ()
 ENDIF (GIT_TAG)
 
 OPTION(ENABLE_GPERF_TOOLS  "Enable google perftools [default: OFF]" OFF)
+OPTION(ENABLE_COVERAGE     "Enable coder coverage [default: OFF]" OFF)
 OPTION(ENABLE_DOC          "Enable documentation    [default: ON]" ON)
 
 set(JWT_INSTALL_LIB_DIR       lib CACHE PATH "Installation directory for libraries")
@@ -39,11 +37,12 @@ set(JWT_INSTALL_INCLUDE_DIR   include CACHE PATH "Installation directory for hea
 IF(UNIX)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-    IF(CMAKE_BUILD_TYPE MATCHES "Debug")
-      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
-      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage") # enabling coverage
-      INCLUDE_DIRECTORIES ("/usr/local/include/valgrind")
-    ENDIF(CMAKE_BUILD_TYPE MATCHES "Debug")
+    IF(ENABLE_COVERAGE MATCHES "ON")
+        INCLUDE(CodeCoverage)
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage") # enabling coverage
+        INCLUDE_DIRECTORIES ("/usr/local/include/valgrind")
+    ENDIF(ENABLE_COVERAGE MATCHES "ON")
 ENDIF(UNIX)
 
 # Gperf tools
