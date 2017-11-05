@@ -1,15 +1,13 @@
-# The name of our project is "HELLO". CMakeLists files in this project can 
-# refer to the root source directory of the project as ${HELLO_SOURCE_DIR} and 
-# to the root binary directory of the project as ${HELLO_BINARY_DIR}. 
-CMAKE_MINIMUM_REQUIRED (VERSION 2.8 FATAL_ERROR) 
+CMAKE_MINIMUM_REQUIRED (VERSION 2.8 FATAL_ERROR)
 PROJECT (JWT)
 
 SET (TOOLS_DIRECTORY ${JWT_SOURCE_DIR}/tools)
 INCLUDE (CheckFunctionExists)
 
-LIST (APPEND CMAKE_MODULE_PATH "${TOOLS_DIRECTORY}/cmake/rpavlik")
 LIST (APPEND CMAKE_MODULE_PATH "${TOOLS_DIRECTORY}/cmake")
+LIST (APPEND CMAKE_MODULE_PATH "${TOOLS_DIRECTORY}/cmake/rpavlik")
 LIST (APPEND CMAKE_MODULE_PATH "${TOOLS_DIRECTORY}/cmake/doxygen")
+
 INCLUDE(GetGitRevisionDescription)
 INCLUDE(cpplint)
 IF(UNIX)
@@ -20,7 +18,6 @@ INCLUDE(UseDoxygen)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 git_get_exact_tag(GIT_TAG)
 
-
 MESSAGE ("Git version: ${GIT_SHA1}")
 if (GIT_TAG)
     MESSAGE ("Git tag: ${GIT_TAG}")
@@ -29,10 +26,8 @@ ELSE ()
     SET (GIT_TAG "untagged")
 ENDIF (GIT_TAG)
 
-
 OPTION(ENABLE_GPERF_TOOLS  "Enable google perftools [default: OFF]" OFF)
 OPTION(ENABLE_DOC          "Enable documentation    [default: ON]" ON)
-
 
 set(JWT_INSTALL_LIB_DIR       lib CACHE PATH "Installation directory for libraries")
 set(JWT_INSTALL_BIN_DIR       bin CACHE PATH "Installation directory for executables")
@@ -45,15 +40,9 @@ IF(UNIX)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
     IF(CMAKE_BUILD_TYPE MATCHES "Debug")
-      MESSAGE ("Setting debug flags")
-      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -fprofile-arcs -ftest-coverage")
-      SET(CMAKE_C_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
+      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
+      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage") # enabling coverage
       INCLUDE_DIRECTORIES ("/usr/local/include/valgrind")
-      IF (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-        LINK_LIBRARIES(gcov)
-      ELSE()
-        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-optimize-sibling-calls")
-      ENDIF ()
     ENDIF(CMAKE_BUILD_TYPE MATCHES "Debug")
 ENDIF(UNIX)
 
