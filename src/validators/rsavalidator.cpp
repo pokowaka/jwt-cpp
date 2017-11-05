@@ -48,7 +48,14 @@ RSAValidator::~RSAValidator() {
 bool RSAValidator::Verify(const json &jsonHeader, const uint8_t *header,
                           size_t num_header, const uint8_t *signature,
                           size_t num_signature) const {
-    EVP_MD_CTX *evp_md_ctx = EVP_MD_CTX_new();
+    EVP_MD_CTX *evp_md_ctx;
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+    EVP_MD_CTX old_ssl;
+    EVP_MD_CTX_init(&old_ssl);
+    evp_md_ctx = &old_ssl;
+#else
+    evp_md_ctx = EVP_MD_CTX_new();
+#endif
     EVP_MD_CTX_init(evp_md_ctx);
     EVP_VerifyInit_ex(evp_md_ctx, md_, NULL);
     bool valid =
@@ -63,7 +70,14 @@ bool RSAValidator::Sign(const uint8_t *header, size_t num_header,
     size_t needed = 0;
     bool success = false;
 
-    EVP_MD_CTX *evp_md_ctx = EVP_MD_CTX_new();
+    EVP_MD_CTX *evp_md_ctx;
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+    EVP_MD_CTX old_ssl;
+    EVP_MD_CTX_init(&old_ssl);
+    evp_md_ctx = &old_ssl;
+#else
+    evp_md_ctx = EVP_MD_CTX_new();
+#endif
     EVP_MD_CTX_init(evp_md_ctx);
     EVP_DigestSignInit(evp_md_ctx, NULL, md_, NULL, private_key_);
     if (EVP_DigestSignUpdate(evp_md_ctx, header, num_header) != 1) {
