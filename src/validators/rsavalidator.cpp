@@ -21,6 +21,7 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "jwt/rsavalidator.h"
+#include "private/ssl_compat.h"
 #include <openssl/err.h>
 #include <openssl/pem.h>
 #include <regex>  // NOLINT(*)
@@ -48,20 +49,13 @@ RSAValidator::~RSAValidator() {
 bool RSAValidator::Verify(const json &jsonHeader, const uint8_t *header,
                           size_t num_header, const uint8_t *signature,
                           size_t num_signature) const {
-    EVP_MD_CTX *evp_md_ctx;
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-    EVP_MD_CTX old_ssl;
-    EVP_MD_CTX_init(&old_ssl);
-    evp_md_ctx = &old_ssl;
-#else
-    evp_md_ctx = EVP_MD_CTX_new();
-#endif
+    EvpMdCtx ctx;
+    EVP_MD_CTX *evp_md_ctx = ctx.get();
     EVP_MD_CTX_init(evp_md_ctx);
     EVP_VerifyInit_ex(evp_md_ctx, md_, NULL);
     bool valid =
         EVP_VerifyUpdate(evp_md_ctx, header, num_header) == 1 &&
         EVP_VerifyFinal(evp_md_ctx, signature, num_signature, public_key_) == 1;
-    EVP_MD_CTX_free(evp_md_ctx);
     return valid;
 }
 
@@ -70,14 +64,8 @@ bool RSAValidator::Sign(const uint8_t *header, size_t num_header,
     size_t needed = 0;
     bool success = false;
 
-    EVP_MD_CTX *evp_md_ctx;
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-    EVP_MD_CTX old_ssl;
-    EVP_MD_CTX_init(&old_ssl);
-    evp_md_ctx = &old_ssl;
-#else
-    evp_md_ctx = EVP_MD_CTX_new();
-#endif
+    EvpMdCtx ctx;
+    EVP_MD_CTX *evp_md_ctx = ctx.get();
     EVP_MD_CTX_init(evp_md_ctx);
     EVP_DigestSignInit(evp_md_ctx, NULL, md_, NULL, private_key_);
     if (EVP_DigestSignUpdate(evp_md_ctx, header, num_header) != 1) {
@@ -97,7 +85,6 @@ bool RSAValidator::Sign(const uint8_t *header, size_t num_header,
 
     success = EVP_DigestSignFinal(evp_md_ctx, signature, num_signature) == 1;
 Error:
-    EVP_MD_CTX_free(evp_md_ctx);
     return success;
 }
 

@@ -21,6 +21,7 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "jwt/hmacvalidator.h"
+#include "private/ssl_compat.h"
 #include <memory>
 #include <sstream>
 #include <string.h>
@@ -64,11 +65,13 @@ bool HMACValidator::Sign(const uint8_t *header, size_t num_header,
     *num_signature = key_size_;
     return false;
   }
-  HMAC_CTX *ctx = HMAC_CTX_new();
+  HMacCtx hctx;
+  HMAC_CTX *ctx = hctx.get();
+
   HMAC_Init_ex(ctx, key_.c_str(), key_.size(), md_, NULL);
   bool sign = HMAC_Update(ctx, header, num_header) &&
               HMAC_Final(ctx, signature, (unsigned int *)num_signature);
-  HMAC_CTX_free(ctx);
+
   return sign;
 }
 
