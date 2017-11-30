@@ -29,3 +29,6 @@ debug/
 *.exe
 *.out
 *.app
+
+# QtCreator user settings
+CMakeLists.txt.user
