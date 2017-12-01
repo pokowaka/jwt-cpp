@@ -1,5 +1,5 @@
-CMAKE_MINIMUM_REQUIRED (VERSION 2.8 FATAL_ERROR)
-PROJECT (JWT)
+CMAKE_MINIMUM_REQUIRED (VERSION 3.2 FATAL_ERROR)
+PROJECT (JWT VERSION 1.1.0)
 
 SET (TOOLS_DIRECTORY ${JWT_SOURCE_DIR}/tools)
 INCLUDE (CheckFunctionExists)
@@ -15,6 +15,7 @@ INCLUDE(UseDoxygen)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 git_get_exact_tag(GIT_TAG)
 
+MESSAGE ("JWT version ${JWT_VERSION}")
 MESSAGE ("Git version: ${GIT_SHA1}")
 if (GIT_TAG)
     MESSAGE ("Git tag: ${GIT_TAG}")
@@ -27,17 +28,17 @@ OPTION(ENABLE_GPERF_TOOLS  "Enable google perftools [default: OFF]" OFF)
 OPTION(ENABLE_COVERAGE     "Enable coder coverage [default: OFF]" OFF)
 OPTION(ENABLE_DOC          "Enable documentation    [default: ON]" ON)
 OPTION(ENABLE_TESTS        "Enable tests [default: ON]" ON)
+OPTION(BUILD_SHARED_LIBS   "Build all libraries as shared library [default: OFF]" OFF)
 
 set(JWT_INSTALL_LIB_DIR       lib CACHE PATH "Installation directory for libraries")
 set(JWT_INSTALL_BIN_DIR       bin CACHE PATH "Installation directory for executables")
 set(JWT_INSTALL_INCLUDE_DIR   include CACHE PATH "Installation directory for header files")
 
 #
-# Compiler SETtings
+# Compiler Settings
 #
 IF(UNIX)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
     IF(ENABLE_COVERAGE MATCHES "ON")
         INCLUDE(CodeCoverage)
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
@@ -133,3 +134,7 @@ IF(ENABLE_TESTS MATCHES "ON")
     ADD_SUBDIRECTORY(ext/gtest-1.7.0)
     ADD_SUBDIRECTORY(test)
 ENDIF(ENABLE_TESTS MATCHES "ON")
+
+if (BUILD_SHARED_LIBS)
+    message("Will build JWT as a shared library")
+endif()
