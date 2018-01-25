@@ -21,7 +21,7 @@ class HMacCtx {
  public:
   HMacCtx() { HMAC_CTX_init(&ctx_); }
 
-  ~HMacCtx() {}
+  ~HMacCtx() { HMAC_CTX_cleanup(&ctx_); }
 
   HMAC_CTX* get() { return &ctx_; }
 
