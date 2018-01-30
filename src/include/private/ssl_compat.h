@@ -9,7 +9,7 @@ class EvpMdCtx {
  public:
   EvpMdCtx() { EVP_MD_CTX_init(&ctx_); }
 
-  ~EvpMdCtx() {}
+  ~EvpMdCtx() { EVP_MD_CTX_cleanup(&ctx_); }
 
   EVP_MD_CTX* get() { return &ctx_; }
 
