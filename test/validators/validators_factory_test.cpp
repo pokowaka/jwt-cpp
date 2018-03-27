@@ -1,4 +1,5 @@
 #include <fstream>
+#include <memory>
 #include <string>
 #include "./constants.h"
 #include "gtest/gtest.h"
@@ -217,7 +218,7 @@ TEST(parse_test, accepts_multiple_types) {
         "\"key1\" : { \"HS256\" : { \"secret\" : \"key1\" } }, "
         "\"key3\" : { \"HS512\" : { \"secret\" : \"key3\" } } "
         "} }";
-    ASSERT_NO_THROW(MessageValidatorFactory::Build(json));
+    ASSERT_NO_THROW(std::unique_ptr<MessageValidator>(MessageValidatorFactory::Build(json)));
 }
 
 TEST(parse_test, rsa_not_in_pem_format) {
