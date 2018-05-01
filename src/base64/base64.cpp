@@ -37,11 +37,13 @@ inline char Base64Encode::EncodeChar(uint8_t in) {
 int Base64Encode::DecodeUrl(const char *decode, size_t num_decode, char *out,
                             size_t *num_out) {
   // No integer overflows please.
-  if ((decode + num_decode) < decode || (out + *num_out) < out)
+  if ((decode + num_decode) < decode || (out + *num_out) < out) {
     return 1;
+  }
 
-  if (*num_out < DecodeBytesNeeded(num_decode))
+  if (*num_out < DecodeBytesNeeded(num_decode)) {
     return 1;
+  }
 
   const char *end = decode + num_decode;
   const char *out_start = out;
@@ -85,11 +87,13 @@ int Base64Encode::DecodeUrl(const char *decode, size_t num_decode, char *out,
 int Base64Encode::EncodeUrl(const char *encode, size_t num_encode, char *result,
                             size_t *num_result) {
   // No integer overflows please.
-  if ((encode + num_encode) < encode || (result + *num_result) < result)
+  if ((encode + num_encode) < encode || (result + *num_result) < result) {
     return 1;
+  }
 
-  if (EncodeBytesNeeded(num_encode) > *num_result)
+  if (EncodeBytesNeeded(num_encode) > *num_result) {
     return 1;
+  }
 
   if (num_encode == 0) {
     *result = 0;
@@ -124,8 +128,9 @@ int Base64Encode::EncodeUrl(const char *encode, size_t num_encode, char *result,
     // Set last four chars
     *result++ = EncodeChar(i >> 12);
     *result++ = EncodeChar((i >> 6) & 0x3f);
-    if (left == 2)
+    if (left == 2) {
       *result++ = EncodeChar(i & 0x3f);
+    }
   }
 
   *result++ = 0;
@@ -144,7 +149,8 @@ std::string Base64Encode::EncodeUrl(const std::string &input) {
 std::string Base64Encode::DecodeUrl(const std::string &input) {
   size_t num_decoded = DecodeBytesNeeded(input.size());
   str_ptr decoded(new char[num_decoded]);
-  if (DecodeUrl(input.c_str(), input.size(), decoded.get(), &num_decoded)) {
+  if (DecodeUrl(input.c_str(), input.size(), decoded.get(), &num_decoded) !=
+      0) {
     return "";
   }
   return std::string(decoded.get(), num_decoded);

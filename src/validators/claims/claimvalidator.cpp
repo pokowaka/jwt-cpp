@@ -24,10 +24,11 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 AllClaimValidator::AllClaimValidator(std::vector<ClaimValidator *> validators)
-    : ClaimValidator(""), validators_(validators) {}
+    : ClaimValidator(""), validators_(std::move(validators)) {}
 
 bool AllClaimValidator::IsValid(const json &claimset) const {
   for (auto validator : validators_) {
@@ -42,22 +43,24 @@ std::string AllClaimValidator::toJson() const {
   int num = validators_.size();
   for (auto validator : validators_) {
     msg << validator->toJson();
-    if (--num != 0)
+    if (--num != 0) {
       msg << ", ";
+    }
   }
   msg << " ] }";
   return msg.str();
 }
 
 AnyClaimValidator::AnyClaimValidator(std::vector<ClaimValidator *> validators)
-    : ClaimValidator(""), validators_(validators) {}
+    : ClaimValidator(""), validators_(std::move(validators)) {}
 
 bool AnyClaimValidator::IsValid(const json &claimset) const {
   for (auto validator : validators_) {
     try {
-      if (validator->IsValid(claimset))
+      if (validator->IsValid(claimset)) {
         return true;
-    } catch (InvalidClaimError ice) {
+      }
+    } catch (const InvalidClaimError &ice) {
     }
   }
   throw InvalidClaimError("None of the children validate");
@@ -69,8 +72,9 @@ std::string AnyClaimValidator::toJson() const {
   int num = validators_.size();
   for (auto validator : validators_) {
     msg << validator->toJson();
-    if (--num != 0)
+    if (--num != 0) {
       msg << ", ";
+    }
   }
   msg << " ] }";
   return msg.str();
@@ -80,7 +84,7 @@ OptionalClaimValidator::OptionalClaimValidator(const ClaimValidator *inner)
     : ClaimValidator(inner->property()), inner_(inner) {}
 
 bool OptionalClaimValidator::IsValid(const json &claimset) const {
-  return !claimset.count(property_) || inner_->IsValid(claimset);
+  return (claimset.count(property_) == 0u) || inner_->IsValid(claimset);
 }
 
 std::string OptionalClaimValidator::toJson() const {

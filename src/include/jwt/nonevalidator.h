@@ -32,8 +32,8 @@
  */
 class NoneValidator : public MessageSigner {
 public:
-  bool Verify(const json &jsonHeader, const uint8_t *header, size_t cHeader,
-              const uint8_t *signature, size_t cSignature) const;
+  bool Verify(const json &jsonHeader, const uint8_t *header, size_t num_header,
+              const uint8_t *signature, size_t num_signature) const;
   bool Sign(const uint8_t *header, size_t num_header, uint8_t *signature,
             size_t *num_signature) const;
 

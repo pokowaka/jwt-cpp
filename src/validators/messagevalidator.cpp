@@ -24,31 +24,30 @@
 #include <string>
 
 bool MessageValidator::Accepts(const json &jose) const {
-    return jose.count("alg") &&
-           jose["alg"].get<std::string>() == this->algorithm();
+  return (jose.count("alg") != 0u) &&
+         jose["alg"].get<std::string>() == this->algorithm();
 }
 
 bool MessageValidator::Validate(const json &jsonHeader,
                                 const std::string &header,
                                 const std::string &signature) const {
-    return Verify(
-        jsonHeader,
-        reinterpret_cast<uint8_t *>(const_cast<char *>(header.c_str())),
-        header.size(),
-        reinterpret_cast<uint8_t *>(const_cast<char *>(signature.c_str())),
-        signature.size());
+  return Verify(
+      jsonHeader,
+      reinterpret_cast<uint8_t *>(const_cast<char *>(header.c_str())),
+      header.size(),
+      reinterpret_cast<uint8_t *>(const_cast<char *>(signature.c_str())),
+      signature.size());
 }
 
 std::string MessageSigner::Digest(const std::string &header) const {
-    size_t num_signature = 0;
-    Sign(reinterpret_cast<const uint8_t *>(header.c_str()), header.size(), NULL,
-         &num_signature);
-    std::unique_ptr<uint8_t[]> signature(new uint8_t[num_signature]);
-    if (!this->Sign(reinterpret_cast<const uint8_t *>(header.c_str()),
-                    header.size(), signature.get(), &num_signature)) {
-        throw std::logic_error("unable to sign header");
-    }
+  size_t num_signature = 0;
+  Sign(reinterpret_cast<const uint8_t *>(header.c_str()), header.size(),
+       nullptr, &num_signature);
+  std::unique_ptr<uint8_t[]> signature(new uint8_t[num_signature]);
+  if (!this->Sign(reinterpret_cast<const uint8_t *>(header.c_str()),
+                  header.size(), signature.get(), &num_signature)) {
+    throw std::logic_error("unable to sign header");
+  }
 
-    return std::string(reinterpret_cast<char *>(signature.get()),
-                       num_signature);
+  return std::string(reinterpret_cast<char *>(signature.get()), num_signature);
 }

@@ -108,11 +108,10 @@ TEST(base64_test, bad) {
   EXPECT_STREQ("", Base64Encode::DecodeUrl("Zg ==").c_str());
   EXPECT_STREQ("", Base64Encode::DecodeUrl("Zg =").c_str());
   EXPECT_STREQ("", Base64Encode::DecodeUrl("Zm9vYmE@").c_str());
-  EXPECT_STREQ(
-      "", Base64Encode::DecodeUrl(
-              "VGhlIHF1aWNrIGJy\n"
-              "b3duIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5IGRvZyBhbmQgc29tZSBleHR")
-              .c_str());
+  EXPECT_STREQ("", Base64Encode::DecodeUrl("VGhlIHF1aWNrIGJy\n"
+                                           "b3duIGZveCBqdW1wcyBvdmVyIHRoZSBsY"
+                                           "Xp5IGRvZyBhbmQgc29tZSBleHR")
+                       .c_str());
 }
 
 TEST(base64_test, invers) {
@@ -131,7 +130,9 @@ TEST(base64_test, random) {
     uint32_t fst = RANDOM();
     uint32_t snd = RANDOM();
     std::string input = combine(fst, snd);
-    size_t cOut = 1 + ((input.size() / 3) + (input.size() % 3 > 0)) * 4;
+    size_t cOut = 1 + ((input.size() / 3) +
+                       static_cast<unsigned long>(input.size() % 3 > 0)) *
+                          4;
     size_t cRes = 4096;
     Base64Encode::EncodeUrl(input.c_str(), input.size(), res, &buf);
     Base64Encode::DecodeUrl(res, cOut, dec, &cRes);
@@ -144,8 +145,8 @@ TEST(base64_test, perf_encode_c) {
   // Benchmark.measure{  50_000_000.times { Base64.encode64(EncodeUrl) } }
   // => #<Benchmark::Tms:0x71a8adcf @stime=0.120000000000001,
   // @label="", @cstime=0.0, @real=22.494999885559082, @total=23.19,
-  // @cutime=0.0, @utime=23.07> vs: base64_test.perf (2186 ms) (10x faster than
-  // ruby)
+  // @cutime=0.0, @utime=23.07> vs: base64_test.perf (2186 ms) (10x faster
+  // than ruby)
   std::string encode = "Send reinforcements";
   size_t buf = 4096;
   char res[4096];

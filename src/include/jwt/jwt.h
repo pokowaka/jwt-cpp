@@ -23,14 +23,14 @@
 #ifndef SRC_INCLUDE_JWT_JWT_H_
 #define SRC_INCLUDE_JWT_JWT_H_
 
-#include <stddef.h>
-#include <memory>
-#include <string>
-#include <tuple>
-#include <utility>
 #include "jwt/claimvalidator.h"
 #include "jwt/json.hpp"
 #include "jwt/messagevalidator.h"
+#include <memory>
+#include <stddef.h>
+#include <string>
+#include <tuple>
+#include <utility>
 
 // Stack allocated signature.
 #define MAX_SIGNATURE_LENGTH 256
@@ -49,62 +49,63 @@
  * more details.
  */
 class JWT {
-    using json = nlohmann::json;
+  using json = nlohmann::json;
 
-   public:
-    /**
-     * Parses an encoded web token and validates it.
-     *
-     * @param jwsToken String containing a valid webtoken
-     * @param verifier Optional verifier used to validate the signature. If this
-     *                 parameter is null the signature will not be verified.
-     * @param validator Optional validator to validate the claims in this token.
-     * The payload will not be validated if this parameter is null
-     * @throw TokenFormatError in case the token cannot be parsed
-     * @throw InvalidSignatureError in case the token is not signed
-     * @throw InvalidClaimError in case the payload cannot be validated
-     */
-    static std::tuple<json, json> Decode(const std::string &jwsToken,
-                                         MessageValidator *verifier = nullptr,
-                                         ClaimValidator *validator = nullptr);
+public:
+  /**
+   * Parses an encoded web token and validates it.
+   *
+   * @param jwsToken String containing a valid webtoken
+   * @param verifier Optional verifier used to validate the signature. If this
+   *                 parameter is null the signature will not be verified.
+   * @param validator Optional validator to validate the claims in this token.
+   * The payload will not be validated if this parameter is null
+   * @throw TokenFormatError in case the token cannot be parsed
+   * @throw InvalidSignatureError in case the token is not signed
+   * @throw InvalidClaimError in case the payload cannot be validated
+   */
+  static std::tuple<json, json> Decode(const std::string &jwsToken,
+                                       MessageValidator *verifier = nullptr,
+                                       ClaimValidator *validator = nullptr);
 
-    /**
-     * Decodes and validates a JSON Web Token.
-     *
-     * @param jws_token String containing a valid webtoken
-     * @param num_jws_token The number of bytes in the jws_token string
-     * @param verifier Optional verifier used to validate the JOSE header. No
-     *                 verification will be done if this parameter is null .
-     * @param validator Optional validator to validate the claims in this token.
-     * The payload will not be validated if this parameter is null
-     * @return A tuple containing the json header and the payload.
-     * @throw TokenFormatError in case the token cannot be parsed
-     * @throw InvalidSignatureError in case the token is not signed
-     * @throw InvalidClaimError in case the payload cannot be validated
-     */
-    static std::tuple<json, json> Decode(const char *jws_token,
-                                         size_t num_jws_token,
-                                         MessageValidator *verifier = nullptr,
-                                         ClaimValidator *validator = nullptr);
+  /**
+   * Decodes and validates a JSON Web Token.
+   *
+   * @param jws_token String containing a valid webtoken
+   * @param num_jws_token The number of bytes in the jws_token string
+   * @param verifier Optional verifier used to validate the JOSE header. No
+   *                 verification will be done if this parameter is null .
+   * @param validator Optional validator to validate the claims in this
+   * token. The payload will not be validated if this parameter is null
+   * @return A tuple containing the json header and the payload.
+   * @throw TokenFormatError in case the token cannot be parsed
+   * @throw InvalidSignatureError in case the token is not signed
+   * @throw InvalidClaimError in case the payload cannot be validated
+   */
+  static std::tuple<json, json> Decode(const char *jws_token,
+                                       size_t num_jws_token,
+                                       MessageValidator *verifier = nullptr,
+                                       ClaimValidator *validator = nullptr);
 
-    /**
-     * Encodes the given json payload and optional header with the given signer.
-     *
-     * @param signer The MessageSigner used to sign the resulting token.
-     * @param payload The payload for this token.
-     * @param header The header. Note the "jwt" and "alg" fields will
-     * be added if they are not there.
-     * @return a char[] with a signed token. To be cleared up with calling
-     * delete[]
-     */
-    static std::string Encode(const MessageSigner &signer, const json &payload,
-                              json header = {});
+  /**
+   * Encodes the given json payload and optional header with the given
+   * signer.
+   *
+   * @param signer The MessageSigner used to sign the resulting token.
+   * @param payload The payload for this token.
+   * @param header The header. Note the "jwt" and "alg" fields will
+   * be added if they are not there.
+   * @return a char[] with a signed token. To be cleared up with calling
+   * delete[]
+   */
+  static std::string Encode(const MessageSigner &validator, const json &payload,
+                            json header = {});
 
-   private:
-    static json ExtractPayload(const char *payload, size_t num_payload);
-    static bool VerifySignature(const json &header_claims_, const char *header,
-                                size_t num_header_and_payload,
-                                const char *signature, size_t num_signature,
-                                MessageValidator *verifier);
+private:
+  static json ExtractPayload(const char *payload, size_t num_payload);
+  static bool VerifySignature(const json &header_claims_, const char *header,
+                              size_t num_header_and_payload,
+                              const char *signature, size_t num_signature,
+                              MessageValidator *verifier);
 };
-#endif  // SRC_INCLUDE_JWT_JWT_H_
+#endif // SRC_INCLUDE_JWT_JWT_H_

@@ -186,7 +186,7 @@ TEST(aud_test, wrong_type) {
 }
 
 TEST(aud_test, wrong_subject) {
-  json json = json::parse("[\"aud\", \"baz\"]");
+  json json = json::parse(R"(["aud", "baz"])");
   AudValidator aud(accepted);
   ASSERT_THROW(aud.IsValid(json), InvalidClaimError);
 }

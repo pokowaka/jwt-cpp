@@ -21,21 +21,22 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "jwt/nonevalidator.h"
-#include <string.h>
+#include <cstring>
 
-bool NoneValidator::Verify(const json &jsonHeader, const uint8_t *header,
-                           size_t num_header, const uint8_t *signature,
+bool NoneValidator::Verify(const json & /*jsonHeader*/,
+                           const uint8_t * /*header*/, size_t /*num_header*/,
+                           const uint8_t * /*signature*/,
                            size_t num_signature) const {
-    return num_signature == 0;
+  return num_signature == 0;
 }
 
-bool NoneValidator::Sign(const uint8_t *header, size_t num_header,
+bool NoneValidator::Sign(const uint8_t * /*header*/, size_t /*num_header*/,
                          uint8_t *signature, size_t *num_signature) const {
-    if (signature == NULL) {
-        *num_signature = 0;
-        return false;
-    }
-
+  if (signature == nullptr) {
     *num_signature = 0;
-    return true;
+    return false;
+  }
+
+  *num_signature = 0;
+  return true;
 }

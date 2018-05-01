@@ -25,6 +25,7 @@ ELSE ()
 ENDIF (GIT_TAG)
 
 OPTION(ENABLE_GPERF_TOOLS  "Enable google perftools [default: OFF]" OFF)
+OPTION(ENABLE_CLANG_TIDY   "Enable clang tidy [default: OFF]" OFF)
 OPTION(ENABLE_COVERAGE     "Enable coder coverage [default: OFF]" OFF)
 OPTION(ENABLE_DOC          "Enable documentation    [default: ON]" ON)
 OPTION(ENABLE_TESTS        "Enable tests [default: ON]" ON)
@@ -89,6 +90,17 @@ IF(UNIX AND ENABLE_GPERF_TOOLS MATCHES "ON")
 ENDIF(UNIX AND ENABLE_GPERF_TOOLS MATCHES "ON")
 
 
+# Run clang-tidy if needed.
+IF(ENABLE_CLANG_TIDY MATCHES "ON")
+    FIND_PROGRAM(CLANG_TIDY_EXE NAMES "clang-tidy" DOC "Path to clang-tidy executable")
+    IF(NOT CLANG_TIDY_EXE)
+        MESSAGE(STATUS "clang-tidy not found.")
+    ELSE()
+        MESSAGE(STATUS "clang-tidy found: ${CLANG_TIDY_EXE}")
+        SET(DO_CLANG_TIDY "${CLANG_TIDY_EXE}" "-checks=*")
+    ENDIF()
+ENDIF()
+
 # OpenSSL
 IF (OPENSSL_INCLUDE_DIRS AND OPENSSL_LIBRARY_DIRS AND OPENSSL_LIBRARIES)
     MESSAGE(STATUS "Using provided OpenSSL")
@@ -144,6 +156,6 @@ IF(ENABLE_TESTS MATCHES "ON")
     ADD_SUBDIRECTORY(test)
 ENDIF(ENABLE_TESTS MATCHES "ON")
 
-if (BUILD_SHARED_LIBS)
-    message("Will build JWT as a shared library")
-endif()
+IF (BUILD_SHARED_LIBS)
+    MESSAGE("Will build JWT as a shared library")
+ENDIF()

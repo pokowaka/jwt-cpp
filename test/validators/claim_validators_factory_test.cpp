@@ -12,7 +12,7 @@ TEST(parse_test, proper_exp) {
 }
 
 TEST(parse_test, iss_not_a_list) {
-  std::string json = "{ \"iss\" : { \"foo\" : \"bar\"} }";
+  std::string json = R"({ "iss" : { "foo" : "bar"} })";
   ASSERT_THROW(ClaimValidatorFactory::Build(json), std::logic_error);
 }
 
@@ -28,17 +28,17 @@ TEST(parse_test, any) {
 }
 
 TEST(parse_test, any_not_a_list) {
-  std::string json = "{ \"any\" : { \"xx\" : \"zz\" }}";
+  std::string json = R"({ "any" : { "xx" : "zz" }})";
   ASSERT_THROW(ClaimValidatorFactory::Build(json), std::logic_error);
 }
 
 TEST(parse_test, iss_not_a_stringlist) {
-  std::string json = "{ \"iss\" : [ { \"foo\" : \"bar\" } , \"zz\" ]}";
+  std::string json = R"({ "iss" : [ { "foo" : "bar" } , "zz" ]})";
   ASSERT_THROW(ClaimValidatorFactory::Build(json), std::logic_error);
 }
 
 TEST(parse_test, optional_exp) {
-  std::string json = "{ \"optional\" : { \"exp\" : { \"leeway\" : 32} } }";
+  std::string json = R"({ "optional" : { "exp" : { "leeway" : 32} } })";
   claim_ptr valid(ClaimValidatorFactory::Build(json));
   EXPECT_NE(nullptr, valid.get());
   EXPECT_STREQ("exp", valid->property().c_str());
@@ -47,7 +47,7 @@ TEST(parse_test, optional_exp) {
 }
 
 TEST(parse_test, optional_bad) {
-  std::string json = "{ \"optional\" : { \"foo\" : \"bar\" } }";
+  std::string json = R"({ "optional" : { "foo" : "bar" } })";
   ASSERT_THROW(ClaimValidatorFactory::Build(json), std::logic_error);
 }
 
@@ -57,12 +57,12 @@ TEST(parse_test, optional_empty) {
 }
 
 TEST(parse_test, optional_inner_bad) {
-  std::string json = "{ \"optional\" : { \"elxp\" : null } }";
+  std::string json = R"({ "optional" : { "elxp" : null } })";
   ASSERT_THROW(ClaimValidatorFactory::Build(json), std::logic_error);
 }
 
 TEST(parse_test, double_properties) {
-  std::string json = "{ \"exp\" : null, \"nbf\" : null }";
+  std::string json = R"({ "exp" : null, "nbf" : null })";
   ASSERT_THROW(ClaimValidatorFactory::Build(json), std::logic_error);
 }
 

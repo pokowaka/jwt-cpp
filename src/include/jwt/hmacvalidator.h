@@ -36,8 +36,8 @@
  */
 class HMACValidator : public MessageSigner {
 public:
-  explicit HMACValidator(const std::string &algorithm, const EVP_MD *md,
-                         const std::string &key);
+  explicit HMACValidator(std::string algorithm, const EVP_MD *md,
+                         std::string key);
   virtual ~HMACValidator();
 
   bool Verify(const json &jsonHeader, const uint8_t *header, size_t num_header,

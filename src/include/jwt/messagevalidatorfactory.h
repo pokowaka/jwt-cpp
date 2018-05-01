@@ -35,19 +35,20 @@ using json = nlohmann::json;
 class MessageValidatorFactory {
 public:
   static MessageValidator *Build(const std::string &msg);
-  static MessageValidator *Build(const json &msg);
+  static MessageValidator *Build(const json &json);
   static MessageSigner *BuildSigner(const std::string &msg);
-  static MessageSigner *BuildSigner(const json &sign);
+  static MessageSigner *BuildSigner(const json &json);
 
   ~MessageValidatorFactory();
 
 private:
-  static std::string ParseSecret(const std::string &property, const json &object);
+  static std::string ParseSecret(const std::string &property,
+                                 const json &object);
 
   std::vector<std::string> BuildList(const json &lst);
-  std::vector<MessageValidator *> BuildValidatorList(const json &list);
-  MessageValidator *BuildInternal(const json &fromJson);
-  MessageValidator *BuildKid(KidValidator *kid,const json &kidlist);
+  std::vector<MessageValidator *> BuildValidatorList(const json &j);
+  MessageValidator *BuildInternal(const json &json);
+  MessageValidator *BuildKid(KidValidator *kid, const json &j);
 
   std::vector<MessageValidator *> build_;
 };

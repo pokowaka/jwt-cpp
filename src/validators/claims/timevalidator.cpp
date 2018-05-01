@@ -36,11 +36,11 @@ TimeValidator::TimeValidator(const char *key, bool sign, uint64_t leeway,
     : ClaimValidator(key), sign_(sign), leeway_(leeway), clock_(clock) {}
 
 bool TimeValidator::IsValid(const json &claim) const {
-  if (!claim.count(property_) || !claim[property_].is_number()) {
+  if ((claim.count(property_) == 0u) || !claim[property_].is_number()) {
     throw InvalidClaimError(std::string("Missing claim: ") += property_);
   }
 
-  int64_t time = claim[property_].get<int64_t>();
+  auto time = claim[property_].get<int64_t>();
   if (time < 0) {
     throw InvalidClaimError(std::string("Negative time for: ") += property_);
   }

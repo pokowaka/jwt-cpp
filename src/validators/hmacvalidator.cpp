@@ -22,23 +22,26 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "jwt/hmacvalidator.h"
 #include "private/ssl_compat.h"
+#include <cstring>
 #include <memory>
 #include <sstream>
-#include <string.h>
 #include <string>
+#include <utility>
 
-HMACValidator::HMACValidator(const std::string &algorithm, const EVP_MD *md,
-                             const std::string &key)
-    : md_(md), algorithm_(algorithm), key_size_(EVP_MD_size(md)), key_(key) {}
+HMACValidator::HMACValidator(std::string algorithm, const EVP_MD *md,
+                             std::string key)
+    : md_(md), algorithm_(std::move(algorithm)), key_size_(EVP_MD_size(md)),
+      key_(std::move(key)) {}
 
-HMACValidator::~HMACValidator() {}
+HMACValidator::~HMACValidator() = default;
 
-bool HMACValidator::Verify(const json &jsonHeader, const uint8_t *header,
+bool HMACValidator::Verify(const json & /*jsonHeader*/, const uint8_t *header,
                            size_t num_header, const uint8_t *signature,
                            size_t num_signature) const {
   // No need to calc the signature if it is going be the wrong size.
-  if (num_signature != key_size_ || signature == nullptr)
+  if (num_signature != key_size_ || signature == nullptr) {
     return false;
+  }
 
   size_t num_local_signature = MAX_HMAC_KEYLENGTH;
   uint8_t local_signature[MAX_HMAC_KEYLENGTH];
@@ -61,22 +64,24 @@ int HMACValidator::const_time_cmp(const uint8_t *a, const uint8_t *b,
 
 bool HMACValidator::Sign(const uint8_t *header, size_t num_header,
                          uint8_t *signature, size_t *num_signature) const {
-  if (signature == NULL || *num_signature < key_size_) {
+  if (signature == nullptr || *num_signature < key_size_) {
     *num_signature = key_size_;
     return false;
   }
   HMacCtx hctx;
   HMAC_CTX *ctx = hctx.get();
 
-  HMAC_Init_ex(ctx, key_.c_str(), key_.size(), md_, NULL);
-  bool sign = HMAC_Update(ctx, header, num_header) &&
-              HMAC_Final(ctx, signature, (unsigned int *)num_signature);
+  HMAC_Init_ex(ctx, key_.c_str(), key_.size(), md_, nullptr);
+  bool sign =
+      (HMAC_Update(ctx, header, num_header) != 0) &&
+      (HMAC_Final(ctx, signature,
+                  reinterpret_cast<unsigned int *>(num_signature)) != 0);
 
   return sign;
 }
 
 std::string HMACValidator::toJson() const {
   std::ostringstream msg;
-  msg << "{ \"" << algorithm() << "\" : { \"secret\" : \"" << key_ << "\" } }";
+  msg << "{ \"" << algorithm() << R"(" : { "secret" : ")" << key_ << "\" } }";
   return msg.str();
 }

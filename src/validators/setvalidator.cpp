@@ -26,48 +26,50 @@
 #include <vector>
 
 SetValidator::SetValidator(const std::vector<MessageValidator *> &validators) {
-    for (auto validator : validators) {
-        validator_map_[validator->algorithm()] = validator;
-    }
+  for (auto validator : validators) {
+    validator_map_[validator->algorithm()] = validator;
+  }
 }
 
 bool SetValidator::Verify(const json &jose, const uint8_t *header,
                           size_t num_header, const uint8_t *signature,
                           size_t num_signature) const {
-    if (!jose.count("alg")) {
-        return false;
-    }
+  if (jose.count("alg") == 0u) {
+    return false;
+  }
 
-    auto alg = validator_map_.find(jose["alg"].get<std::string>());
-    if (alg == validator_map_.end()) {
-        return false;
-    }
+  auto alg = validator_map_.find(jose["alg"].get<std::string>());
+  if (alg == validator_map_.end()) {
+    return false;
+  }
 
-    MessageValidator *validator = alg->second;
-    return validator->Verify(nullptr, header, num_header, signature,
-                             num_signature);
+  MessageValidator *validator = alg->second;
+  return validator->Verify(nullptr, header, num_header, signature,
+                           num_signature);
 }
 
 bool SetValidator::Accepts(const json &jose) const {
-    if (!jose.count("alg") || !jose["alg"].is_string()) return false;
+  if ((jose.count("alg") == 0u) || !jose["alg"].is_string()) {
+    return false;
+  }
 
-    auto alg = validator_map_.find(jose["alg"].get<std::string>());
-    if (alg == validator_map_.end()) {
-        return false;
-    }
-    return alg->second->Accepts(jose);
+  auto alg = validator_map_.find(jose["alg"].get<std::string>());
+  if (alg == validator_map_.end()) {
+    return false;
+  }
+  return alg->second->Accepts(jose);
 }
 
 std::string SetValidator::toJson() const {
-    std::ostringstream msg;
-    msg << "{ \"set\" : [ ";
-    int idx = 0;
-    for (const auto &validator : validator_map_) {
-        if (idx++ > 0) {
-            msg << ", ";
-        }
-        msg << validator.second->toJson();
+  std::ostringstream msg;
+  msg << "{ \"set\" : [ ";
+  int idx = 0;
+  for (const auto &validator : validator_map_) {
+    if (idx++ > 0) {
+      msg << ", ";
     }
-    msg << " ] }";
-    return msg.str();
+    msg << validator.second->toJson();
+  }
+  msg << " ] }";
+  return msg.str();
 }

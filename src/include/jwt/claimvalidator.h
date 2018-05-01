@@ -81,10 +81,11 @@ public:
   /**
    * Constructs a new AllClaimValidator with a list validators that need to
    * evaluate to true.
-   * @param validators The list of claimvalidators that have to evaluate to true
+   * @param validators The list of claimvalidators that have to evaluate to
+   * true
    */
   explicit AllClaimValidator(std::vector<ClaimValidator *> validators);
-  bool IsValid(const json& claimset) const;
+  bool IsValid(const json &claimset) const;
   std::string toJson() const;
 
 private:

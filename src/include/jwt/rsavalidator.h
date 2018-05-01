@@ -34,11 +34,10 @@
  */
 class RSAValidator : public MessageSigner {
 public:
+  explicit RSAValidator(std::string algorithm, const EVP_MD *md,
+                        const std::string &key);
   explicit RSAValidator(const std::string &algorithm, const EVP_MD *md,
-                        const std::string &public_key);
-  explicit RSAValidator(const std::string &algorithm, const EVP_MD *md,
-                        const std::string &public_key,
-                        const std::string &private_key);
+                        const std::string &key, const std::string &private_key);
   virtual ~RSAValidator();
 
   bool Verify(const json &jsonHeader, const uint8_t *header, size_t num_header,

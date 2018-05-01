@@ -34,13 +34,13 @@ public:
   using json = nlohmann::json;
 
   static ClaimValidator *Build(const std::string &fromJson);
-  static ClaimValidator *Build(const json &claim);
+  static ClaimValidator *Build(const json &json);
   ~ClaimValidatorFactory();
 
 private:
-  std::vector<std::string> BuildList(const json &lst);
-  std::vector<ClaimValidator *> BuildValidatorList(const json &lst);
-  ClaimValidator *BuildInternal(const json &fromJson);
+  std::vector<std::string> BuildList(const json &object);
+  std::vector<ClaimValidator *> BuildValidatorList(const json &json);
+  ClaimValidator *BuildInternal(const json &json);
 
   std::vector<ClaimValidator *> build_;
 };

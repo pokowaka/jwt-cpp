@@ -23,17 +23,18 @@
 #include "jwt/listclaimvalidator.h"
 #include "jwt/jwt_error.h"
 
+#include <cstring>
 #include <sstream>
-#include <string.h>
 #include <string>
+#include <utility>
 #include <vector>
 
 ListClaimValidator::ListClaimValidator(const std::string &property,
-                                       const std::vector<std::string> &accepted)
-    : ClaimValidator(property), accepted_(accepted) {}
+                                       std::vector<std::string> accepted)
+    : ClaimValidator(property), accepted_(std::move(accepted)) {}
 
 bool ListClaimValidator::IsValid(const json &claim) const {
-  if (!claim.count(property_)) {
+  if (claim.count(property_) == 0u) {
     throw InvalidClaimError(std::string("Validator: missing: ") + property_);
   }
 
@@ -45,9 +46,10 @@ bool ListClaimValidator::IsValid(const json &claim) const {
   }
 
   std::string value = object.get<std::string>();
-  for (auto accept : accepted_) {
-    if (accept == value)
+  for (const auto &accept : accepted_) {
+    if (accept == value) {
       return true;
+    }
   }
 
   throw InvalidClaimError(std::string("Validator invalid: ") + property_);
@@ -57,17 +59,18 @@ std::string ListClaimValidator::toJson() const {
   std::ostringstream msg;
   msg << "{ \"" << property() << "\" : [";
   int last = accepted_.size();
-  for (auto accept : accepted_) {
+  for (const auto &accept : accepted_) {
     msg << "\"" << accept << "\"";
-    if (--last != 0)
+    if (--last != 0) {
       msg << ", ";
+    }
   }
   msg << "] }";
   return msg.str();
 }
 
 bool AudValidator::IsValid(const json &claim) const {
-  if (!claim.count(property_)) {
+  if (claim.count(property_) == 0u) {
     throw InvalidClaimError(std::string("AudValidator claim: " + claim.dump() +
                                         " is missing: " + property_));
   }
@@ -82,10 +85,11 @@ bool AudValidator::IsValid(const json &claim) const {
     return ListClaimValidator::IsValid(claim);
   }
 
-  for (json::iterator it = object.begin(); it != object.end(); ++it) {
+  for (auto &it : object) {
     for (auto accept : accepted_) {
-      if (accept == *it)
+      if (accept == it) {
         return true;
+      }
     }
   }
   throw InvalidClaimError(std::string("Invalid: ") += property_);

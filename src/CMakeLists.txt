@@ -26,7 +26,7 @@ IF(UNIX AND ENABLE_GPERF_TOOLS MATCHES "ON")
     TARGET_LINK_LIBRARIES(jwt-cpp tcmalloc)
 ENDIF(UNIX AND ENABLE_GPERF_TOOLS MATCHES "ON")
 
-target_include_directories(jwt PUBLIC
+TARGET_INCLUDE_DIRECTORIES(jwt PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/>  # <prefix>/include
 )
@@ -41,27 +41,34 @@ INSTALL(TARGETS jwt
 
 ADD_STYLE_CHECK_TARGET(lint "${JWT_SRC}")
 
-set_property(TARGET jwt PROPERTY VERSION ${JWT_VERSION})
-set_property(TARGET jwt PROPERTY SOVERSION ${JWT_VERSION_MAJOR})
-set_property(TARGET jwt PROPERTY DEBUG_POSTFIX d)
+SET_PROPERTY(TARGET jwt PROPERTY VERSION ${JWT_VERSION})
+SET_PROPERTY(TARGET jwt PROPERTY SOVERSION ${JWT_VERSION_MAJOR})
+SET_PROPERTY(TARGET jwt PROPERTY DEBUG_POSTFIX d)
+SET_PROPERTY(TARGET jwt PROPERTY CXX_STANDARD 11)
+SET_PROPERTY(TARGET jwt PROPERTY CXX_STANDARD_REQUIRED ON)
+
+
+IF(DO_CLANG_TIDY)
+    SET_PROPERTY(TARGET jwt PROPERTY CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
+ENDIF()
 
 #Some boiler plate code to generate the cmake module files for Jwt
-install(EXPORT JwtTargets
+INSTALL(EXPORT JwtTargets
     FILE JwtTargets.cmake
     NAMESPACE Jwt::
     DESTINATION ${JWT_INSTALL_LIB_DIR}/cmake/Jwt
 )
-include(CMakePackageConfigHelpers)
+INCLUDE(CMakePackageConfigHelpers)
 write_basic_package_version_file("JwtConfigVersion.cmake"
     VERSION ${JWT_VERSION}
     COMPATIBILITY SameMajorVersion
 )
 
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/JwtConfig.cmake" "
-include(\"\${CMAKE_CURRENT_LIST_DIR}/JwtTargets.cmake\")
+FILE(WRITE "${CMAKE_CURRENT_BINARY_DIR}/JwtConfig.cmake" "
+INCLUDE(\"\${CMAKE_CURRENT_LIST_DIR}/JwtTargets.cmake\")
 ")
 
-install(FILES
+INSTALL(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/JwtConfigVersion.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/JwtConfig.cmake
     DESTINATION ${JWT_INSTALL_LIB_DIR}/cmake/Jwt

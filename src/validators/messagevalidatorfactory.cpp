@@ -21,11 +21,6 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "jwt/messagevalidatorfactory.h"
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <vector>
 #include "jwt/allocators.h"
 #include "jwt/hmacvalidator.h"
 #include "jwt/json.hpp"
@@ -34,194 +29,193 @@
 #include "jwt/rsavalidator.h"
 #include "jwt/setvalidator.h"
 #include "private/buildwrappers.h"
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
-using namespace std;
 using json = nlohmann::json;
 
 MessageValidatorFactory::~MessageValidatorFactory() {
-    for (auto it = build_.begin(); it != build_.end(); it++) {
-        delete *it;
-    }
+  for (auto &it : build_) {
+    delete it;
+  }
 }
 
 MessageValidator *MessageValidatorFactory::Build(const std::string &msg) {
-    return Build(json::parse(msg));
+  return Build(json::parse(msg));
 };
 MessageSigner *MessageValidatorFactory::BuildSigner(const std::string &msg) {
-    return BuildSigner(json::parse(msg));
+  return BuildSigner(json::parse(msg));
 };
 
 MessageSigner *MessageValidatorFactory::BuildSigner(const json &json) {
-    if (json.size() > 1) {
-        std::ostringstream msg;
-        msg << "More than one property at: " << json;
-        throw std::logic_error(msg.str());
-    }
+  if (json.size() > 1) {
+    std::ostringstream msg;
+    msg << "More than one property at: " << json;
+    throw std::logic_error(msg.str());
+  }
 
-    std::unique_ptr<MessageSigner> constructed = nullptr;
-    if (json.count("none")) {
-        constructed.reset(new NoneValidator());
-    } else if (json.count("HS256")) {
-        constructed.reset(
-            new HS256Validator(ParseSecret("secret", json["HS256"])));
-    } else if (json.count("HS384")) {
-        constructed.reset(
-            new HS384Validator(ParseSecret("secret", json["HS384"])));
-    } else if (json.count("HS512")) {
-        constructed.reset(
-            new HS512Validator(ParseSecret("secret", json["HS512"])));
-    } else if (json.count("RS256")) {
-        constructed.reset(
-            new RS256Validator(ParseSecret("public", json["RS256"]),
-                               ParseSecret("private", json["RS256"])));
-    } else if (json.count("RS384")) {
-        constructed.reset(
-            new RS384Validator(ParseSecret("public", json["RS384"]),
-                               ParseSecret("private", json["RS384"])));
-    } else if (json.count("RS512")) {
-        constructed.reset(
-            new RS512Validator(ParseSecret("public", json["RS512"]),
-                               ParseSecret("private", json["RS512"])));
-    }
+  std::unique_ptr<MessageSigner> constructed = nullptr;
+  if (json.count("none") != 0u) {
+    constructed.reset(new NoneValidator());
+  } else if (json.count("HS256") != 0u) {
+    constructed.reset(new HS256Validator(ParseSecret("secret", json["HS256"])));
+  } else if (json.count("HS384") != 0u) {
+    constructed.reset(new HS384Validator(ParseSecret("secret", json["HS384"])));
+  } else if (json.count("HS512") != 0u) {
+    constructed.reset(new HS512Validator(ParseSecret("secret", json["HS512"])));
+  } else if (json.count("RS256") != 0u) {
+    constructed.reset(
+        new RS256Validator(ParseSecret("public", json["RS256"]),
+                           ParseSecret("private", json["RS256"])));
+  } else if (json.count("RS384") != 0u) {
+    constructed.reset(
+        new RS384Validator(ParseSecret("public", json["RS384"]),
+                           ParseSecret("private", json["RS384"])));
+  } else if (json.count("RS512") != 0u) {
+    constructed.reset(
+        new RS512Validator(ParseSecret("public", json["RS512"]),
+                           ParseSecret("private", json["RS512"])));
+  }
 
-    if (constructed.get() == nullptr) {
-        throw std::logic_error("Unable to construct signer");
-    }
+  if (constructed == nullptr) {
+    throw std::logic_error("Unable to construct signer");
+  }
 
-    return constructed.release();
+  return constructed.release();
 }
 
 MessageValidator *MessageValidatorFactory::BuildInternal(const json &json) {
-    if (json.size() > 1) {
-        std::ostringstream msg;
-        msg << "More than one property at: " << json;
-        throw std::logic_error(msg.str());
-    }
+  if (json.size() > 1) {
+    std::ostringstream msg;
+    msg << "More than one property at: " << json;
+    throw std::logic_error(msg.str());
+  }
 
-    std::unique_ptr<MessageValidator> constructed = nullptr;
-    try {
-        if (json.count("none")) {
-            constructed.reset(new NoneValidator());
-        } else if (json.count("HS256")) {
-            constructed.reset(
-                new HS256Validator(ParseSecret("secret", json["HS256"])));
-        } else if (json.count("HS384")) {
-            constructed.reset(
-                new HS384Validator(ParseSecret("secret", json["HS384"])));
-        } else if (json.count("HS512")) {
-            constructed.reset(
-                new HS512Validator(ParseSecret("secret", json["HS512"])));
-        } else if (json.count("RS256")) {
-            constructed.reset(
-                new RS256Validator(ParseSecret("public", json["RS256"])));
-        } else if (json.count("RS384")) {
-            constructed.reset(
-                new RS384Validator(ParseSecret("public", json["RS384"])));
-        } else if (json.count("RS512")) {
-            constructed.reset(
-                new RS512Validator(ParseSecret("public", json["RS512"])));
-        } else if (json.count("set")) {
-            auto lst = BuildValidatorList(json["set"]);
-            constructed.reset(new SetValidator(lst));
-        } else if (json.count("kid")) {
-            KidValidator *kid = new KidValidator();
-            constructed.reset(kid);
-            BuildKid(kid, json["kid"]);
-        }
-    } catch (std::exception &e) {
-        throw std::logic_error(
-            std::string("Failed to construct validator at: ") + json.dump() +
-            ", " + e.what());
+  std::unique_ptr<MessageValidator> constructed = nullptr;
+  try {
+    if (json.count("none") != 0u) {
+      constructed.reset(new NoneValidator());
+    } else if (json.count("HS256") != 0u) {
+      constructed.reset(
+          new HS256Validator(ParseSecret("secret", json["HS256"])));
+    } else if (json.count("HS384") != 0u) {
+      constructed.reset(
+          new HS384Validator(ParseSecret("secret", json["HS384"])));
+    } else if (json.count("HS512") != 0u) {
+      constructed.reset(
+          new HS512Validator(ParseSecret("secret", json["HS512"])));
+    } else if (json.count("RS256") != 0u) {
+      constructed.reset(
+          new RS256Validator(ParseSecret("public", json["RS256"])));
+    } else if (json.count("RS384") != 0u) {
+      constructed.reset(
+          new RS384Validator(ParseSecret("public", json["RS384"])));
+    } else if (json.count("RS512") != 0u) {
+      constructed.reset(
+          new RS512Validator(ParseSecret("public", json["RS512"])));
+    } else if (json.count("set") != 0u) {
+      auto lst = BuildValidatorList(json["set"]);
+      constructed.reset(new SetValidator(lst));
+    } else if (json.count("kid") != 0u) {
+      auto *kid = new KidValidator();
+      constructed.reset(kid);
+      BuildKid(kid, json["kid"]);
     }
+  } catch (std::exception &e) {
+    throw std::logic_error(std::string("Failed to construct validator at: ") +
+                           json.dump() + ", " + e.what());
+  }
 
-    if (!constructed.get()) {
-        throw std::logic_error(std::string("No validator declared at: ") +
-                               json.dump());
-    }
+  if (constructed == nullptr) {
+    throw std::logic_error(std::string("No validator declared at: ") +
+                           json.dump());
+  }
 
-    build_.push_back(constructed.get());
-    return constructed.release();
+  build_.push_back(constructed.get());
+  return constructed.release();
 }
 
 MessageValidator *MessageValidatorFactory::Build(const json &json) {
-    MessageValidatorFactory factory;
+  MessageValidatorFactory factory;
 
-    MessageValidator *root = factory.BuildInternal(json);
-    ParsedMessagevalidator *validator =
-        new ParsedMessagevalidator(json, factory.build_, root);
-    factory.build_.clear();
+  MessageValidator *root = factory.BuildInternal(json);
+  auto *validator = new ParsedMessagevalidator(json, factory.build_, root);
+  factory.build_.clear();
 
-    return validator;
+  return validator;
 }
 
-std::vector<MessageValidator *> MessageValidatorFactory::BuildValidatorList(
-    const json &j) {
-    std::vector<MessageValidator *> result;
+std::vector<MessageValidator *>
+MessageValidatorFactory::BuildValidatorList(const json &j) {
+  std::vector<MessageValidator *> result;
 
-    for (auto it = j.begin(); it != j.end(); ++it) {
-        result.push_back(BuildInternal(*it));
-    }
+  for (const auto &it : j) {
+    result.push_back(BuildInternal(it));
+  }
 
-    return result;
+  return result;
 }
 
 MessageValidator *MessageValidatorFactory::BuildKid(KidValidator *kid,
                                                     const json &j) {
-    for (auto it = j.begin(); it != j.end(); ++it) {
-        MessageValidator *validator = BuildInternal(it.value());
-        kid->Register(it.key(), validator);
-    }
+  for (auto it = j.begin(); it != j.end(); ++it) {
+    MessageValidator *validator = BuildInternal(it.value());
+    kid->Register(it.key(), validator);
+  }
 
-    return kid;
+  return kid;
 }
 
 std::string MessageValidatorFactory::ParseSecret(const std::string &property,
                                                  const json &object) {
-    if (object.count(property) == 0) {
-        std::ostringstream msg;
-        msg << "parsing secret, property: " << property
-            << " is missing from: " << object;
-        throw std::logic_error(msg.str());
-    }
+  if (object.count(property) == 0) {
+    std::ostringstream msg;
+    msg << "parsing secret, property: " << property
+        << " is missing from: " << object;
+    throw std::logic_error(msg.str());
+  }
 
-    json secret = object[property];
-    if (secret.is_string()) {
-        return secret.get<std::string>();
-    }
+  json secret = object[property];
+  if (secret.is_string()) {
+    return secret.get<std::string>();
+  }
 
-    if (secret.count("fromfile")) {
-        std::ifstream t(secret["fromfile"].get<std::string>());
-        std::stringstream buffer;
-        buffer << t.rdbuf();
-        return buffer.str();
-    }
+  if (secret.count("fromfile") != 0u) {
+    std::ifstream t(secret["fromfile"].get<std::string>());
+    std::stringstream buffer;
+    buffer << t.rdbuf();
+    return buffer.str();
+  }
 
-    throw std::logic_error("fromfile is not specified");
+  throw std::logic_error("fromfile is not specified");
 }
 
 bool ParsedMessagevalidator::Verify(const json &jose, const uint8_t *header,
                                     size_t num_header, const uint8_t *signature,
                                     size_t num_signature) const {
-    return root_->Verify(jose, header, num_header, signature, num_signature);
+  return root_->Verify(jose, header, num_header, signature, num_signature);
 }
 
 std::string ParsedMessagevalidator::algorithm() const {
-    return root_->algorithm();
+  return root_->algorithm();
 }
 
 std::string ParsedMessagevalidator::toJson() const { return root_->toJson(); }
 
 ParsedMessagevalidator::~ParsedMessagevalidator() {
-    for (auto it = children_.begin(); it != children_.end(); it++) {
-        delete *it;
-    }
+  for (auto &it : children_) {
+    delete it;
+  }
 }
 
 bool ParsedMessagevalidator::Accepts(const json &jose) const {
-    return root_->Accepts(jose);
+  return root_->Accepts(jose);
 }
 
 ParsedMessagevalidator::ParsedMessagevalidator(
-    const json &json, const std::vector<MessageValidator *> &children,
-    MessageValidator *root)
-    : json_(json), children_(children), root_(root) {}
+    json json, std::vector<MessageValidator *> children, MessageValidator *root)
+    : json_(std::move(json)), children_(std::move(children)), root_(root) {}

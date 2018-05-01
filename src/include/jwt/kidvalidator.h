@@ -50,8 +50,8 @@ public:
    * @param validator The validator that should handle this key id
    */
   void Register(const std::string &kid, MessageValidator *validator);
-  bool Verify(const json &jsonHeader, const uint8_t *header, size_t cHeader,
-              const uint8_t *signature, size_t cSignature) const override;
+  bool Verify(const json &jose, const uint8_t *header, size_t num_header,
+              const uint8_t *signature, size_t num_signature) const override;
   bool Accepts(const json &jose) const override;
   std::string algorithm() const override { return algorithm_; }
   std::string toJson() const override;
