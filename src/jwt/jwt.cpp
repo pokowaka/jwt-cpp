@@ -81,7 +81,7 @@ std::tuple<json, json> JWT::Decode(const char *jws_token, size_t num_jws_token,
   // no line breaks, whitespace, or other additional characters have been
   // used.
   size_t num_dec_header = Base64Encode::DecodeBytesNeeded(num_header);
-  str_ptr dec_header(new char[num_dec_header]);
+  str_ptr dec_header(new char[num_dec_header + 1]);
 
   if (Base64Encode::DecodeUrl(header, num_header, dec_header.get(),
                               &num_dec_header) != 0) {
