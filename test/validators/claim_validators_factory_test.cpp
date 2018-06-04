@@ -71,7 +71,7 @@ TEST(parse_test, bad_type) {
                      "  \"optional\" : { \"exp\" : { \"leeway\" : 32} }, \n"
                      "  \"iss\" : [\"foo\", \"bar\"]] \n"
                      "}";
-  ASSERT_THROW(ClaimValidatorFactory::Build(json), std::logic_error);
+  ASSERT_THROW(ClaimValidatorFactory::Build(json), json::parse_error);
 }
 
 void roundtrip(ClaimValidator *claimValidator) {
