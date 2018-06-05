@@ -57,7 +57,7 @@ bool AnyClaimValidator::IsValid(const json &claimset) const {
     try {
       if (validator->IsValid(claimset))
         return true;
-    } catch (InvalidClaimError ice) {
+    } catch (const InvalidClaimError &ice) {
     }
   }
   throw InvalidClaimError("None of the children validate");
