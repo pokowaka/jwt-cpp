@@ -63,6 +63,16 @@ cmake -DCMAKE_BUILD_TYPE=Debug ..
 make cov_all_tests
 ```
 
+### OpenSSL location
+
+If you have installed OpenSSL in a non-standard location, the recommended way to let cmake find
+it is to include your OpenSSL install directory in CMAKE_PREFIX_PATH.
+
+For example: if you installed OpenSSL in /my_custom_install_dir/openssl_1_1_0h:
+
+```
+CMAKE -DCMAKE_PREFIX_PATH=/my_custom_install_dir/openssl_1_1_0h <jwt-cpp-source-dir>
+```
 
 ### Dependencies in linux
 
@@ -86,10 +96,11 @@ Beside cmake and Visual Studio, you need to install OpenSSL binaries:
 [Win32 OpenSSL](https://slproweb.com/products/Win32OpenSSL.html)
 
 After installation, configure cmake for your Visual Studio and set openssl folders:
+
 ```
 MD build
 CD build
-cmake -G "Visual Studio 14" -DCMAKE_INSTALL_PREFIX=..\install -DOPENSSL_INCLUDE_DIRS=C:\OpenSSL-Win32\include -DOPENSSL_LIBRARY_DIRS=C:\OpenSSL-Win32\lib ..
+cmake -G "Visual Studio 14" -DCMAKE_INSTALL_PREFIX=..\install -DCMAKE_PREFIX_PATH=C:\OpenSSL-Win32 ..
 cmake --build . --clean-first --target install
 ```
 Find your binaries at `install` folder.

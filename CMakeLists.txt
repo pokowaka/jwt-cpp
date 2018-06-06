@@ -90,46 +90,34 @@ ENDIF(UNIX AND ENABLE_GPERF_TOOLS MATCHES "ON")
 
 
 # OpenSSL
+SET(OPENSSL_MINIM_VERSION "1.1.0")
+#If the OpenSSL library is not  installed in the standard search paths then preferably let cmake know where 
+#your OpenSSL library is installed by including the OpenSSL install directory in CMAKE_PREFIX_PATH. 
+#For backwards compatability you can still use the variables below, use them at your own risk.
 IF (OPENSSL_INCLUDE_DIRS AND OPENSSL_LIBRARY_DIRS AND OPENSSL_LIBRARIES)
     MESSAGE(STATUS "Using provided OpenSSL")
     MESSAGE(STATUS "  Include dir: ${OPENSSL_INCLUDE_DIRS}")
     MESSAGE(STATUS "  Library dirs: ${OPENSSL_LIBRARY_DIRS}")
     MESSAGE(STATUS "  Libraries: ${OPENSSL_LIBRARIES}")
+    INCLUDE_DIRECTORIES(${OPENSSL_INCLUDE_DIRS})
+    LINK_DIRECTORIES (${OPENSSL_LIBRARY_DIRS})
 ELSE()
-    MESSAGE(STATUS "No version of OpenSSL provided, searching for v1.1.0")
     IF(APPLE)
-        # If it doesn't go to any Cellar it will not work.
-        EXECUTE_PROCESS(COMMAND bash -c "brew info openssl@1.1 | grep Cellar | sed 's/ .*//' | tr -d '\r\n'" OUTPUT_VARIABLE MAC_SSL_ROOT)
-        SET(OPENSSL_INCLUDE_DIRS ${MAC_SSL_ROOT}/include)
-        SET(OPENSSL_LIBRARY_DIRS ${MAC_SSL_ROOT}/lib)
-        SET(OPENSSL_LIBRARIES "-lcrypto")
-
-        IF (NOT EXISTS ${OPENSSL_INCLUDE_DIRS})
-            MESSAGE(FATAL_ERROR "Cannot find ${MAC_SSL_ROOT}, please run brew install openssl@1.1")
+        FIND_PACKAGE(OpenSSL ${OPENSSL_MINIM_VERSION})
+        IF (NOT OPENSSL_FOUND)
+            MESSAGE(STATUS "OpenSSL >= ${OPENSSL_MINIM_VERSION} not found, will try to install with brew")
+            # If it doesn't go to any Cellar it will not work.
+            EXECUTE_PROCESS(COMMAND bash -c "brew info openssl@1.1 | grep Cellar | sed 's/ .*//' | tr -d '\r\n'" OUTPUT_VARIABLE MAC_SSL_ROOT)
+            SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH};${MAC_SSL_ROOT})
         ENDIF()
-    ELSEIF(UNIX)
-        FIND_PACKAGE(PkgConfig REQUIRED)
-        PKG_SEARCH_MODULE(OPENSSL REQUIRED openssl openssl>=1.1.0)
-        IF(OPENSSL_FOUND)
-            MESSAGE(STATUS "Using OpenSSL ${OPENSSL_VERSION} - ${OPENSSL_LIBDIR} - ${OPENSSL_LIBRARY_DIRS}")
-        ELSE()
-            # Error; with REQUIRED, pkg_search_module() will throw an error by it's own
-        ENDIF()
-    ELSE(APPLE)
-        SET(OPENSSL_INCLUDE_DIRS ${OPENSSL_INCLUDE_DIRS})
-        SET(OPENSSL_LIBRARY_DIRS ${OPENSSL_LIBRARY_DIRS})
-        SET(OPENSSL_LIBRARIES "libcrypto libssl")
-        IF(NOT OPENSSL_INCLUDE_DIRS OR NOT OPENSSL_LIBRARY_DIRS)
-            MESSAGE(FATAL_ERROR "Set path to openssl include and library dirs: -DOPENSSL_INCLUDE_DIRS=path -DOPENSSL_LIBRARY_DIRS=path")
-        ENDIF()
-    ENDIF(APPLE)
+    ENDIF()
+    
+    FIND_PACKAGE(OpenSSL ${OPENSSL_MINIM_VERSION} REQUIRED)
 ENDIF()
 
 
 # General include directories
 INCLUDE_DIRECTORIES(src/include/ src/include/private)
-INCLUDE_DIRECTORIES(${OPENSSL_INCLUDE_DIRS})
-LINK_DIRECTORIES (${OPENSSL_LIBRARY_DIRS})
 ADD_SUBDIRECTORY (src)
 
 #-------------------
