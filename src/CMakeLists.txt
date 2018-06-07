@@ -24,6 +24,8 @@ ELSE()
     TARGET_LINK_LIBRARIES(jwt OpenSSL::SSL OpenSSL::Crypto)
 ENDIF()
 IF(UNIX)
+    #libdl is needed by OpenSSL, but is not a dependency of OpenSSL::Crypto
+    TARGET_LINK_LIBRARIES(jwt dl)
     SET_PROPERTY(TARGET jwt PROPERTY CXX_STANDARD 11)
 ENDIF(UNIX)
 

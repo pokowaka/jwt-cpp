@@ -113,7 +113,7 @@ ELSE()
             ELSE()
                 MESSAGE(FATAL_ERROR "Brew installation of OpenSSL failed")
             ENDIF()
-            SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH};${MAC_SSL_ROOT})
+            SET(OPENSSL_ROOT_DIR ${CMAKE_PREFIX_PATH};${MAC_SSL_ROOT})
         ENDIF()
     ENDIF()
     
