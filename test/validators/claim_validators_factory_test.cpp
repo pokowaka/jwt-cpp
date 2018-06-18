@@ -37,6 +37,15 @@ TEST(parse_test, iss_not_a_stringlist) {
   ASSERT_THROW(ClaimValidatorFactory::Build(json), std::logic_error);
 }
 
+// This test tries to test that the factory has created an AudValidator
+// and not a basic ListClaimValidator
+TEST(parse_test, aud_array_value_in_payload) {
+    std::string json = "{ \"aud\" : [ \"foo\" ]}";
+    claim_ptr valid(ClaimValidatorFactory::Build(json));
+    ::json aud = {{"aud", ::json::array({"foo", "bar", "baz"})}};
+    EXPECT_TRUE(valid->IsValid(aud));
+}
+
 TEST(parse_test, optional_exp) {
   std::string json = "{ \"optional\" : { \"exp\" : { \"leeway\" : 32} } }";
   claim_ptr valid(ClaimValidatorFactory::Build(json));
