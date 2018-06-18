@@ -57,11 +57,11 @@ ClaimValidator *ClaimValidatorFactory::BuildInternal(const json &json) {
     ClaimValidator *constructed = nullptr;
     try {
         if (json.count("iss")) {
-            constructed = new ListClaimValidator("iss", BuildList(json["iss"]));
+            constructed = new IssValidator(BuildList(json["iss"]));
         } else if (json.count("sub")) {
-            constructed = new ListClaimValidator("sub", BuildList(json["sub"]));
+            constructed = new SubValidator(BuildList(json["sub"]));
         } else if (json.count("aud")) {
-            constructed = new ListClaimValidator("aud", BuildList(json["aud"]));
+            constructed = new AudValidator(BuildList(json["aud"]));
         } else if (json.count("exp")) {
             ::json val = json["exp"];
             ::json leeway = val["leeway"];
