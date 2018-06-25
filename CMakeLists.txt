@@ -90,11 +90,7 @@ ENDIF(UNIX AND ENABLE_GPERF_TOOLS MATCHES "ON")
 
 
 # OpenSSL
-if (WIN32)
-    SET(OPENSSL_MINIM_VERSION "1.0.2")
-else()
-    SET(OPENSSL_MINIM_VERSION "1.1.0")
-endif()
+SET(OPENSSL_MINIM_VERSION "1.0.0")
 #If the OpenSSL library is not  installed in the standard search paths then preferably let cmake know where 
 #your OpenSSL library is installed by including the OpenSSL install directory in CMAKE_PREFIX_PATH. 
 #For backwards compatability you can still use the variables below, use them at your own risk.
