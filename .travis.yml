@@ -15,13 +15,10 @@ matrix:
   include:
   # OSX / Clang
   - os: osx
-    osx_image: xcode6.4
+    osx_image: xcode9.4
 
   - os: osx
-    osx_image: xcode8.3
-
-  - os: osx
-    osx_image: xcode9
+    osx_image: xcode10.2
 
   # Linux / GCC
   - os: linux
