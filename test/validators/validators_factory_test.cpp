@@ -68,7 +68,7 @@ TEST(parse_test, proper_rsa) {
 TEST(parse_signer_test, rsa_missing_file) {
     std::string json =
         "{ \"RS256\" : { \"public\" : { \"fromfile\" : null } } }";
-    ASSERT_THROW(MessageValidatorFactory::BuildSigner(json), std::logic_error);
+    ASSERT_THROW(MessageValidatorFactory::BuildSigner(json), nlohmann::json::type_error);
 }
 
 // Test for the various validators.
@@ -260,12 +260,12 @@ TEST(parse_test, non_secret) {
 
 TEST(parse_test, bad_json) {
     std::string json = "{ { \"HS256\" : { \"secret\" : \"safe!\" } }";
-    ASSERT_THROW(MessageValidatorFactory::Build(json), std::logic_error);
+    ASSERT_THROW(MessageValidatorFactory::Build(json), nlohmann::json::parse_error);
 }
 
 TEST(parse_signer_test, bad_json) {
     std::string json = "{ { \"HS256\" : { \"secret\" : \"safe!\" } }";
-    ASSERT_THROW(MessageValidatorFactory::BuildSigner(json), std::logic_error);
+    ASSERT_THROW(MessageValidatorFactory::BuildSigner(json), nlohmann::json::parse_error);
 }
 
 void roundtrip(MessageValidator *validator) {
