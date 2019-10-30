@@ -95,6 +95,8 @@ IF (OPENSSL_INCLUDE_DIRS AND OPENSSL_LIBRARY_DIRS AND OPENSSL_LIBRARIES)
     MESSAGE(STATUS "  Include dir: ${OPENSSL_INCLUDE_DIRS}")
     MESSAGE(STATUS "  Library dirs: ${OPENSSL_LIBRARY_DIRS}")
     MESSAGE(STATUS "  Libraries: ${OPENSSL_LIBRARIES}")
+    INCLUDE_DIRECTORIES(${OPENSSL_INCLUDE_DIRS})
+    LINK_DIRECTORIES (${OPENSSL_LIBRARY_DIRS})
 ELSE()
     set(OPENSSL_MINIM_VERSION "1.1.0")
     MESSAGE(STATUS "No version of OpenSSL provided, searching for v${OPENSSL_MINIM_VERSION}")
@@ -111,13 +113,12 @@ ELSE()
     IF (NOT OPENSSL_FOUND)
         MESSAGE(FATAL_ERROR "Unable to find OpenSSL, set path to openssl include and library dirs: -DOPENSSL_INCLUDE_DIRS=path -DOPENSSL_LIBRARY_DIRS=path -DOPENSSL_LIBRARIES=libs")
     ENDIF()
+    set(OPENSSL_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
 ENDIF()
 
 
 # General include directories
 INCLUDE_DIRECTORIES(src/include/ src/include/private)
-INCLUDE_DIRECTORIES(${OPENSSL_INCLUDE_DIRS})
-LINK_DIRECTORIES (${OPENSSL_LIBRARY_DIRS})
 ADD_SUBDIRECTORY (src)
 
 #-------------------
@@ -133,5 +134,10 @@ IF(ENABLE_TESTS MATCHES "ON")
 ENDIF(ENABLE_TESTS MATCHES "ON")
 
 if (BUILD_SHARED_LIBS)
+    if (MSVC)
+        #In order to build a DLL on Windows all functions that should go into the DLL need to be marked 
+        #explicitly with __declspec(dllexport)
+        message(FATAL_ERROR "Building JWT-CPP as shared library with MS Visual Studio is currently not supported")
+    endif()
     message("Will build JWT as a shared library")
 endif()
