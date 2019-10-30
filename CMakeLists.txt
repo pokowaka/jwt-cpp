@@ -98,7 +98,12 @@ IF (OPENSSL_INCLUDE_DIRS AND OPENSSL_LIBRARY_DIRS AND OPENSSL_LIBRARIES)
     INCLUDE_DIRECTORIES(${OPENSSL_INCLUDE_DIRS})
     LINK_DIRECTORIES (${OPENSSL_LIBRARY_DIRS})
 ELSE()
-    set(OPENSSL_MINIM_VERSION "1.1.0")
+    if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
+        #Lower OpenSSL version for Linux because 1.1.0 not available on CI machine
+        set(OPENSSL_MINIM_VERSION "1.0.1")
+    else()
+        set(OPENSSL_MINIM_VERSION "1.1.0")
+    endif()
     MESSAGE(STATUS "No version of OpenSSL provided, searching for v${OPENSSL_MINIM_VERSION}")
     IF(APPLE)
         # If it doesn't go to any Cellar it will not work.
