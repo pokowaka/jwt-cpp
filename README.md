@@ -1,4 +1,4 @@
-Jwt-cpp
+JWT-cpp
 =======
 
 ![Build status](https://travis-ci.org/pokowaka/jwt-cpp.svg?branch=master)
@@ -33,7 +33,7 @@ Payload validators:
 **NOTE**: We keep private and public keys unencrypted in memory for the duration of the
 existence of any of the validators.
 
-## Compilation and Installation
+## Compilation and Installation:-
 
 Jwt-cpp uses the [CMake](http://www.cmake.org/) cross platform build tools to
 build. Once you have installed the proper dependencies you can do the following:
@@ -410,7 +410,7 @@ For example:
 }
 ```
 
-Indicates that the claims set has the following:
+Indicates that the claims set has the following:-
 
 - If an expiration is set, its expiration should be no later than the current time + 32 seconds
 - It has been issued by either *foo*, or *bar*
